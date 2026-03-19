@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ecgen-eval"
+version = "0.1.0"
+description = "Evaluation metrics and interactive reports for synthetic ECG quality assessment"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.6"
+keywords = ["ecg", "electrocardiogram", "synthetic data", "evaluation", "generative models"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "numpy>=1.19",
+    "pandas>=0.25",
+    "plotly>=5.18",
+    "click>=7.0",
+    "jinja2>=2.11",
+    "tqdm>=4.40",
+    "scikit-learn>=0.24",
+    "dtaidistance>=2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "black>=23.0",
+    "ruff>=0.1",
+]
+
+[project.scripts]
+ecgen-eval = "ecgen_eval.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ecgen_eval"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
