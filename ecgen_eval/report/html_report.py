@@ -85,11 +85,15 @@ def generate_report(
             fs=fs,
         ))
 
-    # 5. Radar summary (if multiple metrics)
+    # 5. Metrics summary table with CSV download
+    if metric_results:
+        sections.append(_render_summary_table(metric_results, synthetics))
+
+    # 6. Radar summary (if multiple metrics)
     if len(metric_results) > 1:
         sections.append(_render_radar(metric_results, include_js))
 
-    # 6. Citations
+    # 7. Citations
     sections.append(_render_citations(metric_results))
 
     html = _wrap_html(
@@ -267,6 +271,71 @@ def _render_metric_section(
 """
 
 
+def _render_summary_table(
+    metric_results: Dict[str, Dict[str, MetricResult]],
+    synthetics: List[ECGDataset],
+) -> str:
+    """Render a combined metrics × datasets table with a CSV download button."""
+    synth_labels = [s.label for s in synthetics]
+
+    # Build header row
+    header_cells = "<th>Metric</th><th>Direction</th>" + "".join(
+        f"<th>{lbl}</th>" for lbl in synth_labels
+    )
+
+    # Build data rows and accumulate CSV lines
+    csv_lines = ["metric,direction," + ",".join(synth_labels)]
+    body_rows = ""
+    for metric_name, by_synth in metric_results.items():
+        sample = next(iter(by_synth.values()))
+        direction = "↑ higher" if sample.higher_is_better else "↓ lower"
+        direction_csv = "higher" if sample.higher_is_better else "lower"
+        cells = f"<td><code>{metric_name}</code></td><td>{direction}</td>"
+        csv_row = [metric_name, direction_csv]
+        for lbl in synth_labels:
+            if lbl in by_synth:
+                val = by_synth[lbl].score
+                cells += f"<td>{val:.6f}</td>"
+                csv_row.append(f"{val:.6f}")
+            else:
+                cells += "<td>—</td>"
+                csv_row.append("")
+        body_rows += f"<tr>{cells}</tr>"
+        csv_lines.append(",".join(csv_row))
+
+    # Embed CSV as a JavaScript string and wire up the download button
+    csv_content = "\\n".join(csv_lines).replace('"', '\\"')
+    download_js = f"""
+<script>
+function downloadMetricsCSV() {{
+  var csv = "{csv_content}";
+  var blob = new Blob([csv], {{type: "text/csv"}});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "ecgen_eval_metrics.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}}
+</script>
+"""
+
+    return f"""
+{download_js}
+<div class="section">
+  <h2>Metrics Summary</h2>
+  <p class="hint">All metric scores in a single table. Click <strong>Download CSV</strong> to export.</p>
+  <table class="summary-table">
+    <thead><tr>{header_cells}</tr></thead>
+    <tbody>{body_rows}</tbody>
+  </table>
+  <button class="download-btn" onclick="downloadMetricsCSV()">&#8595; Download CSV</button>
+</div>
+"""
+
+
 def _render_radar(
     metric_results: Dict[str, Dict[str, MetricResult]],
     include_js,
@@ -427,6 +496,20 @@ def _wrap_html(title: str, body: str, plotly_cdn: bool) -> str:
       color: #495057;
     }}
     .ecg-sample {{ margin-bottom: 24px; }}
+    .download-btn {{
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 20px;
+      background: #0f3460;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }}
+    .download-btn:hover {{ background: #16213e; }}
   </style>
 </head>
 <body>
