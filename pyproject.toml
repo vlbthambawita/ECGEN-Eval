@@ -1,14 +1,17 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "ecgen-eval"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Evaluation metrics and interactive reports for synthetic ECG quality assessment"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.6"
+authors = [
+    { name = "Vajira Thambawita", email = "vajira@simula.no" },
+]
 keywords = ["ecg", "electrocardiogram", "synthetic data", "evaluation", "generative models"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -32,6 +35,11 @@ dependencies = [
     "dtaidistance>=2.3",
 ]
 
+[project.urls]
+Homepage = "https://github.com/vlbthambawita/ECGEN-Eval"
+Repository = "https://github.com/vlbthambawita/ECGEN-Eval"
+Issues = "https://github.com/vlbthambawita/ECGEN-Eval/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4",
@@ -42,6 +50,9 @@ dev = [
 
 [project.scripts]
 ecgen-eval = "ecgen_eval.cli:main"
+
+[tool.hatch.version]
+source = "vcs"   # reads version from the git tag (e.g. v0.1.0 → 0.1.0)
 
 [tool.hatch.build.targets.wheel]
 packages = ["ecgen_eval"]
