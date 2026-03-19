@@ -111,6 +111,12 @@ def main():
     default=None,
     help="Comma-separated labels for synthetic datasets. Defaults to folder names.",
 )
+@click.option(
+    "--feature-plots",
+    is_flag=True,
+    default=False,
+    help="Extract clinical features and add 2D/3D distribution plots to report.",
+)
 def eval(
     real,
     synthetic,
@@ -124,6 +130,7 @@ def eval(
     offline,
     real_label,
     synth_labels,
+    feature_plots,
 ):
     """Run evaluation metrics and generate an interactive HTML report."""
 
@@ -176,6 +183,28 @@ def eval(
         metric_results[metric_key] = by_synth
 
     # -------------------------------------------------------------- #
+    # Extract clinical features (optional)                             #
+    # -------------------------------------------------------------- #
+    feature_df_real = None
+    feature_dfs_synth = None
+    if feature_plots:
+        click.echo("\nExtracting clinical features...")
+        try:
+            from ecgen_eval.features import extract_features
+
+            _, feature_df_real = extract_features(real_ds)
+            click.echo(f"  Real features: {feature_df_real.shape}")
+            feature_dfs_synth = []
+            for synth_ds in synth_datasets:
+                _, sdf = extract_features(synth_ds)
+                feature_dfs_synth.append(sdf)
+                click.echo(f"  {synth_ds.label} features: {sdf.shape}")
+        except Exception as exc:
+            click.echo(f"  WARNING: Feature extraction failed ({exc}). Skipping feature plots.")
+            feature_df_real = None
+            feature_dfs_synth = None
+
+    # -------------------------------------------------------------- #
     # Generate report                                                  #
     # -------------------------------------------------------------- #
     click.echo(f"\nGenerating report → {output}")
@@ -188,6 +217,10 @@ def eval(
         leads=leads_list,
         compare_mode=compare_mode,
         plotly_cdn=not offline,
+        feature_df_real=feature_df_real,
+        feature_dfs_synth=feature_dfs_synth,
+        feature_plots_2d=feature_plots,
+        feature_plots_3d=feature_plots,
     )
     click.echo(f"\nDone!  Report saved to: {out_path.resolve()}")
     click.echo("Open in any modern browser.\n")
@@ -257,6 +290,53 @@ def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_s
 
     Path(output).write_text(html, encoding="utf-8")
     click.echo(f"Saved: {Path(output).resolve()}")
+
+
+# ------------------------------------------------------------------ #
+# features command                                                     #
+# ------------------------------------------------------------------ #
+
+@main.command()
+@click.option("--real", "-r", required=True, type=click.Path(exists=True),
+              help="Path to folder containing real ECG files.")
+@click.option("--synthetic", "-s", multiple=True, type=click.Path(exists=True),
+              help="Path to folder(s) containing synthetic ECG files.")
+@click.option("--output", "-o", default="ecg_features.csv", show_default=True,
+              help="Output CSV path for the feature summary.")
+@click.option("--fs", default=500.0, show_default=True, help="Sampling frequency in Hz.")
+@click.option("--max-samples", default=None, type=int,
+              help="Cap number of recordings per folder.")
+@click.option("--lead", default="II", show_default=True,
+              help="Lead to use for RR/interval detection.")
+def features(real, synthetic, output, fs, max_samples, lead):
+    """Extract clinical ECG features and save a summary CSV."""
+    from ecgen_eval.features import extract_features
+
+    click.echo(f"\n{'='*60}")
+    click.echo(f"  ECGEN-Eval v{__version__} — Feature Extraction")
+    click.echo(f"{'='*60}\n")
+
+    real_ds = load_ecg_folder(real, fs=fs, max_samples=max_samples)
+    click.echo(f"Loaded real: {real_ds}")
+
+    _, real_feat_df = extract_features(real_ds, lead_for_intervals=lead)
+    real_feat_df["dataset"] = real_ds.label
+
+    dfs = [real_feat_df]
+
+    for s_path in synthetic:
+        sds = load_ecg_folder(s_path, fs=fs, max_samples=max_samples)
+        click.echo(f"Loaded synthetic: {sds}")
+        _, sdf = extract_features(sds, lead_for_intervals=lead)
+        sdf["dataset"] = sds.label
+        dfs.append(sdf)
+
+    import pandas as pd
+    combined = pd.concat(dfs, ignore_index=True)
+    out = Path(output)
+    combined.to_csv(out, index=False)
+    click.echo(f"\nFeature summary saved to: {out.resolve()}")
+    click.echo(f"Shape: {combined.shape[0]} rows × {combined.shape[1]} columns\n")
 
 
 # ------------------------------------------------------------------ #

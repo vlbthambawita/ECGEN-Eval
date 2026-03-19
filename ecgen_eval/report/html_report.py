@@ -24,6 +24,12 @@ from ecgen_eval.visualization.metric_plots import (
     plot_psd_overlay,
     plot_radar_chart,
 )
+from ecgen_eval.visualization.feature_plots import (
+    plot_feature_pair_grid,
+    plot_feature_triple_grid,
+    DEFAULT_2D_PAIRS,
+    DEFAULT_3D_TRIPLES,
+)
 
 
 # ------------------------------------------------------------------ #
@@ -40,6 +46,10 @@ def generate_report(
     compare_mode: str = "overlay",
     plotly_cdn: bool = True,
     fs: float = 500.0,
+    feature_df_real=None,
+    feature_dfs_synth=None,
+    feature_plots_2d: bool = False,
+    feature_plots_3d: bool = False,
 ) -> Path:
     """
     Build and write a self-contained HTML report.
@@ -93,7 +103,25 @@ def generate_report(
     if len(metric_results) > 1:
         sections.append(_render_radar(metric_results, include_js))
 
-    # 7. Citations
+    # 7. Clinical Feature Summary table
+    if feature_df_real is not None and feature_dfs_synth:
+        sections.append(_render_feature_summary_table(
+            feature_df_real, feature_dfs_synth, synthetics
+        ))
+
+    # 8. 2D feature distribution plots
+    if feature_plots_2d and feature_df_real is not None and feature_dfs_synth:
+        for i, (sdf, sds) in enumerate(zip(feature_dfs_synth, synthetics)):
+            sections.append(_render_feature_2d_section(
+                feature_df_real, sdf, sds.label, include_js=(i == 0 and not metric_results)
+            ))
+
+    # 9. 3D feature distribution plots
+    if feature_plots_3d and feature_df_real is not None and feature_dfs_synth:
+        for i, (sdf, sds) in enumerate(zip(feature_dfs_synth, synthetics)):
+            sections.append(_render_feature_3d_section(feature_df_real, sdf, sds.label))
+
+    # 10. Citations
     sections.append(_render_citations(metric_results))
 
     html = _wrap_html(
@@ -362,6 +390,94 @@ def _render_radar(
     Radar chart: each axis is one metric, normalised so the outer ring = best quality.
   </p>
   {radar_html}
+</div>
+"""
+
+
+def _render_feature_summary_table(
+    real_df,
+    synth_dfs: list,
+    synthetics: List[ECGDataset],
+) -> str:
+    """Render a Clinical Feature Summary table: mean ± std for real vs synthetic."""
+    import pandas as pd
+    import numpy as np
+
+    # Numeric columns only, skip index/sample_idx
+    exclude = {"sample_idx", "beat_idx", "lead", "r_sample"}
+    cols = [c for c in real_df.columns if c not in exclude and pd.api.types.is_numeric_dtype(real_df[c])]
+
+    if not cols:
+        return ""
+
+    header = "<th>Feature</th>" + "<th>Real (mean ± std)</th>" + "".join(
+        f"<th>{ds.label} (mean ± std)</th>" for ds in synthetics
+    )
+    def _mean_std(series) -> str:
+        vals = series.dropna()
+        if vals.empty:
+            return "N/A"
+        return f"{vals.mean():.3f} ± {vals.std(ddof=0):.3f}"
+
+    rows = ""
+    for col in cols:
+        cells = f"<td><code>{col}</code></td>"
+        cells += f"<td>{_mean_std(real_df[col])}</td>"
+        for sdf in synth_dfs:
+            cells += f"<td>{_mean_std(sdf[col]) if col in sdf.columns else 'N/A'}</td>"
+        rows += f"<tr>{cells}</tr>"
+
+    return f"""
+<div class="section">
+  <h2>Clinical Feature Summary</h2>
+  <p class="hint">Mean ± std of each feature across recordings. NaN indicates feature could not be extracted.</p>
+  <table class="summary-table">
+    <thead><tr>{header}</tr></thead>
+    <tbody>{rows}</tbody>
+  </table>
+</div>
+"""
+
+
+def _render_feature_2d_section(real_df, synth_df, synth_label: str, include_js=False) -> str:
+    """Render 2D feature distribution plots for one synthetic dataset."""
+    fig = plot_feature_pair_grid(
+        real_df, synth_df, synth_label=synth_label, real_label="Real"
+    )
+    plot_html = fig.to_html(
+        full_html=False,
+        include_plotlyjs=include_js,
+        config={"responsive": True},
+    )
+    return f"""
+<div class="section">
+  <h2>Clinical Feature Distributions (2D) — {synth_label}</h2>
+  <p class="hint">
+    Scatter plots comparing real (blue) vs synthetic (orange) feature distributions.
+    Each point represents one recording.
+  </p>
+  {plot_html}
+</div>
+"""
+
+
+def _render_feature_3d_section(real_df, synth_df, synth_label: str) -> str:
+    """Render 3D feature distribution plots for one synthetic dataset."""
+    fig = plot_feature_triple_grid(
+        real_df, synth_df, synth_label=synth_label, real_label="Real"
+    )
+    plot_html = fig.to_html(
+        full_html=False,
+        include_plotlyjs=False,
+        config={"responsive": True},
+    )
+    return f"""
+<div class="section">
+  <h2>Clinical Feature Distributions (3D) — {synth_label}</h2>
+  <p class="hint">
+    Interactive 3D scatter: rotate by dragging. Real = blue, Synthetic = orange.
+  </p>
+  {plot_html}
 </div>
 """
 

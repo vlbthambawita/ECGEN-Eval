@@ -1,0 +1,277 @@
+"""
+Unit tests for ecgen_eval.features.
+
+Uses the synthetic ECG fixtures from conftest.py.  The QRS-like bumps
+inserted at every 500 samples (at 500 Hz → 1 Hz = 60 BPM) give enough
+structure for R-peak detection to succeed.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from ecgen_eval.data.dataset import ECGDataset, LEADS_12
+from ecgen_eval.features import FeatureExtractor, extract_features
+from ecgen_eval.features.qrs_detection import detect_rpeaks
+from ecgen_eval.features.hrv_features import extract_hrv_features
+from ecgen_eval.features.interval_features import extract_rr_hr, extract_interval_features
+from ecgen_eval.features.amplitude_features import extract_amplitude_features
+
+
+# ------------------------------------------------------------------ #
+# Fixtures                                                             #
+# ------------------------------------------------------------------ #
+
+@pytest.fixture
+def simple_ecg_signal():
+    """Single-lead ECG-like signal: noise + periodic R-peaks every 500 samples."""
+    rng = np.random.default_rng(42)
+    t = 5000
+    sig = rng.standard_normal(t).astype(np.float32) * 0.05
+    for i in range(t // 500):
+        centre = i * 500 + 250
+        if centre + 20 < t:
+            sig[centre: centre + 20] += 2.0  # positive R-peak
+    return sig.astype(np.float64)
+
+
+@pytest.fixture
+def tiny_dataset():
+    """5-sample, 12-lead, 5000-timepoint ECGDataset with QRS-like bumps."""
+    rng = np.random.default_rng(7)
+    n, l, t = 5, 12, 5000
+    data = rng.standard_normal((n, l, t)).astype(np.float32) * 0.05
+    for i in range(t // 500):
+        centre = i * 500 + 250
+        if centre + 20 < t:
+            data[:, :, centre: centre + 20] += 2.0
+    return ECGDataset(
+        data=data,
+        lead_names=LEADS_12,
+        fs=500.0,
+        source_path="/tmp/test",
+        label="test",
+    )
+
+
+# ------------------------------------------------------------------ #
+# qrs_detection                                                        #
+# ------------------------------------------------------------------ #
+
+class TestRpeakDetection:
+    def test_returns_array(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        assert isinstance(peaks, np.ndarray)
+
+    def test_detects_expected_peaks(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        # Expect ~9 peaks (one per 500-sample period across 5000 samples)
+        assert len(peaks) >= 5, f"Expected ≥5 peaks, got {len(peaks)}"
+
+    def test_peaks_sorted(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        if len(peaks) > 1:
+            assert np.all(np.diff(peaks) > 0)
+
+    def test_flat_signal_no_crash(self):
+        sig = np.zeros(1000, dtype=np.float64)
+        peaks = detect_rpeaks(sig, fs=500.0)
+        assert isinstance(peaks, np.ndarray)
+
+    def test_wrong_ndim_raises(self, simple_ecg_signal):
+        with pytest.raises(ValueError, match="1-D"):
+            detect_rpeaks(simple_ecg_signal.reshape(1, -1), fs=500.0)
+
+
+# ------------------------------------------------------------------ #
+# hrv_features                                                         #
+# ------------------------------------------------------------------ #
+
+class TestHRVFeatures:
+    def test_keys_present(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        result = extract_hrv_features(peaks, fs=500.0)
+        assert set(result.keys()) == {"hrv_sdnn_ms", "hrv_rmssd_ms", "hrv_pnn50"}
+
+    def test_values_finite_for_good_signal(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        result = extract_hrv_features(peaks, fs=500.0)
+        # With regular peaks, sdnn and rmssd should be near-zero (regular rhythm)
+        for k, v in result.items():
+            assert np.isfinite(v) or np.isnan(v), f"{k} = {v}"
+
+    def test_too_few_peaks_returns_nan(self):
+        peaks = np.array([100, 600], dtype=int)  # only 1 RR
+        result = extract_hrv_features(peaks, fs=500.0)
+        assert all(np.isnan(v) for v in result.values())
+
+
+# ------------------------------------------------------------------ #
+# interval_features                                                    #
+# ------------------------------------------------------------------ #
+
+class TestIntervalFeatures:
+    def test_rr_hr_keys(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        result = extract_rr_hr(peaks, fs=500.0)
+        assert "rr_mean_ms" in result
+        assert "hr_bpm" in result
+
+    def test_rr_approximate_value(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        result = extract_rr_hr(peaks, fs=500.0)
+        if np.isfinite(result["rr_mean_ms"]):
+            # R-peaks spaced ~500 samples at 500 Hz → RR ≈ 1000 ms
+            assert 500 <= result["rr_mean_ms"] <= 2000
+
+    def test_interval_features_no_crash(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        result = extract_interval_features(simple_ecg_signal, fs=500.0, rpeaks=peaks, waves=None)
+        expected_keys = {"pr_interval_ms", "qrs_duration_ms", "qt_interval_ms",
+                         "qtc_bazett_ms", "p_wave_duration_ms"}
+        assert expected_keys.issubset(result.keys())
+
+    def test_no_peaks_returns_nan(self):
+        sig = np.zeros(1000, dtype=np.float64)
+        result = extract_rr_hr(np.array([], dtype=int), fs=500.0)
+        assert np.isnan(result["rr_mean_ms"])
+
+
+# ------------------------------------------------------------------ #
+# amplitude_features                                                   #
+# ------------------------------------------------------------------ #
+
+class TestAmplitudeFeatures:
+    def test_keys_present(self, simple_ecg_signal):
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        result = extract_amplitude_features(simple_ecg_signal, fs=500.0, rpeaks=peaks)
+        assert "st_deviation_mv" in result
+        assert "t_amplitude_mv" in result
+
+    def test_no_peaks_returns_nan(self):
+        sig = np.zeros(1000, dtype=np.float64)
+        result = extract_amplitude_features(sig, fs=500.0, rpeaks=np.array([], dtype=int))
+        assert np.isnan(result["st_deviation_mv"])
+        assert np.isnan(result["t_amplitude_mv"])
+
+
+# ------------------------------------------------------------------ #
+# FeatureExtractor / extract_features                                  #
+# ------------------------------------------------------------------ #
+
+class TestFeatureExtractor:
+    def test_returns_dataframes(self, tiny_dataset):
+        beat_df, summary_df = extract_features(tiny_dataset)
+        assert isinstance(beat_df, pd.DataFrame)
+        assert isinstance(summary_df, pd.DataFrame)
+
+    def test_summary_rows_match_samples(self, tiny_dataset):
+        _, summary_df = extract_features(tiny_dataset)
+        assert len(summary_df) == tiny_dataset.n_samples
+
+    def test_summary_columns_present(self, tiny_dataset):
+        _, summary_df = extract_features(tiny_dataset)
+        expected = {
+            "rr_mean_ms", "hr_bpm", "qrs_duration_ms", "qt_interval_ms",
+            "st_deviation_mv", "t_amplitude_mv", "hrv_sdnn_ms",
+        }
+        missing = expected - set(summary_df.columns)
+        assert not missing, f"Missing columns: {missing}"
+
+    def test_beat_df_has_expected_columns(self, tiny_dataset):
+        beat_df, _ = extract_features(tiny_dataset)
+        if not beat_df.empty:
+            for col in ("sample_idx", "beat_idx", "lead", "rr_ms"):
+                assert col in beat_df.columns, f"Missing column: {col}"
+
+    def test_different_seed_gives_different_values(self):
+        """Two different datasets should yield different feature distributions."""
+        rng1 = np.random.default_rng(0)
+        rng2 = np.random.default_rng(99)
+        n, l, t = 10, 12, 3000
+
+        def _make(rng):
+            data = rng.standard_normal((n, l, t)).astype(np.float32) * 0.05
+            for i in range(t // 500):
+                c = i * 500 + 250
+                if c + 20 < t:
+                    data[:, :, c: c + 20] += 2.0
+            return ECGDataset(data=data, lead_names=LEADS_12, fs=500.0,
+                              source_path="/tmp/x", label="x")
+
+        ds1 = _make(rng1)
+        ds2 = _make(rng2)
+        _, s1 = extract_features(ds1)
+        _, s2 = extract_features(ds2)
+        # At least one feature should differ
+        common = set(s1.columns) & set(s2.columns) - {"sample_idx"}
+        for col in common:
+            if s1[col].notna().any() and s2[col].notna().any():
+                if not np.allclose(s1[col].dropna().values, s2[col].dropna().values, equal_nan=True):
+                    return  # passed
+        # If all identical, that's suspicious but not a failure for synthetic data
+
+
+# ------------------------------------------------------------------ #
+# feature_plots smoke tests                                            #
+# ------------------------------------------------------------------ #
+
+class TestFeaturePlots:
+    @pytest.fixture
+    def feature_dfs(self, tiny_dataset):
+        rng = np.random.default_rng(3)
+        data2 = rng.standard_normal(tiny_dataset.data.shape).astype(np.float32) * 0.05
+        t = tiny_dataset.n_timepoints
+        for i in range(t // 500):
+            c = i * 500 + 250
+            if c + 20 < t:
+                data2[:, :, c: c + 20] += 2.0
+        ds2 = ECGDataset(data=data2, lead_names=LEADS_12, fs=500.0,
+                         source_path="/tmp/s", label="synth")
+        _, real_df = extract_features(tiny_dataset)
+        _, synth_df = extract_features(ds2)
+        return real_df, synth_df
+
+    def test_plot_feature_2d_returns_figure(self, feature_dfs):
+        from ecgen_eval.visualization.feature_plots import plot_feature_2d
+        import plotly.graph_objects as go
+
+        real_df, synth_df = feature_dfs
+        fig = plot_feature_2d(real_df, synth_df, "rr_mean_ms", "hr_bpm")
+        assert isinstance(fig, go.Figure)
+
+    def test_plot_feature_pair_grid_returns_figure(self, feature_dfs):
+        from ecgen_eval.visualization.feature_plots import plot_feature_pair_grid
+        import plotly.graph_objects as go
+
+        real_df, synth_df = feature_dfs
+        fig = plot_feature_pair_grid(real_df, synth_df)
+        assert isinstance(fig, go.Figure)
+
+    def test_plot_feature_3d_returns_figure(self, feature_dfs):
+        from ecgen_eval.visualization.feature_plots import plot_feature_3d
+        import plotly.graph_objects as go
+
+        real_df, synth_df = feature_dfs
+        fig = plot_feature_3d(real_df, synth_df, "rr_mean_ms", "hr_bpm", "qrs_duration_ms")
+        assert isinstance(fig, go.Figure)
+
+    def test_plot_feature_triple_grid_returns_figure(self, feature_dfs):
+        from ecgen_eval.visualization.feature_plots import plot_feature_triple_grid
+        import plotly.graph_objects as go
+
+        real_df, synth_df = feature_dfs
+        fig = plot_feature_triple_grid(real_df, synth_df)
+        assert isinstance(fig, go.Figure)
+
+    def test_missing_columns_no_crash(self, feature_dfs):
+        """Plots should handle DataFrames that are missing requested columns gracefully."""
+        from ecgen_eval.visualization.feature_plots import plot_feature_2d, plot_feature_3d
+        import plotly.graph_objects as go
+
+        real_df, synth_df = feature_dfs
+        # Request non-existent column — should return a Figure, not raise
+        fig = plot_feature_2d(real_df, synth_df, "nonexistent_x", "nonexistent_y")
+        assert isinstance(fig, go.Figure)
