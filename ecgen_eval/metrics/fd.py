@@ -43,6 +43,7 @@ from typing import List, Optional
 import numpy as np
 
 from ecgen_eval.metrics.base import BaseMetric, MetricResult
+from ecgen_eval.metrics._frechet_utils import frechet_distance
 
 
 _REFERENCE = (
@@ -114,7 +115,7 @@ class FDMetric(BaseMetric):
             feats_r = (feats_r - mu_norm) / std_norm
             feats_s = (feats_s - mu_norm) / std_norm
 
-            fd = self._frechet_distance(feats_r, feats_s)
+            fd = frechet_distance(feats_r, feats_s, eps=self.eps)
             per_lead[lname] = float(fd)
 
         overall = float(np.mean(list(per_lead.values())))
@@ -177,36 +178,3 @@ class FDMetric(BaseMetric):
         ], axis=1)
         return feats
 
-    # ------------------------------------------------------------------ #
-    # Fréchet Distance                                                     #
-    # ------------------------------------------------------------------ #
-
-    def _frechet_distance(self, X: np.ndarray, Y: np.ndarray) -> float:
-        """
-        FD = ‖μ_X − μ_Y‖² + Tr(Σ_X + Σ_Y − 2·(Σ_X Σ_Y)^½)
-        """
-        mu1, sigma1 = X.mean(axis=0), np.cov(X, rowvar=False)
-        mu2, sigma2 = Y.mean(axis=0), np.cov(Y, rowvar=False)
-
-        # Regularise
-        n_feat = mu1.shape[0]
-        sigma1 += self.eps * np.eye(n_feat)
-        sigma2 += self.eps * np.eye(n_feat)
-
-        diff = mu1 - mu2
-        mean_sq = float(np.dot(diff, diff))
-
-        # Matrix square root of sigma1 @ sigma2
-        sqrt_sigma = self._matrix_sqrt(sigma1 @ sigma2)
-
-        trace_term = float(np.trace(sigma1 + sigma2 - 2.0 * sqrt_sigma))
-        return mean_sq + trace_term
-
-    @staticmethod
-    def _matrix_sqrt(M: np.ndarray) -> np.ndarray:
-        """Symmetric matrix square root via eigendecomposition."""
-        # Symmetrise for numerical stability
-        M = (M + M.T) / 2.0
-        eigenvalues, eigenvectors = np.linalg.eigh(M)
-        eigenvalues = np.maximum(eigenvalues, 0.0)
-        return eigenvectors @ np.diag(np.sqrt(eigenvalues)) @ eigenvectors.T

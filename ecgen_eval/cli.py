@@ -117,6 +117,26 @@ def main():
     default=False,
     help="Extract clinical features and add 2D/3D distribution plots to report.",
 )
+@click.option(
+    "--backbone",
+    default="ecgfounder",
+    show_default=True,
+    type=click.Choice(["ecgfounder", "hubert_ecg", "ecgfm"], case_sensitive=False),
+    help="Foundation model backbone to use when 'fed' metric is selected.",
+)
+@click.option(
+    "--fed-device",
+    default="cpu",
+    show_default=True,
+    help="PyTorch device for FED encoder (e.g. 'cpu' or 'cuda').",
+)
+@click.option(
+    "--fed-batch-size",
+    default=32,
+    show_default=True,
+    type=int,
+    help="Batch size for FED encoder forward passes.",
+)
 def eval(
     real,
     synthetic,
@@ -131,6 +151,9 @@ def eval(
     real_label,
     synth_labels,
     feature_plots,
+    backbone,
+    fed_device,
+    fed_batch_size,
 ):
     """Run evaluation metrics and generate an interactive HTML report."""
 
@@ -168,7 +191,14 @@ def eval(
 
     for metric_key in metrics:
         metric_cls = AVAILABLE_METRICS[metric_key.lower()]
-        metric_obj = metric_cls()
+        if metric_key.lower() == "fed":
+            metric_obj = metric_cls(
+                backbone=backbone,
+                device=fed_device,
+                batch_size=fed_batch_size,
+            )
+        else:
+            metric_obj = metric_cls()
         click.echo(f"  [{metric_key.upper()}]")
         by_synth = {}
         for synth_ds in synth_datasets:
