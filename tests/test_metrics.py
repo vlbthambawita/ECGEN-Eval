@@ -33,7 +33,7 @@ def _assert_result(result: MetricResult, name: str):
 # ------------------------------------------------------------------ #
 
 def test_available_metrics_keys():
-    expected_original = {"mmd", "dtw", "prd", "psd", "fd"}
+    expected_original = {"mmd", "dtw", "prd", "psd", "fd", "fed"}
     expected_new = {"psnr", "ssim", "swd", "mae", "hrv", "pr_dist", "sqi", "nn_dist", "heart_rate", "spectral_entropy"}
     assert expected_original | expected_new == set(AVAILABLE_METRICS.keys())
 

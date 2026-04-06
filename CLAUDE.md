@@ -12,6 +12,7 @@ ECGEN-Eval is a Python package providing evaluation metrics and interactive HTML
 # Install
 pip install -e ".[dev]"        # core + dev tools
 pip install -e ".[features]"   # + neurokit2 + scipy for clinical feature extraction
+pip install -e ".[fed]"        # + torch + transformers + huggingface_hub for FED metric
 pip install scipy wfdb         # optional: needed for Welch PSD and WFDB loading
 
 # Test
@@ -27,6 +28,7 @@ black ecgen_eval/ tests/
 # CLI
 ecgen-eval list-metrics
 ecgen-eval eval --real /path/real.npy --synthetic /path/synth.npy --metrics mmd prd psd --output report.html --fs 500
+ecgen-eval eval --real /path/real.npy --synthetic /path/synth.npy --metrics fed --backbone ecgfounder --fed-device cpu --output report.html
 ecgen-eval eval --real /path/real.npy --synthetic /path/synth.npy --feature-plots --output report.html
 ecgen-eval features --real /path/real.npy --synthetic /path/synth.npy --output features.csv
 ecgen-eval visualize --real /path/real.npy --synthetic /path/synth.npy --output compare.html
@@ -67,7 +69,12 @@ All metrics inherit `BaseMetric` and return a `MetricResult` (scalar score + per
 | `dtw` | `DTWMetric` | Mean DTW distance on randomly sampled pairs; falls back from dtaidistance to pure-NumPy |
 | `prd` | `PRDMetric` | Nearest-neighbor PRD%; unpaired, suitable for generative models |
 | `psd` | `PSDMetric` | Jensen-Shannon divergence between mean normalized PSDs; uses Welch (scipy) or FFT |
-| `fd` | `FrechetMetric` | Fréchet distance between fitted multivariate Gaussians on 11 signal features (FID-like) |
+| `fd` | `FDMetric` | Fréchet distance between fitted multivariate Gaussians on 11 handcrafted signal features (FID-like) |
+| `fed` | `FEDMetric` | Fréchet ECG Distance using deep embeddings from a pre-trained foundation model (requires `[fed]` extras) |
+
+`FEDMetric` supports three backbones (selected via `--backbone`): `ecgfounder` (PKUDigitalHealth/ECGFounder, RegNet, 10.7 M ECGs), `hubert_ecg` (Edoardo-BS/hubert-ecg-base, Transformer, 9.1 M ECGs), `ecgfm` (bowang-lab/ECG-FM, wav2vec2-style, 1.5 M ECGs). Weights are downloaded from HuggingFace **on first use** and cached locally. Set `HF_HOME` to control the cache directory.
+
+The shared Fréchet math lives in `ecgen_eval/metrics/_frechet_utils.py` (used by both `fd.py` and `fed.py`). Encoder adapters live in `ecgen_eval/metrics/encoders/` — add new backbones there without touching `FEDMetric`.
 
 Convention: lower scores are better for all metrics. `MetricResult.higher_is_better` is always `False` here.
 

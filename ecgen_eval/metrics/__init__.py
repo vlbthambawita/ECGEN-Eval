@@ -1,4 +1,5 @@
 from ecgen_eval.metrics.mmd import MMDMetric
+from ecgen_eval.metrics.fed import FEDMetric
 from ecgen_eval.metrics.dtw import DTWMetric
 from ecgen_eval.metrics.prd import PRDMetric
 from ecgen_eval.metrics.psd import PSDMetric
@@ -21,6 +22,7 @@ AVAILABLE_METRICS = {
     "prd":              PRDMetric,
     "psd":              PSDMetric,
     "fd":               FDMetric,
+    "fed":              FEDMetric,
     # --- New metrics ---
     "psnr":             PSNRMetric,
     "ssim":             SSIMMetric,
@@ -35,7 +37,7 @@ AVAILABLE_METRICS = {
 }
 
 __all__ = [
-    "MMDMetric", "DTWMetric", "PRDMetric", "PSDMetric", "FDMetric",
+    "MMDMetric", "DTWMetric", "PRDMetric", "PSDMetric", "FDMetric", "FEDMetric",
     "PSNRMetric", "SSIMMetric", "SWDMetric", "MAEMetric", "HRVMetric",
     "PRDistMetric", "SQIMetric", "NNDistMetric", "HeartRateMetric",
     "SpectralEntropyMetric",
