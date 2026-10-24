@@ -3,7 +3,7 @@
 Evaluation metrics and interactive HTML reports for synthetic ECG quality assessment.
 Part of the ECGEN research suite (ECGEN-FM, ECGEN-VAE, Pulse2Pulse).
 
-📖 **Documentation:** <https://vlbthambawita.github.io/ECGEN-Eval/>
+📖 **Documentation:** <https://vajira.info/ECGEN-Eval/>
 
 ## Installation
 

@@ -1,7 +1,7 @@
 site_name: ECGEN-Eval
 site_description: Evaluation metrics and interactive reports for synthetic ECG quality assessment
 site_author: Vajira Thambawita
-site_url: https://vlbthambawita.github.io/ECGEN-Eval/
+site_url: https://vajira.info/ECGEN-Eval/
 repo_url: https://github.com/vlbthambawita/ECGEN-Eval
 repo_name: vlbthambawita/ECGEN-Eval
 edit_uri: edit/main/docs/
