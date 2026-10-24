@@ -3,6 +3,8 @@
 Evaluation metrics and interactive HTML reports for synthetic ECG quality assessment.
 Part of the ECGEN research suite (ECGEN-FM, ECGEN-VAE, Pulse2Pulse).
 
+📖 **Documentation:** <https://vlbthambawita.github.io/ECGEN-Eval/>
+
 ## Installation
 
 ```bash
@@ -170,7 +172,7 @@ ecgen-eval visualize \
 ```
 
 Key options for `eval`:
-- `--metrics mmd prd psd psnr hrv` — run a subset of metrics
+- `-m mmd -m prd -m psd` — run a subset of metrics (repeat `-m` per metric; default: all, including `fed`)
 - `--feature-plots` — add clinical feature extraction + 2D/3D distribution plots
 - `--fs 500` — sampling frequency
 - `--n-samples 5` — ECG samples shown in gallery

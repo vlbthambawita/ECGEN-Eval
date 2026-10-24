@@ -1,0 +1,131 @@
+site_name: ECGEN-Eval
+site_description: Evaluation metrics and interactive reports for synthetic ECG quality assessment
+site_author: Vajira Thambawita
+site_url: https://vlbthambawita.github.io/ECGEN-Eval/
+repo_url: https://github.com/vlbthambawita/ECGEN-Eval
+repo_name: vlbthambawita/ECGEN-Eval
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2025–2026 Vajira Thambawita — Apache License 2.0
+
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/heart-pulse
+  favicon: assets/favicon.svg
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+    - toc.follow
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: numpy
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            merge_init_into_class: true
+            filters: ["!^_"]
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/vlbthambawita/ECGEN-Eval
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - User Guide:
+      - Loading Data: user-guide/data-loading.md
+      - Metrics Overview: user-guide/metrics.md
+      - Metric Reference: user-guide/metric-reference.md
+      - Fréchet ECG Distance (FED): user-guide/fed.md
+      - Clinical Features: user-guide/features.md
+      - Visualization: user-guide/visualization.md
+      - HTML Reports: user-guide/reports.md
+      - Command-Line Interface: user-guide/cli.md
+  - Background:
+      - ECG Feature Review: ecg_features_review.md
+      - References: references.md
+  - Development:
+      - Architecture: development/architecture.md
+      - Adding a Metric: development/adding-metrics.md
+      - Adding a FED Backbone: development/adding-backbones.md
+      - Contributing: development/contributing.md
+  - API Reference:
+      - api/index.md
+      - Data: api/data.md
+      - Metrics: api/metrics.md
+      - FED Encoders: api/encoders.md
+      - Features: api/features.md
+      - Visualization: api/visualization.md
+      - Report: api/report.md

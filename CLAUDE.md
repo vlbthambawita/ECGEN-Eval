@@ -27,11 +27,16 @@ black ecgen_eval/ tests/
 
 # CLI
 ecgen-eval list-metrics
-ecgen-eval eval --real /path/real.npy --synthetic /path/synth.npy --metrics mmd prd psd --output report.html --fs 500
+ecgen-eval eval --real /path/real.npy --synthetic /path/synth.npy -m mmd -m prd -m psd --output report.html --fs 500   # -m is repeatable
 ecgen-eval eval --real /path/real.npy --synthetic /path/synth.npy --metrics fed --backbone ecgfounder --fed-device cpu --output report.html
 ecgen-eval eval --real /path/real.npy --synthetic /path/synth.npy --feature-plots --output report.html
 ecgen-eval features --real /path/real.npy --synthetic /path/synth.npy --output features.csv
 ecgen-eval visualize --real /path/real.npy --synthetic /path/synth.npy --output compare.html
+
+# Docs (MkDocs Material + mkdocstrings; deployed to GitHub Pages by .github/workflows/docs.yml)
+pip install -e ".[docs]"
+mkdocs serve
+mkdocs build --strict
 ```
 
 ## Architecture
