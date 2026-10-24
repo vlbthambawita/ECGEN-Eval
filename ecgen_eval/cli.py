@@ -10,6 +10,7 @@ Commands
 
 from __future__ import annotations
 
+import inspect
 import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -20,6 +21,9 @@ from ecgen_eval import __version__
 from ecgen_eval.data.loader import load_ecg_folder
 from ecgen_eval.metrics import AVAILABLE_METRICS
 from ecgen_eval.report.html_report import generate_report
+
+# `fed` needs the [fed] extras and downloads model weights, so it must be requested explicitly.
+DEFAULT_METRICS = [k for k in AVAILABLE_METRICS if k != "fed"]
 
 
 # ------------------------------------------------------------------ #
@@ -54,10 +58,10 @@ def main():
 @click.option(
     "--metrics", "-m",
     multiple=True,
-    default=list(AVAILABLE_METRICS.keys()),
+    default=DEFAULT_METRICS,
     show_default=True,
     type=click.Choice(list(AVAILABLE_METRICS.keys()), case_sensitive=False),
-    help="Metrics to compute. Repeatable. Defaults to all available metrics.",
+    help="Metric to compute. Repeatable (-m mmd -m prd). Defaults to all metrics except 'fed'.",
 )
 @click.option(
     "--output", "-o",
@@ -182,6 +186,11 @@ def eval(
         ds = load_ecg_folder(s_path, fs=fs, label=lbl, max_samples=max_samples)
         synth_datasets.append(ds)
         click.echo(f"  Synth {i+1}: {ds}")
+        if ds.fs != real_ds.fs:
+            click.echo(
+                f"  WARNING: {ds.label} is sampled at {ds.fs} Hz but the real data at "
+                f"{real_ds.fs} Hz. Resample for meaningful comparisons."
+            )
 
     # -------------------------------------------------------------- #
     # Compute metrics                                                  #
@@ -197,6 +206,8 @@ def eval(
                 device=fed_device,
                 batch_size=fed_batch_size,
             )
+        elif "fs" in inspect.signature(metric_cls.__init__).parameters:
+            metric_obj = metric_cls(fs=real_ds.fs)
         else:
             metric_obj = metric_cls()
         click.echo(f"  [{metric_key.upper()}]")
@@ -247,6 +258,7 @@ def eval(
         leads=leads_list,
         compare_mode=compare_mode,
         plotly_cdn=not offline,
+        fs=real_ds.fs,
         feature_df_real=feature_df_real,
         feature_dfs_synth=feature_dfs_synth,
         feature_plots_2d=feature_plots,

@@ -94,13 +94,14 @@ class PRDMetric(BaseMetric):
 
         # For each real signal find nearest synthetic via flattened Euclidean distance
         # Compute per-lead PRD for those pairs
-        r_flat = r.reshape(r.shape[0], -1)  # (Nr, L*T)
-        s_flat = s.reshape(s.shape[0], -1)  # (Ns, L*T)
+        r_flat = r.reshape(r.shape[0], -1).astype(np.float64)  # (Nr, L*T)
+        s_flat = s.reshape(s.shape[0], -1).astype(np.float64)  # (Ns, L*T)
 
-        # Pairwise squared distances: (Nr, Ns)
-        diff = r_flat[:, None, :] - s_flat[None, :, :]    # (Nr, Ns, L*T)
-        sq_dist = np.sum(diff ** 2, axis=-1)               # (Nr, Ns)
-        nn_idx = np.argmin(sq_dist, axis=1)                # (Nr,)
+        # argmin_s ‖r − s‖² = argmin_s (‖s‖² − 2·r·s); ‖r‖² is constant per row.
+        # Uses an (Nr, Ns) matrix instead of an (Nr, Ns, L*T) difference tensor.
+        s_sq = np.einsum("ij,ij->i", s_flat, s_flat)        # (Ns,)
+        sq_dist = s_sq[None, :] - 2.0 * (r_flat @ s_flat.T)  # (Nr, Ns), up to a row constant
+        nn_idx = np.argmin(sq_dist, axis=1)                  # (Nr,)
 
         nn_synth = s[nn_idx]  # (Nr, L, T)
 

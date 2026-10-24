@@ -40,8 +40,9 @@ section per metric and a radar chart summarising all scores.
 
 !!! warning "Repeat `-m` for each metric"
     `--metrics` / `-m` is a repeatable option: write `-m mmd -m prd`, **not**
-    `--metrics mmd prd`. If you omit it, *all* metrics run — including `fed`, which needs
-    the `[fed]` extra and downloads model weights.
+    `--metrics mmd prd`. If you omit it, every metric except `fed` runs; `fed` must be
+    requested explicitly with `-m fed` because it needs the `[fed]` extra and downloads
+    model weights.
 
 ### Compare several models
 

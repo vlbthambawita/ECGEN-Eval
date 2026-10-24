@@ -141,7 +141,7 @@ fig.show()
 ## CLI
 
 ```bash
-# Run all metrics and generate interactive HTML report
+# Run all metrics (except fed) and generate interactive HTML report
 ecgen-eval eval \
   --real   /path/to/real_ecgs.npy \
   --synthetic /path/to/model1_ecgs.npy \
@@ -172,9 +172,9 @@ ecgen-eval visualize \
 ```
 
 Key options for `eval`:
-- `-m mmd -m prd -m psd` — run a subset of metrics (repeat `-m` per metric; default: all, including `fed`)
+- `-m mmd -m prd -m psd` — run a subset of metrics (repeat `-m` per metric; default: all except `fed`)
 - `--feature-plots` — add clinical feature extraction + 2D/3D distribution plots
-- `--fs 500` — sampling frequency
+- `--fs 500` — sampling frequency (also passed to `psd`, `spectral_entropy`, `hrv`, `heart_rate`)
 - `--n-samples 5` — ECG samples shown in gallery
 - `--offline` — embed Plotly.js for offline viewing
 - `--max-samples 500` — cap loaded recordings per folder

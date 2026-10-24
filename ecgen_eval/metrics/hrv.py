@@ -29,9 +29,10 @@ HRV statistics computed per recording:
   rMSSD  = root mean square of successive RR differences (ms)
   pNN50  = fraction of successive differences > 50 ms
 
-The score is the Jensen-Shannon divergence between SDNN distributions
-of real and synthetic ECGs (lower = more similar HRV).  RMSD of rMSSD
-and pNN50 distributions are included in the ``extra`` dict.
+Per lead, the score is the mean of the Jensen-Shannon divergences between
+the real and synthetic SDNN, rMSSD and pNN50 distributions (lower = more
+similar HRV).  Per-lead real/synthetic means of each statistic are
+included in the ``extra`` dict.
 """
 
 from __future__ import annotations

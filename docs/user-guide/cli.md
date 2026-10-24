@@ -39,9 +39,9 @@ ecgen-eval eval --real REAL --synthetic SYNTH [--synthetic SYNTH2 ...] [OPTIONS]
 |---|---|---|
 | `-r, --real PATH` | *required* | Real ECG data |
 | `-s, --synthetic PATH` | *required* | Synthetic ECG data. Repeatable |
-| `-m, --metrics KEY` | all metrics | Metric to compute. Repeatable. See `list-metrics` |
+| `-m, --metrics KEY` | all except `fed` | Metric to compute. Repeatable. See `list-metrics` |
 | `-o, --output PATH` | `ecgen_eval_report.html` | Report path |
-| `--fs FLOAT` | `500.0` | Sampling frequency (Hz) assigned to the loaded data |
+| `--fs FLOAT` | `500.0` | Sampling frequency (Hz) of the data; also passed to `psd`, `spectral_entropy`, `hrv`, `heart_rate` |
 | `--n-samples INT` | `3` | Recordings shown in the ECG gallery |
 | `--leads TEXT` | all | Comma-separated leads for the gallery, e.g. `I,II,V1` |
 | `--compare-mode` | `overlay` | `overlay`, `sidebyside` or `grid` |
@@ -54,14 +54,15 @@ ecgen-eval eval --real REAL --synthetic SYNTH [--synthetic SYNTH2 ...] [OPTIONS]
 | `--fed-device TEXT` | `cpu` | PyTorch device for FED, e.g. `cuda` |
 | `--fed-batch-size INT` | `32` | FED batch size |
 
-!!! note "Defaults to all metrics"
-    Without `-m`, every registered metric runs, including `fed`. That requires the `[fed]`
-    extra and downloads model weights. Pass an explicit `-m` list if you don't want this.
+!!! note "Default metric set"
+    Without `-m`, every registered metric runs **except `fed`**, which requires the `[fed]`
+    extra and downloads model weights. Add `-m fed` (or list it with others) to include it.
 
-!!! note "`--fs` and metric sampling rates"
-    `--fs` sets the dataset's sampling rate but metrics are constructed with their defaults,
-    so `psd`, `spectral_entropy`, `hrv` and `heart_rate` assume 500 Hz. See
-    [Metrics Overview](metrics.md#practical-notes).
+!!! note "Sampling rate"
+    Metrics that take a sampling rate (`psd`, `spectral_entropy`, `hrv`, `heart_rate`) and the
+    report's PSD axes use the real dataset's rate: the `--fs` value for NumPy/CSV data, or the
+    rate in the headers for WFDB data. A warning is printed if a synthetic dataset's rate
+    differs from the real one.
 
 If feature extraction fails with `--feature-plots` (e.g. NeuroKit2 is missing) a warning is
 printed and the report is generated without the feature sections.

@@ -94,20 +94,16 @@ Subsampling and reproducibility
     `n_subsample` for more stable estimates on large datasets.
 
 Cost
-:   Nearest-neighbour metrics (`prd`, `mae`, `psnr`, `ssim`) build pairwise distance matrices
-    over raw signals, so memory and time grow with `N_real × N_synth × T`. Reduce
-    `n_subsample` if you run out of memory. `dtw` only evaluates `n_pairs` random pairs on
+:   Nearest-neighbour metrics (`prd`, `mae`, `psnr`, `ssim`) compare every real recording with
+    every synthetic one, so time grows with `N_real × N_synth × T`. Reduce `n_subsample` to
+    speed them up. `dtw` only evaluates `n_pairs` random pairs on
     downsampled signals. `fed` runs a neural network and is fastest on a GPU.
 
 Sampling rate
 :   `psd`, `spectral_entropy`, `hrv` and `heart_rate` take an `fs` argument (default 500 Hz).
     In Python, pass your sampling rate when constructing them:
-    `AVAILABLE_METRICS["hrv"](fs=250)`.
-
-    !!! warning
-        The `ecgen-eval eval` command constructs these metrics with their defaults, so
-        `--fs` only sets dataset metadata and does **not** change the metric `fs`. For data not
-        sampled at 500 Hz, either resample to 500 Hz or run these metrics from Python.
+    `AVAILABLE_METRICS["hrv"](fs=250)`. The `ecgen-eval eval` command does this automatically,
+    using the sampling rate of the real dataset (`--fs`, or the rate in the WFDB headers).
 
 Comparing scores across runs
 :   Absolute values depend on the signal units, length and the subsampling settings. Compare

@@ -76,12 +76,24 @@ All metrics inherit `BaseMetric` and return a `MetricResult` (scalar score + per
 | `psd` | `PSDMetric` | Jensen-Shannon divergence between mean normalized PSDs; uses Welch (scipy) or FFT |
 | `fd` | `FDMetric` | Fréchet distance between fitted multivariate Gaussians on 11 handcrafted signal features (FID-like) |
 | `fed` | `FEDMetric` | Fréchet ECG Distance using deep embeddings from a pre-trained foundation model (requires `[fed]` extras) |
+| `psnr` | `PSNRMetric` | Nearest-neighbour PSNR (dB) |
+| `ssim` | `SSIMMetric` | Global 1-D SSIM to nearest synthetic neighbour |
+| `swd` | `SWDMetric` | Sliced Wasserstein distance on the 7 MMD features |
+| `mae` | `MAEMetric` | Nearest-neighbour MAE (RMSE in `extra`) |
+| `hrv` | `HRVMetric` | Mean JS divergence of SDNN / rMSSD / pNN50 distributions |
+| `pr_dist` | `PRDistMetric` | k-NN precision & recall; score is their F-score |
+| `sqi` | `SQIMetric` | Correlation of synthetic signals with a real-data template |
+| `nn_dist` | `NNDistMetric` | Nearest-neighbour distance; authenticity (memorisation) in `extra` |
+| `heart_rate` | `HeartRateMetric` | JS divergence of heart-rate distributions |
+| `spectral_entropy` | `SpectralEntropyMetric` | JS divergence of spectral-entropy distributions |
 
 `FEDMetric` supports three backbones (selected via `--backbone`): `ecgfounder` (PKUDigitalHealth/ECGFounder, RegNet, 10.7 M ECGs), `hubert_ecg` (Edoardo-BS/hubert-ecg-base, Transformer, 9.1 M ECGs), `ecgfm` (bowang-lab/ECG-FM, wav2vec2-style, 1.5 M ECGs). Weights are downloaded from HuggingFace **on first use** and cached locally. Set `HF_HOME` to control the cache directory.
 
 The shared Fréchet math lives in `ecgen_eval/metrics/_frechet_utils.py` (used by both `fd.py` and `fed.py`). Encoder adapters live in `ecgen_eval/metrics/encoders/` — add new backbones there without touching `FEDMetric`.
 
-Convention: lower scores are better for all metrics. `MetricResult.higher_is_better` is always `False` here.
+Convention: lower is better unless the metric sets `higher_is_better = True` (`psnr`, `ssim`, `pr_dist`, `sqi`).
+
+CLI `eval` runs every metric except `fed` by default (`DEFAULT_METRICS` in `cli.py`), and passes the real dataset's `fs` to any metric whose constructor takes `fs`. Metric constructors must be callable with no arguments.
 
 ### Visualization (`ecgen_eval/visualization/`)
 - `ecg_waveform.py`: Plotly interactive comparisons (`overlay`, `sidebyside`, `grid` modes).

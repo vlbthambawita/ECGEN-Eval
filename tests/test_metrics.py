@@ -112,6 +112,18 @@ class TestPRD:
         # Nearest neighbour is the same signal → PRD should be 0 (or near 0)
         assert r.score < 1e-3
 
+    def test_matches_brute_force_nearest_neighbour(self):
+        real = _make(20, leads=3, t=200, seed=0)
+        synth = _make(30, leads=3, t=200, seed=1)
+        r = PRDMetric().compute(real, synth, lead_names=["A", "B", "C"])
+
+        diff = real.reshape(20, 1, -1) - synth.reshape(1, 30, -1)
+        nn = synth[np.argmin(np.sum(diff**2, axis=-1), axis=1)]
+        for li, lname in enumerate(["A", "B", "C"]):
+            num = np.linalg.norm(real[:, li] - nn[:, li], axis=-1)
+            den = np.linalg.norm(real[:, li], axis=-1) + 1e-9
+            assert r.per_lead_scores[lname] == pytest.approx(np.mean(100.0 * num / den), rel=1e-5)
+
 
 # ------------------------------------------------------------------ #
 # PSD                                                                  #
