@@ -37,6 +37,7 @@ ecgen-eval visualize --real /path/real.npy --synthetic /path/synth.npy --output 
 pip install -e ".[docs]"
 mkdocs serve
 mkdocs build --strict
+bash docs/diagrams/render.sh   # re-render D2 diagrams (needs d2) after editing docs/diagrams/*.d2
 ```
 
 ## Architecture

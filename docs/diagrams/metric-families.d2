@@ -1,0 +1,55 @@
+# Metric families (user-guide/metrics.md)
+...@_palette
+
+families: {
+  grid-columns: 3
+  grid-gap: 28
+  style.fill: transparent
+  style.stroke-width: 0
+  label: ""
+
+  *.*.width: 190
+  *.*.height: 46
+  *.grid-gap: 14
+
+  distribution: "Distribution" {
+    class: group
+    grid-columns: 1
+    mmd: "mmd ↓" {class: metric}
+    fd: "fd ↓" {class: metric}
+    fed: "fed ↓" {class: metric}
+    swd: "swd ↓" {class: metric}
+    pr_dist: "pr_dist ↑" {class: metric}
+  }
+  fidelity: "Signal fidelity" {
+    class: group
+    grid-columns: 1
+    prd: "prd ↓" {class: data}
+    mae: "mae ↓" {class: data}
+    psnr: "psnr ↑" {class: data}
+    ssim: "ssim ↑" {class: data}
+    dtw: "dtw ↓" {class: data}
+  }
+  physio: "Physiological" {
+    class: group
+    grid-columns: 1
+    heart_rate: "heart_rate ↓" {class: feature}
+    hrv: "hrv ↓" {class: feature}
+  }
+  spectral: "Spectral" {
+    class: group
+    grid-columns: 1
+    psd: "psd ↓" {class: viz}
+    spectral_entropy: "spectral_entropy ↓" {class: viz}
+  }
+  morphology: "Morphology" {
+    class: group
+    grid-columns: 1
+    sqi: "sqi ↑" {class: report}
+  }
+  privacy: "Privacy" {
+    class: group
+    grid-columns: 1
+    nn_dist: "nn_dist ↓\n+ authenticity" {class: model}
+  }
+}

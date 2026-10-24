@@ -14,6 +14,9 @@ result = metric.compute(real.data, synth.data, lead_names=real.lead_names)
 
 ## All metrics
 
+[![The 16 metrics grouped into six families; arrows show whether lower or higher is better](../assets/diagrams/metric-families-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/metric-families-light.svg "Open full size")
+[![The 16 metrics grouped into six families; arrows show whether lower or higher is better](../assets/diagrams/metric-families-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/metric-families-dark.svg "Open full size")
+
 | Key | Name | Better | Family | Per-lead | Extra deps |
 |---|---|:-:|---|:-:|---|
 | `mmd` | Maximum Mean Discrepancy | ↓ | Distribution | ✓ | — |

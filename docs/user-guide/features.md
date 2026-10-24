@@ -39,6 +39,9 @@ The clinical rationale for each feature is discussed in the
 
 ## How extraction works
 
+[![Feature extraction: R-peaks and delineation on the primary lead, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/features-light.svg "Open full size")
+[![Feature extraction: R-peaks and delineation on the primary lead, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/features-dark.svg "Open full size")
+
 For each recording:
 
 1. **R-peaks** are detected on a single *primary lead* — `lead_for_intervals`, default

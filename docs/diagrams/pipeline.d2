@@ -1,0 +1,38 @@
+# End-to-end evaluation pipeline (home page)
+...@_palette
+direction: down
+
+inputs: Inputs {
+  class: group
+  npy: ".npy / .npz" {class: io}
+  wfdb: "WFDB\n(PTB-XL, PhysioNet)" {class: io}
+  csv: "CSV\nwide · flat · multi" {class: io}
+}
+
+dataset: "ECGDataset\nN × L × T\n+ fs, lead names, label" {
+  class: data
+  style.multiple: true
+}
+
+analysis: Analysis {
+  class: group
+  metrics: "16 metrics\nBaseMetric.compute()" {class: metric}
+  result: "MetricResult\nscore · per-lead · extra" {class: metric}
+  features: "FeatureExtractor\nclinical features" {class: feature}
+  tables: "beat_df · summary_df" {class: feature; shape: stored_data}
+  metrics -> result: {class: flow}
+  features -> tables: {class: flow}
+}
+
+report: "generate_report()" {class: report}
+html: "report.html\nself-contained, interactive" {class: io; shape: document}
+
+inputs.npy -> dataset: {class: flow}
+inputs.wfdb -> dataset: {class: flow}
+inputs.csv -> dataset: {class: flow}
+dataset -> analysis.metrics: {class: hot}
+dataset -> analysis.features: {class: hot}
+dataset -> report: "ECG gallery" {class: soft}
+analysis.result -> report: {class: flow}
+analysis.tables -> report: {class: flow}
+report -> html: {class: hot}

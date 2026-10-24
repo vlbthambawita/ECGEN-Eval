@@ -11,6 +11,9 @@ model** and compares the Gaussian statistics of the real and synthetic embedding
 
 Lower is better; 0 means identical embedding statistics.
 
+[![FED pipeline: real and synthetic ECGs are embedded by a foundation model, Gaussians are fitted and compared with the Fréchet distance](../assets/diagrams/fed-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/fed-light.svg "Open full size")
+[![FED pipeline: real and synthetic ECGs are embedded by a foundation model, Gaussians are fitted and compared with the Fréchet distance](../assets/diagrams/fed-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/fed-dark.svg "Open full size")
+
 ## Installation
 
 ```bash

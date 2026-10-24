@@ -1,0 +1,35 @@
+# Clinical feature extraction (user-guide/features.md)
+...@_palette
+direction: down
+
+rec: "Recording\n(L, T)" {class: data; style.multiple: true}
+
+primary: "Primary lead\n(lead_for_intervals, default II)" {
+  class: group
+  peaks: "R-peak detection\nnk.ecg_peaks()\n↳ SciPy Pan–Tompkins fallback" {class: feature}
+  delin: "Delineation\nnk.ecg_delineate()\n↳ heuristic windows fallback" {class: feature}
+  rr: "RR · HR" {class: feature}
+  intervals: "PR · QRS · QT · QTc · P-wave" {class: feature}
+  hrv: "SDNN · RMSSD · pNN50" {class: feature}
+  peaks -> delin: {class: flow}
+  peaks -> rr: {class: flow}
+  peaks -> hrv: {class: flow}
+  delin -> intervals: {class: flow}
+}
+
+all: "Every lead" {
+  class: group
+  amp: "ST deviation · T-wave amplitude" {class: feature}
+}
+
+summary: "summary_df\n1 row / recording" {class: report; shape: stored_data}
+beats: "beat_df\n1 row / (recording, beat, lead)" {class: report; shape: stored_data}
+
+rec -> primary.peaks: {class: hot}
+rec -> all.amp: {class: hot}
+primary.peaks -> all.amp: R-peaks {class: soft}
+primary.rr -> summary: {class: flow}
+primary.intervals -> summary: {class: flow}
+primary.hrv -> summary: {class: flow}
+all.amp -> summary: lead average {class: flow}
+all.amp -> beats: {class: flow}

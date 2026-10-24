@@ -1,5 +1,7 @@
 # ECGEN-Eval
 
+[:material-tag: v{{ ecgen_version }}](changelog.md){ .md-button } [:material-github: Source](https://github.com/vlbthambawita/ECGEN-Eval){ .md-button }
+
 **Evaluation metrics and interactive HTML reports for synthetic ECG quality assessment.**
 
 ECGEN-Eval answers one question: *how close are the ECGs produced by a generative model to
@@ -92,17 +94,8 @@ and Pulse2Pulse, but it works with output from any ECG generator.
 
 ## How it fits together
 
-```mermaid
-flowchart LR
-    A[".npy / .npz<br/>WFDB<br/>CSV"] -->|loaders| B["ECGDataset<br/>(N, L, T)"]
-    B --> C["BaseMetric.compute()"]
-    C --> D["MetricResult"]
-    B --> E["FeatureExtractor"]
-    E --> F["beat_df, summary_df"]
-    D --> G["generate_report()"]
-    F --> G
-    G --> H["report.html"]
-```
+[![ECGEN-Eval pipeline: inputs are loaded into an ECGDataset, scored by metrics and feature extraction, and assembled into an HTML report](assets/diagrams/pipeline-light.svg#only-light){ .ecgen-diagram }](assets/diagrams/pipeline-light.svg "Open full size")
+[![ECGEN-Eval pipeline: inputs are loaded into an ECGDataset, scored by metrics and feature extraction, and assembled into an HTML report](assets/diagrams/pipeline-dark.svg#only-dark){ .ecgen-diagram }](assets/diagrams/pipeline-dark.svg "Open full size")
 
 ## Citation
 

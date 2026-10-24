@@ -2,37 +2,8 @@
 
 ## Data flow
 
-```mermaid
-flowchart TD
-    subgraph data [ecgen_eval.data]
-        L1[load_ecg_npy] --> DS[ECGDataset<br/>N × L × T]
-        L2[load_ecg_wfdb] --> DS
-        L3[load_ecg_folder<br/>auto-detect] --> DS
-    end
-    subgraph metrics [ecgen_eval.metrics]
-        DS --> BM["BaseMetric.compute(real, synth, lead_names)"]
-        BM --> MR[MetricResult]
-        ENC[encoders/<br/>ECGFounder · HuBERT-ECG · ECG-FM] -.-> FED[FEDMetric]
-        FED --> MR
-    end
-    subgraph features [ecgen_eval.features]
-        DS --> FE[FeatureExtractor]
-        FE --> DF["beat_df, summary_df"]
-    end
-    subgraph viz [ecgen_eval.visualization]
-        DS --> W[ecg_waveform / ecg_paper]
-        MR --> MP[metric_plots]
-        DF --> FP[feature_plots]
-    end
-    W --> R[report.generate_report]
-    MP --> R
-    FP --> R
-    R --> HTML[(report.html)]
-    CLI[cli.py — ecgen-eval] --> L3
-    CLI --> BM
-    CLI --> FE
-    CLI --> R
-```
+[![Package architecture: cli, data, metrics, features, visualization and report modules](../assets/diagrams/architecture-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/architecture-light.svg "Open full size")
+[![Package architecture: cli, data, metrics, features, visualization and report modules](../assets/diagrams/architecture-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/architecture-dark.svg "Open full size")
 
 ## Package layout
 

@@ -1,0 +1,35 @@
+# Fréchet ECG Distance pipeline (user-guide/fed.md)
+...@_palette
+direction: down
+
+real: "Real ECGs\n(N, L, T)" {class: data; style.multiple: true}
+synth: "Synthetic ECGs\n(M, L, T)" {class: metric; style.multiple: true}
+
+encoder: "Foundation-model encoder\nget_encoder(backbone)" {
+  class: group
+  ecgfounder: "ECGFounder\nRegNet · 10.7 M ECGs" {class: model}
+  hubert: "HuBERT-ECG\nTransformer · 9.1 M ECGs" {class: model}
+  ecgfm: "ECG-FM\nwav2vec 2.0 · 1.5 M ECGs" {class: model}
+}
+
+hub: "Hugging Face Hub\ndownloaded on first compute()\ncached in HF_HOME" {class: io; shape: cloud}
+
+emb_r: "Embeddings\n(N, D)" {class: data; shape: stored_data}
+emb_s: "Embeddings\n(M, D)" {class: metric; shape: stored_data}
+
+stats_r: "μᵣ, Σᵣ" {class: data; shape: circle}
+stats_s: "μₛ, Σₛ" {class: metric; shape: circle}
+
+fed: "FED = ‖μᵣ − μₛ‖² + Tr(Σᵣ + Σₛ − 2(ΣᵣΣₛ)^½)" {class: report}
+score: "MetricResult\nscore (lower is better)" {class: report; shape: document}
+
+hub -> encoder: weights {class: soft}
+real -> encoder: {class: hot}
+synth -> encoder: {class: hot}
+encoder -> emb_r: {class: flow}
+encoder -> emb_s: {class: flow}
+emb_r -> stats_r: Gaussian fit {class: flow}
+emb_s -> stats_s: Gaussian fit {class: flow}
+stats_r -> fed: {class: flow}
+stats_s -> fed: {class: flow}
+fed -> score: {class: hot}

@@ -1,0 +1,22 @@
+/* Version badge injected next to the site name by hooks/docs_version.py */
+.ecgen-version {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--md-primary-bg-color);
+  color: var(--md-primary-fg-color);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.5;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
+/* D2 diagrams: full width, centred, never wider than their natural size */
+.ecgen-diagram {
+  display: block;
+  margin: 1.2rem auto;
+  max-width: 100%;
+  height: auto;
+}

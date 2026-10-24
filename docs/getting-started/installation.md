@@ -18,7 +18,8 @@ This installs the core package and the `ecgen-eval` command. Core dependencies a
 Tagged releases (`v*`) are published to PyPI automatically:
 
 ```bash
-pip install ecgen-eval
+pip install ecgen-eval                       # latest release (currently {{ ecgen_version }})
+pip install "ecgen-eval=={{ ecgen_version }}"   # pin this exact version
 ```
 
 ## Optional extras

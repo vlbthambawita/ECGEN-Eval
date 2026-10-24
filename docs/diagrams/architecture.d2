@@ -1,0 +1,50 @@
+# Package architecture (development/architecture.md)
+...@_palette
+direction: down
+
+cli: "cli.py\necgen-eval\neval · features\nvisualize · list-metrics" {class: model; shape: hexagon}
+
+data: ecgen_eval.data {
+  class: group
+  loaders: "loader.py\nload_ecg_npy\nload_ecg_wfdb\nload_ecg_folder" {class: data}
+  dataset: "dataset.py\nECGDataset (N × L × T)" {class: data; style.multiple: true}
+  loaders -> dataset: {class: flow}
+}
+
+metrics: ecgen_eval.metrics {
+  class: group
+  registry: "AVAILABLE_METRICS\n16 metric classes" {class: metric}
+  base: "base.py\nBaseMetric → MetricResult" {class: metric}
+  frechet: "_frechet_utils.py\nshared Fréchet math" {class: metric}
+  encoders: "encoders/\nECGFounder\nHuBERT-ECG · ECG-FM" {class: model}
+  registry -> base: implements {class: soft}
+  registry -> frechet: "fd, fed" {class: soft}
+  encoders -> frechet: embeddings {class: soft}
+}
+
+features: ecgen_eval.features {
+  class: group
+  extractor: "extractor.py\nFeatureExtractor" {class: feature}
+  modules: "qrs_detection · interval\namplitude · hrv" {class: feature}
+  extractor -> modules: {class: flow}
+}
+
+viz: ecgen_eval.visualization {
+  class: group
+  waveform: "ecg_waveform · ecg_paper" {class: viz}
+  mplots: "metric_plots\nbar · violin · PSD · radar" {class: viz}
+  fplots: "feature_plots\n2D · 3D" {class: viz}
+}
+
+report: "report/html_report.py\ngenerate_report()" {class: report}
+html: report.html {class: io; shape: document}
+
+cli -> data.loaders: {class: flow}
+data.dataset -> metrics.registry: ".data arrays" {class: hot}
+data.dataset -> features.extractor: {class: hot}
+data.dataset -> viz.waveform: {class: flow}
+metrics.base -> viz.mplots: MetricResult {class: flow}
+features.extractor -> viz.fplots: summary_df {class: flow}
+viz -> report: Plotly figures {class: flow}
+report -> html: {class: hot}
+cli -> report: {class: soft}
