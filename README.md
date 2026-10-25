@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://vajira.info/ECGEN-Eval/">
+    <img src="https://vajira.info/ECGEN-Eval/assets/favicon.svg" alt="ECGEN-Eval logo" width="120">
+  </a>
+</p>
+
 # ECGEN-Eval
 
 Evaluation metrics and interactive HTML reports for synthetic ECG quality assessment.
