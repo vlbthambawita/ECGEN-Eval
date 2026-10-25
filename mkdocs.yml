@@ -11,7 +11,7 @@ theme:
   name: material
   icon:
     repo: fontawesome/brands/github
-    logo: material/heart-pulse
+  logo: assets/logo.svg
   favicon: assets/favicon.svg
   palette:
     - media: "(prefers-color-scheme: light)"

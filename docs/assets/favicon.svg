@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#e53935"/><polyline points="4,36 18,36 23,28 28,36 32,36 36,10 41,52 45,36 50,36 54,30 58,36 60,36" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#e53935"/>
+  <g transform="translate(5 5) scale(0.84)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <defs><clipPath id="lens"><circle cx="27" cy="27" r="16"/></clipPath></defs>
+    <polyline clip-path="url(#lens)" stroke-width="3.5" points="8,30 15,30 18,25.5 21,30 24,30 27.5,13 31.5,40 34.5,30 37,30 39.5,26 42,30 48,30"/>
+    <circle cx="27" cy="27" r="19" stroke-width="5"/>
+    <line x1="41" y1="41" x2="56" y2="56" stroke-width="8"/>
+  </g>
+</svg>
