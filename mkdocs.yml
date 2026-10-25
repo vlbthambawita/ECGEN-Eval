@@ -94,6 +94,7 @@ extra_css:
 
 extra_javascript:
   - javascripts/mathjax.js
+  - javascripts/literature-db.js
   - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
 
 extra:
@@ -118,6 +119,9 @@ nav:
   - Background:
       - ECG Feature Review: ecg_features_review.md
       - References: references.md
+  - Literature Review:
+      - literature/index.md
+      - Paper Database: literature/database.md
   - Development:
       - Architecture: development/architecture.md
       - Adding a Metric: development/adding-metrics.md

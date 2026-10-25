@@ -1,0 +1,1 @@
+From the extracted details, I want to make a database (sqlite with expandable tables) which can be hosted in github and access via documentation page. So, users can see the summary of literature review in the documentation and select and filters under different categories, types, years, metrices, metric types etc. 
