@@ -7,7 +7,8 @@ It covers papers published or first posted between **October 2023 and October 20
 
 !!! tip "Explore the papers"
     The [Paper Database](database.md) lets you filter the reviewed papers by category, year,
-    metric, metric type, loss function, task and dataset, and export the filtered list as CSV.
+    metric, metric type, loss function, task and dataset, query the underlying SQLite
+    database with SQL, and export results as CSV.
 
 ## Scope and method
 

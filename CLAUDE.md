@@ -38,7 +38,7 @@ pip install -e ".[docs]"
 mkdocs serve
 mkdocs build --strict
 bash docs/diagrams/render.sh   # re-render D2 diagrams (needs d2) after editing docs/diagrams/*.d2
-python literature_review_claude/build_db.py   # rebuild docs/literature/papers.{json,csv} from papers_index.csv
+python literature_review_claude/build_db.py   # rebuild docs/literature/ecgen_literature.sqlite + papers.csv from papers_index.csv
 ```
 
 ## Architecture

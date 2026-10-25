@@ -1,9 +1,13 @@
 """Build the literature-review database used by the documentation site.
 
 Reads ``papers_index.csv`` (one row per paper, produced by the review) plus the
-per-paper notes in ``notes/`` and writes a normalised JSON database to
-``docs/literature/papers.json`` (and a CSV copy) that the "Paper Database" docs page
-loads and filters in the browser.
+per-paper notes in ``notes/`` and writes a normalised SQLite database to
+``docs/literature/ecgen_literature.sqlite`` (and a flat CSV copy). The "Paper Database"
+docs page opens the SQLite file in the browser with sql.js and filters it there.
+
+Schema: ``papers``, ``authors`` + ``paper_authors``, and a generic facet model
+(``facets`` -> ``terms`` -> ``paper_terms``) so new filter dimensions or values are added as
+rows rather than new tables. Views ``paper_facets`` and ``metric_usage`` simplify queries.
 
 Only papers whose PDF has been downloaded (``pdf_path`` is not "not downloaded")
 are included by default, because their entries were extracted from the full text.
@@ -19,8 +23,8 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import re
+import sqlite3
 from datetime import date
 from pathlib import Path
 
@@ -29,6 +33,7 @@ ROOT = HERE.parent
 INDEX = HERE / "papers_index.csv"
 NOTES = HERE / "notes"
 OUT_DIR = ROOT / "docs" / "literature"
+DB_PATH = OUT_DIR / "ecgen_literature.sqlite"
 
 CATEGORIES = {
     "01_GAN": "GAN",
@@ -201,6 +206,7 @@ def build(include_all: bool) -> list[dict]:
             "url": r["doi_or_url"],
             "category": CATEGORIES.get(r["category"], r["category"]),
             "background": r["category"].startswith("09"),
+            "downloaded": downloaded,
             "model_family": r["model_family"],
             "task": r["task"],
             "task_tags": families(r["task"], TASKS),
@@ -223,6 +229,163 @@ def build(include_all: bool) -> list[dict]:
     return papers
 
 
+SCHEMA = """
+CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
+
+CREATE TABLE papers (
+    id                  TEXT PRIMARY KEY,   -- P001 ... (stable review ID)
+    year                INTEGER,
+    title               TEXT NOT NULL,
+    venue               TEXT,
+    url                 TEXT,               -- DOI / arXiv / landing page
+    model_family        TEXT,               -- free text as extracted
+    task                TEXT,
+    datasets            TEXT,
+    n_leads             TEXT,
+    fs_hz               TEXT,
+    signal_length_s     TEXT,
+    loss_functions      TEXT,               -- verbatim extracted losses
+    eval_metrics        TEXT,               -- verbatim extracted metrics
+    embedding_extractor TEXT,
+    code_url            TEXT,
+    extraction_source   TEXT,               -- full-text | abstract-only
+    pdf_downloaded      INTEGER NOT NULL,   -- 1 if the PDF is in the review folder
+    background          INTEGER NOT NULL,   -- 1 for pre-Oct-2023 seminal works
+    notes               TEXT,
+    takeaway            TEXT                -- takeaway for ECGEN-Eval
+);
+
+CREATE TABLE authors (id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL);
+
+CREATE TABLE paper_authors (
+    paper_id  TEXT    NOT NULL REFERENCES papers(id),
+    author_id INTEGER NOT NULL REFERENCES authors(id),
+    position  INTEGER NOT NULL,
+    PRIMARY KEY (paper_id, author_id)
+);
+
+-- Facets are the filter dimensions (category, metric, loss, ...). New dimensions are added as
+-- rows here, not as new tables.
+CREATE TABLE facets (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT UNIQUE NOT NULL,       -- machine name, e.g. 'metric'
+    label       TEXT NOT NULL,              -- display name, e.g. 'Metric'
+    multi       INTEGER NOT NULL,           -- 1 if a paper can have several terms
+    sort_order  INTEGER NOT NULL
+);
+
+-- Terms are the values within a facet. parent_id links e.g. a metric to its metric type.
+CREATE TABLE terms (
+    id          INTEGER PRIMARY KEY,
+    facet_id    INTEGER NOT NULL REFERENCES facets(id),
+    name        TEXT NOT NULL,
+    parent_id   INTEGER REFERENCES terms(id),
+    ecgen_eval  TEXT,                       -- matching ECGEN-Eval metric key(s), if any
+    UNIQUE (facet_id, name)
+);
+
+CREATE TABLE paper_terms (
+    paper_id TEXT    NOT NULL REFERENCES papers(id),
+    term_id  INTEGER NOT NULL REFERENCES terms(id),
+    PRIMARY KEY (paper_id, term_id)
+);
+
+CREATE INDEX idx_paper_terms_term ON paper_terms(term_id);
+
+-- Convenience view: one row per (paper, facet, term).
+CREATE VIEW paper_facets AS
+SELECT pt.paper_id, f.name AS facet, f.label AS facet_label, t.name AS term, t.ecgen_eval
+FROM paper_terms pt
+JOIN terms t  ON t.id = pt.term_id
+JOIN facets f ON f.id = t.facet_id;
+
+-- Convenience view: metrics with their type and ECGEN-Eval coverage, and usage counts.
+CREATE VIEW metric_usage AS
+SELECT m.name AS metric, mt.name AS metric_type, m.ecgen_eval, COUNT(pt.paper_id) AS n_papers
+FROM terms m
+JOIN facets f ON f.id = m.facet_id AND f.name = 'metric'
+LEFT JOIN terms mt ON mt.id = m.parent_id
+LEFT JOIN paper_terms pt ON pt.term_id = m.id
+GROUP BY m.id ORDER BY n_papers DESC;
+"""
+
+# name, label, multi, paper-dict key
+FACETS = [
+    ("category", "Category", 0, "category"),
+    ("year", "Year", 0, "year"),
+    ("metric_type", "Metric type", 1, "metric_types"),
+    ("metric", "Metric", 1, "metric_families"),
+    ("loss", "Loss function", 1, "loss_families"),
+    ("task", "Task", 1, "task_tags"),
+    ("dataset", "Dataset", 1, "dataset_tags"),
+    ("extraction_source", "Extraction source", 0, "source"),
+]
+
+
+def write_sqlite(papers: list[dict], meta: dict, path: Path) -> None:
+    if path.exists():
+        path.unlink()
+    con = sqlite3.connect(path)
+    con.executescript(SCHEMA)
+    con.executemany("INSERT INTO meta VALUES (?, ?)", meta.items())
+
+    facet_ids = {}
+    for i, (name, label, multi, _) in enumerate(FACETS):
+        cur = con.execute("INSERT INTO facets (name, label, multi, sort_order) VALUES (?,?,?,?)",
+                          (name, label, multi, i))
+        facet_ids[name] = cur.lastrowid
+
+    term_ids: dict[tuple[str, str], int] = {}
+
+    def term(facet: str, name: str, parent: int | None = None, ecgen: str = "") -> int:
+        key = (facet, name)
+        if key not in term_ids:
+            cur = con.execute(
+                "INSERT INTO terms (facet_id, name, parent_id, ecgen_eval) VALUES (?,?,?,?)",
+                (facet_ids[facet], name, parent, ecgen or None))
+            term_ids[key] = cur.lastrowid
+        return term_ids[key]
+
+    # Register the full vocabularies so unused terms are still queryable.
+    types = sorted({v[0] for v in METRICS.values()} | set(TAGS))
+    for t in types:
+        term("metric_type", t)
+    for name, (mtype, ecgen, _) in METRICS.items():
+        term("metric", name, term("metric_type", mtype), ecgen)
+    for name in LOSSES:
+        term("loss", name)
+    for name in TASKS:
+        term("task", name)
+    for name in DATASETS:
+        term("dataset", name)
+    for name in CATEGORIES.values():
+        term("category", name)
+
+    author_ids: dict[str, int] = {}
+    for p in papers:
+        con.execute(
+            "INSERT INTO papers VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (p["id"], p["year"], p["title"], p["venue"], p["url"], p["model_family"], p["task"],
+             p["datasets"], p["n_leads"], p["fs_hz"], p["signal_length_s"], p["loss_functions"],
+             p["eval_metrics"], p["embedding_extractor"], p["code"], p["source"],
+             int(p["downloaded"]), int(p["background"]), p["notes"], p["takeaway"]))
+        for pos, name in enumerate(p["authors"]):
+            if name not in author_ids:
+                author_ids[name] = con.execute(
+                    "INSERT INTO authors (name) VALUES (?)", (name,)).lastrowid
+            con.execute("INSERT OR IGNORE INTO paper_authors VALUES (?,?,?)",
+                        (p["id"], author_ids[name], pos))
+        for facet, _, _, key in FACETS:
+            vals = p[key] if isinstance(p[key], list) else [p[key]]
+            for v in vals:
+                if v not in (None, ""):
+                    con.execute("INSERT OR IGNORE INTO paper_terms VALUES (?,?)",
+                                (p["id"], term(facet, str(v))))
+    con.commit()
+    con.execute("VACUUM")
+    con.close()
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--all", action="store_true", help="include abstract-only papers too")
@@ -231,16 +394,15 @@ def main() -> None:
     papers = build(args.all)
     meta = {
         "generated": date.today().isoformat(),
-        "n_papers": len(papers),
+        "n_papers": str(len(papers)),
         "scope": "all indexed papers" if args.all else "papers with downloaded full text",
-        "metric_families": {k: {"type": v[0], "ecgen_eval": v[1]} for k, v in METRICS.items()},
-        "loss_families": list(LOSSES),
+        "review_window": "2023-10-01 to 2026-10-25",
+        "source": "literature_review_claude/papers_index.csv",
     }
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    (OUT_DIR / "papers.json").write_text(
-        json.dumps({"meta": meta, "papers": papers}, ensure_ascii=False, indent=1) + "\n")
+    write_sqlite(papers, meta, DB_PATH)
 
-    flat = ["id", "year", "title", "authors", "venue", "url", "category", "model_family", "task",
+    flat =["id", "year", "title", "authors", "venue", "url", "category", "model_family", "task",
             "datasets", "n_leads", "fs_hz", "signal_length_s", "loss_functions", "loss_families",
             "eval_metrics", "metric_families", "metric_types", "embedding_extractor", "code",
             "source", "notes", "takeaway"]
@@ -249,7 +411,7 @@ def main() -> None:
         w.writerow(flat)
         for p in papers:
             w.writerow(["; ".join(p[k]) if isinstance(p[k], list) else p[k] for k in flat])
-    print(f"wrote {len(papers)} papers to {OUT_DIR / 'papers.json'}")
+    print(f"wrote {len(papers)} papers to {DB_PATH} and {OUT_DIR / 'papers.csv'}")
 
 
 if __name__ == "__main__":

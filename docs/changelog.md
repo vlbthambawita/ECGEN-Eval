@@ -20,7 +20,8 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 - Version badge in the documentation header and footer.
 - Literature Review section in the docs: a summary of how synthetic ECGs are evaluated
   (Oct 2023 – Oct 2026) and an interactive Paper Database with filters for category, year,
-  metric, metric type, loss function, task and dataset. The database is built from the review
+  metric, metric type, loss function, task and dataset, plus a SQL console. The SQLite database
+  (`docs/literature/ecgen_literature.sqlite`) is built from the review
   by `literature_review_claude/build_db.py`.
 
 ### Changed

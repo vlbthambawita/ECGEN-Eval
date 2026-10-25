@@ -121,3 +121,24 @@
 .md-typeset .litdb-detail dl { display: grid; gap: 0.3rem; margin: 0.3rem 0; }
 .md-typeset .litdb-detail dt { font-weight: 600; }
 .md-typeset .litdb-detail dd { margin: 0 0 0.2rem 0; overflow-wrap: anywhere; }
+.litdb-select,
+.litdb-sql {
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 0.2rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font-size: 0.7rem;
+}
+.litdb-select { flex: 1 1 14rem; min-width: 0; padding: 0.35rem 0.5rem; }
+.litdb-sql {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  font-family: var(--md-code-font-family);
+  resize: vertical;
+}
+.md-typeset details.litdb-console { margin-top: 1.5rem; }
+.litdb-console-body { padding: 0 0.6rem 0.6rem; }
+.litdb-sql-out { max-height: 28rem; overflow: auto; }
