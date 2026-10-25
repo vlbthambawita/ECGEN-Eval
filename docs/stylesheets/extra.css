@@ -142,3 +142,33 @@
 .md-typeset details.litdb-console { margin-top: 1.5rem; }
 .litdb-console-body { padding: 0 0.6rem 0.6rem; }
 .litdb-sql-out { max-height: 28rem; overflow: auto; }
+.litdb-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 2px solid var(--md-default-fg-color--lightest);
+}
+.litdb-tab {
+  margin-bottom: -2px;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--md-default-fg-color--light);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.litdb-tab:hover { color: var(--md-accent-fg-color); }
+.litdb-tab.is-active { border-bottom-color: var(--md-primary-fg-color); color: var(--md-primary-fg-color); }
+.litdb-catbar { padding: 0 0 0.8rem; }
+.litdb-catchip { padding: 0.25rem 0.7rem; font-size: 0.72rem; }
+.litdb-num { text-align: right; font-variant-numeric: tabular-nums; }
+.md-typeset table.litdb-evals { display: table; width: 100%; margin: 0.2rem 0; font-size: 0.64rem; }
+.md-typeset table.litdb-evals th,
+.md-typeset table.litdb-evals td { padding: 0.25rem 0.5rem; }
+.litdb-analyses { font-size: 0.68rem; }
+.litdb-analyses li { margin-bottom: 0.4rem; }
+#litdb { scroll-margin-top: 4.5rem; }

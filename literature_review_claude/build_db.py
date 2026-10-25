@@ -1,17 +1,26 @@
 """Build the literature-review database used by the documentation site.
 
-Reads ``papers_index.csv`` (one row per paper, produced by the review) plus the
-per-paper notes in ``notes/`` and writes a normalised SQLite database to
-``docs/literature/ecgen_literature.sqlite`` (and a flat CSV copy). The "Paper Database"
-docs page opens the SQLite file in the browser with sql.js and filters it there.
+Inputs (all in ``literature_review_claude/``):
 
-Schema: ``papers``, ``authors`` + ``paper_authors``, and a generic facet model
-(``facets`` -> ``terms`` -> ``paper_terms``) so new filter dimensions or values are added as
-rows rather than new tables. Views ``paper_facets`` and ``metric_usage`` simplify queries.
+- ``papers_index.csv``: one row per paper (bibliography, model, task, datasets, verbatim
+  loss functions and evaluation metrics) from the first extraction pass.
+- ``structured_extraction.jsonl``: second, structured pass (per-metric evaluation records
+  with evaluation categories, data type/format, leads, sampling rate, segment length,
+  conditioning, fairness / robustness / privacy analyses). Papers missing here fall back to
+  keyword-matched metric families.
+- ``notes/<basename>.md``: per-paper notes (the "Takeaway for ECGEN-Eval" line is used).
 
-Only papers whose PDF has been downloaded (``pdf_path`` is not "not downloaded")
-are included by default, because their entries were extracted from the full text.
-Pass ``--all`` to also include abstract-only entries.
+Output: a normalised SQLite database ``docs/literature/ecgen_literature.sqlite`` plus a flat
+``papers.csv``. The "Paper Database" docs page opens the SQLite file in the browser with
+sql.js.
+
+Schema: ``papers``; ``authors`` + ``paper_authors``; ``evaluations`` (one row per metric a
+paper uses) + ``evaluation_categories``; and a generic facet model (``facets`` -> ``terms``
+-> ``paper_terms``) so new filter dimensions or values are added as rows, not tables. Views
+``paper_facets``, ``evaluation_details`` and ``metric_usage`` simplify queries.
+
+Only papers whose PDF has been downloaded are included by default; pass ``--all`` to also
+include abstract-only entries.
 
 Usage::
 
@@ -23,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import re
 import sqlite3
 from datetime import date
@@ -31,11 +41,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 INDEX = HERE / "papers_index.csv"
+STRUCTURED = HERE / "structured_extraction.jsonl"
 NOTES = HERE / "notes"
 OUT_DIR = ROOT / "docs" / "literature"
 DB_PATH = OUT_DIR / "ecgen_literature.sqlite"
 
-CATEGORIES = {
+MODEL_CATEGORIES = {
     "01_GAN": "GAN",
     "02_VAE": "VAE",
     "03_Diffusion": "Diffusion",
@@ -47,57 +58,78 @@ CATEGORIES = {
     "09_Background_Seminal": "Background (pre-Oct 2023)",
 }
 
-# metric family -> (metric type, ECGEN-Eval key or "", regex over the extracted metric text)
+# Evaluation categories, in display order, with a one-line definition.
+EVAL_CATEGORIES = {
+    "Fidelity": "Realism / similarity of synthetic samples to real data",
+    "Diversity": "Coverage and variety of the synthetic data (recall, mode collapse)",
+    "Utility": "Usefulness for downstream tasks (TSTR, TRTS, augmentation)",
+    "Privacy": "Memorisation, re-identification and membership-inference risk",
+    "Fairness": "Behaviour across demographic subgroups; demographic attribute preservation",
+    "Robustness": "Behaviour under noise, perturbation, domain shift; external validation",
+    "Clinical validity": "Physiological plausibility: intervals, HR/HRV, fiducials, lead physics",
+    "Human / expert": "Cardiologist ratings and visual Turing tests",
+    "Conditional consistency": "Agreement between the generated ECG and the requested condition",
+    "Efficiency": "Sampling cost: runtime, number of function evaluations, parameters",
+}
+
+# Canonical metric family -> (default evaluation category, ECGEN-Eval key(s) or "",
+# keyword regex used only for papers without a structured extraction).
 METRICS = {
-    "RMSE": ("fidelity", "mae (extra)", r"\brmse\b|root mean squared? error"),
-    "MAE": ("fidelity", "mae", r"\bmae\b|mean absolute error"),
-    "MSE": ("fidelity", "", r"\bmse\b|mean squared? error"),
-    "PRD": ("fidelity", "prd", r"\bprd\b|percent(age)? root.mean"),
-    "Pearson / correlation": ("fidelity", "", r"pearson|correlation coeff|\bpcc\b|cross-?correlation"),
-    "DTW": ("fidelity", "dtw", r"\bdtw\b|dynamic time warp"),
-    "Curve Fréchet distance": (
-        "fidelity", "", r"(discrete|curve)[- ]?fr[eé]chet|fr[eé]chet distance \(fd\)|\bfd\b"),
-    "PSNR / SNR": ("fidelity", "psnr", r"psnr|\bsnr\b|signal.to.noise"),
-    "SSIM": ("fidelity", "ssim", r"ssim|structural similarity"),
-    "Euclidean distance": ("fidelity", "", r"euclidean"),
-    "Cosine similarity": ("fidelity", "", r"cosine"),
+    "RMSE": ("Fidelity", "mae (RMSE in extra)", r"\brmse\b|root mean squared? error"),
+    "MAE": ("Fidelity", "mae", r"\bmae\b|mean absolute error"),
+    "MSE": ("Fidelity", "", r"\bmse\b|mean squared? error"),
+    "PRD / normalised PRD": ("Fidelity", "prd", r"\bn?prd\b|percent(age)? root.mean"),
+    "Pearson / correlation": ("Fidelity", "", r"pearson|correlation coeff|\bpcc\b|cross-?correlation"),
+    "DTW": ("Fidelity", "dtw", r"\bdtw\b|dynamic time warp"),
+    "Curve Fréchet distance": ("Fidelity", "", r"(discrete|curve)[- ]?fr[eé]chet|\bfd\b"),
+    "PSNR / SNR": ("Fidelity", "psnr", r"psnr|\bsnr\b|signal.to.noise"),
+    "SSIM": ("Fidelity", "ssim", r"ssim|structural similarity"),
+    "Euclidean distance": ("Fidelity", "", r"euclidean"),
+    "Cosine similarity": ("Fidelity", "", r"cosine"),
     "Spectral / PSD similarity": (
-        "fidelity", "psd", r"\bpsd\b|spectral (similarity|distance|entropy)|power spectr|spectrum"),
+        "Fidelity", "psd, spectral_entropy", r"\bpsd\b|spectral (similarity|distance)|power spectr"),
     "FID / embedding Fréchet": (
-        "distribution", "fed",
-        r"\bfid\b|fr[eé]chet incep|fr[eé]chet (ecg|resnet)|\bfrd\b|\bfed\b|context-fid|rfid"),
-    "MMD": ("distribution", "mmd", r"\bmmd\b|maximum mean discrep"),
-    "Wasserstein / EMD": ("distribution", "swd", r"wasserstein|\bemd\b|earth mover"),
-    "KL / JS divergence": ("distribution", "", r"kullback|\bkl\b|jensen|\bjsd?\b"),
-    "Precision / recall / coverage": (
-        "distribution", "pr_dist",
-        r"precision.recall \(|\bdensity\b|coverage|α-precision|alpha-precision|beta-recall|improved precision|manifold|k-nn precision"),
+        "Fidelity", "fed, fd", r"\bfid\b|fr[eé]chet incep|\bfrd\b|\bfed\b|context-fid|rfid"),
+    "Inception-score-like": ("Fidelity", "", r"inception score|resnet score"),
+    "MMD": ("Fidelity", "mmd", r"\bmmd\b|maximum mean discrep"),
+    "Wasserstein / EMD": ("Fidelity", "swd", r"wasserstein|\bemd\b|earth mover"),
+    "KL / JS divergence": ("Fidelity", "", r"kullback|\bkl\b|jensen|\bjsd?\b"),
+    "Precision / recall / density / coverage": (
+        "Diversity", "pr_dist", r"precision.recall|\bdensity\b|coverage|α-precision|improved precision"),
+    "Diversity / mode-collapse measure": ("Diversity", "", r"mode collapse|diversity|intra-class"),
     "Classifier two-sample test": (
-        "distribution", "",
-        r"discriminative score|two-sample|2-sample|c2st|real.vs.?.?(fake|synthetic) classif|1-?nn|nearest.neighbou?r adversarial|nnaa"),
+        "Fidelity", "", r"discriminative score|two-sample|c2st|real.vs.?.?(fake|synthetic) classif|1-?nn"),
     "Statistical tests": (
-        "distribution", "", r"\bks\b|kolmogorov|t-test|hotelling|wilcoxon|mann.whitney|permutation|delong"),
-    "t-SNE / UMAP / PCA plots": ("visual", "", r"t-?sne|umap|pacmap|\bpca\b"),
-    "Heart rate / HRV": ("clinical", "heart_rate, hrv", r"heart.rate|\bhr\b|\brr\b|hrv|sdnn|rmssd|pnn50"),
-    "Clinical intervals (PR/QRS/QT)": (
-        "clinical", "features module", r"\bqtc?\b|\bpr interval|\bpr\b|qrs (duration|width)|\bst\b"),
-    "Fiducial / R-peak timing": (
-        "clinical", "", r"r-?peak|fiducial|peak (timing|detection)|beat timing"),
-    "Inter-lead consistency": ("clinical", "", r"einthoven|inter-?lead|lead correlation|goldberger"),
-    "Signal quality index": ("clinical", "sqi", r"\bsqi\b|signal quality|kurtosis"),
-    "Downstream classification": (
-        "utility", "", r"accuracy|\bf1\b|auroc|\bauc\b|sensitivity|specificity|g-mean"),
-    "TSTR / TRTS": ("utility", "", r"tstr|trts|train(ed)? on synthetic|train synthetic|trstr|trsts"),
-    "Label / condition adherence": (
-        "conditional", "", r"label faithful|controllab|conditioned vs generated|\bclip\b|rclip|alignment score|adherence"),
-    "Expert / Turing test": (
-        "expert", "", r"cardiologist|expert|turing|clinician|physician|visual (inspection|assessment)"),
-    "Privacy / memorisation": (
-        "privacy", "nn_dist",
-        r"membership|privacy|re-?identif|memori[sz]|\bdcr\b|authenticity|\bmir\b|\bmia\b"),
-    "Efficiency (NFE / runtime)": (
-        "efficiency", "",
-        r"\bnfe\b|inference (time|speed|steps)|sampling (steps|time|speed)|runtime|latency|function evaluations|parameters"),
+        "Fidelity", "", r"\bks\b|kolmogorov|t-test|hotelling|wilcoxon|mann.whitney|permutation"),
+    "t-SNE / UMAP / PCA plots": ("Fidelity", "", r"t-?sne|umap|pacmap|\bpca\b"),
+    "Visual inspection (qualitative)": ("Fidelity", "", r"visual inspection|qualitative"),
+    "R² (coefficient of determination)": ("Fidelity", "", r"\br2\b|r²|coefficient of determination"),
+    "Heart rate / HRV": ("Clinical validity", "heart_rate, hrv", r"heart.rate|hrv|sdnn|rmssd|pnn50"),
+    "Clinical intervals (PR/QRS/QT/ST)": (
+        "Clinical validity", "features module (no metric yet)", r"\bqtc?\b|\bpr interval|qrs (duration|width)"),
+    "Fiducial / R-peak timing": ("Clinical validity", "", r"r-?peak|fiducial|beat timing"),
+    "Inter-lead consistency": ("Clinical validity", "", r"einthoven|inter-?lead|goldberger"),
+    "Signal quality index": ("Clinical validity", "sqi", r"\bsqi\b|signal quality"),
+    "Physiological validity rate": ("Clinical validity", "", r"validity|malformed|failure rate"),
+    "Downstream classification": ("Utility", "", r"accuracy|\bf1\b|auroc|\bauc\b"),
+    "TSTR / TRTS": ("Utility", "", r"tstr|trts|train(ed)? on synthetic"),
+    "Augmentation gain": ("Utility", "", r"augment"),
+    "Label / condition adherence": ("Conditional consistency", "", r"label faithful|adherence"),
+    "Text–ECG alignment (CLIP)": ("Conditional consistency", "", r"\bclip\b"),
+    "Expert / Turing test": ("Human / expert", "", r"cardiologist|expert|turing|physician"),
+    "Expert diagnostic agreement": ("Human / expert", "", r"diagnostic agreement"),
+    "Membership inference / re-identification": (
+        "Privacy", "", r"membership|re-?identif|\bmia\b"),
+    "Nearest-neighbour / DCR distance": (
+        "Privacy", "nn_dist", r"\bdcr\b|closest record|authenticity|memori[sz]"),
+    "Subgroup performance gap": ("Fairness", "", r"subgroup|fairness|\bbias\b"),
+    "Demographic attribute preservation": ("Fairness", "", r"demographic|age and sex|sex and age"),
+    "Noise / perturbation robustness": ("Robustness", "", r"perturbation|noise robust|robustness"),
+    "Cross-dataset / external validation": ("Robustness", "", r"external validation|cross-dataset"),
+    "Seed / run variability": ("Robustness", "", r"seeds|standard deviation over runs"),
+    "Metric sensitivity analysis": ("Robustness", "", r"metric sensitivity|sensitivity analysis"),
+    "Efficiency (NFE / runtime / params)": (
+        "Efficiency", "", r"\bnfe\b|inference (time|speed)|sampling (steps|time)|runtime"),
 }
 
 LOSSES = {
@@ -107,13 +139,15 @@ LOSSES = {
     "L1 reconstruction": r"\bl1\b|mean absolute|absolute error",
     "L2 / MSE reconstruction": r"\bl2\b|\bmse\b|mean squared",
     "Diffusion noise prediction": (
-        r"noise.prediction|ε|epsilon|ddpm|l_simple|denoising (score|loss|objective)|predicted noise|score matching|v-prediction"),
+        r"noise.prediction|ε|epsilon|ddpm|l_simple|denoising (score|loss|objective)"
+        r"|predicted noise|score matching|v-prediction"),
     "Flow-matching velocity": r"flow matching|rectified|velocity",
     "KL / ELBO": r"\bkl\b|kullback|elbo|evidence lower",
     "Classification CE": r"cross.entropy|auxiliary classif|classification loss",
     "Spectral / frequency": r"spectral|frequency|fft|stft|mel|fourier|wavelet|dwt",
     "Physiology / physics": (
-        r"\bode\b|physio|physics|einthoven|goldberger|lead constraint|simulator|morpholog|r-peak|peak loss|qrs|pde"),
+        r"\bode\b|physio|physics|einthoven|goldberger|lead constraint|simulator|morpholog"
+        r"|r-peak|peak loss|qrs|pde"),
     "Contrastive / CLIP": r"contrastive|infonce|clip|nt-xent",
     "VQ / codebook": r"commitment|codebook|\bvq",
     "Cycle consistency": r"cycle",
@@ -155,9 +189,28 @@ DATASETS = {
     "Private / in-house": r"private|in-house|hospital",
 }
 
-TAGS = ["fidelity", "distribution", "clinical", "utility", "expert", "privacy", "efficiency"]
+# Facets shown as filters: (name, label, multi-valued, paper-dict key), in display order.
+FACETS = [
+    ("category", "Model category", 0, "category"),
+    ("year", "Year", 0, "year"),
+    ("eval_category", "Evaluation category", 1, "eval_categories"),
+    ("metric", "Evaluation metric", 1, "metric_families"),
+    ("loss", "Loss function", 1, "loss_families"),
+    ("task", "Task", 1, "task_tags"),
+    ("conditioning", "Conditioning", 1, "conditioning"),
+    ("data_type", "Data type", 1, "data_type"),
+    ("data_format", "Data format", 1, "data_format"),
+    ("leads", "Leads generated", 0, "leads_bin"),
+    ("sampling_rate", "Sampling rate", 0, "fs_bin"),
+    ("segment_length", "Segment length", 0, "length_bin"),
+    ("dataset", "Dataset", 1, "dataset_tags"),
+    ("data_access", "Data access", 0, "data_access"),
+    ("code", "Code", 0, "code_flag"),
+    ("venue_type", "Publication type", 0, "venue_type"),
+    ("extraction_source", "Extraction source", 0, "source"),
+]
 
-UNKNOWN = re.compile(r"^(unknown|not reported|n/?a|none)", re.I)
+UNKNOWN = re.compile(r"^(unknown|not reported|not applicable|n/?a|none)", re.I)
 
 
 def families(text: str, table: dict) -> list[str]:
@@ -183,28 +236,138 @@ def takeaway(basename: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+def number(value) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    m = re.search(r"\d+(\.\d+)?", str(value or ""))
+    return float(m.group(0)) if m else None
+
+
+def leads_bin(n: float | None) -> str:
+    if n is None:
+        return "Not reported"
+    if n <= 1:
+        return "1 lead"
+    if n <= 3:
+        return "2–3 leads"
+    if n < 12:
+        return "4–11 leads"
+    return "12 leads" if n == 12 else "15+ leads"
+
+
+def fs_bin(fs: float | None) -> str:
+    if fs is None:
+        return "Not reported"
+    if fs <= 150:
+        return "≤ 150 Hz"
+    if fs <= 300:
+        return "151–300 Hz"
+    if fs <= 400:
+        return "301–400 Hz"
+    if fs <= 600:
+        return "401–600 Hz"
+    return "> 600 Hz"
+
+
+def length_bin(s: float | None) -> str:
+    if s is None:
+        return "Not reported"
+    if s <= 2:
+        return "≤ 2 s (beats)"
+    if s < 10:
+        return "2–9 s"
+    if s <= 12:
+        return "10 s"
+    if s <= 60:
+        return "11–60 s"
+    return "> 1 min"
+
+
+def venue_type(venue: str) -> str:
+    v = (venue or "").lower()
+    if re.search(r"arxiv|rxiv|ssrn|preprint", v):
+        return "Preprint"
+    if re.search(r"thes|dissertation|repositor|hal\b|uwspace|tel\.", v):
+        return "Thesis"
+    if re.search(r"conference|proceedings|symposium|workshop|computing in cardiology|lecture notes"
+                 r"|embc|icassp|biostec|ijcai|neurips|icml|iclr|miccai|bibm", v):
+        return "Conference"
+    return "Journal" if v else "Not reported"
+
+
+def load_structured() -> dict[str, dict]:
+    if not STRUCTURED.exists():
+        return {}
+    out = {}
+    for line in STRUCTURED.read_text().splitlines():
+        if line.strip():
+            d = json.loads(line)
+            out[d["id"]] = d
+    return out
+
+
+# "Other: ..." families from the structured extraction that map onto a canonical family.
+FAMILY_ALIASES = {
+    "other: visual inspection": "Visual inspection (qualitative)",
+    "other: r² score": "R² (coefficient of determination)",
+    "other: r² (coefficient of determination)": "R² (coefficient of determination)",
+}
+
+
+def canonical_family(name: str) -> str:
+    name = (name or "").strip()
+    name = FAMILY_ALIASES.get(name.lower(), name)
+    if name in METRICS:
+        return name
+    low = name.lower()
+    for k in METRICS:
+        if k.lower() == low:
+            return k
+    return name or "Other"
+
+
 def build(include_all: bool) -> list[dict]:
-    rows = list(csv.DictReader(INDEX.open(newline="")))
+    structured = load_structured()
     papers = []
-    for r in rows:
+    for r in csv.DictReader(INDEX.open(newline="")):
         downloaded = r["pdf_path"] != "not downloaded"
         if not downloaded and not include_all:
             continue
         basename = Path(r["pdf_path"]).stem if downloaded else ""
-        metrics_text = r["eval_metrics"]
-        metric_fams = families(metrics_text, METRICS)
-        tags = [t for t in TAGS if t in r["eval_category_tags"].lower()]
-        if "utility-tstr" in r["eval_category_tags"].lower() and "utility" not in tags:
-            tags.append("utility")
-        authors = [a.strip() for a in r["authors"].split(";") if a.strip()]
+        s = structured.get(r["id"], {})
+
+        evaluations = []
+        for e in s.get("evaluations", []):
+            fam = canonical_family(e.get("family", ""))
+            cats = [c for c in e.get("categories", []) if c in EVAL_CATEGORIES]
+            if not cats:
+                cats = [METRICS[fam][0]] if fam in METRICS else ["Fidelity"]
+            evaluations.append({"metric": e.get("metric", fam), "family": fam,
+                                "categories": cats, "how": e.get("how", "")})
+        if not s:  # fallback: keyword-matched families from the first-pass text
+            for fam in families(r["eval_metrics"], METRICS):
+                evaluations.append({"metric": fam, "family": fam,
+                                    "categories": [METRICS[fam][0]], "how": ""})
+
+        eval_cats = {c for e in evaluations for c in e["categories"]}
+        for key, cat in (("fairness", "Fairness"), ("robustness", "Robustness"),
+                         ("privacy", "Privacy")):
+            if s.get(key):
+                eval_cats.add(cat)
+
+        n_leads = s.get("n_leads_generated") if s else number(clean(r["n_leads"]))
+        fs = s.get("fs_hz") if s else number(clean(r["fs_hz"]))
+        seg = s.get("segment_length_s") if s else number(clean(r["signal_length_s"]))
+        code = r["code_available"] if r["code_available"].lower().startswith("http") else ""
+
         papers.append({
             "id": r["id"],
             "year": int(r["year"]) if r["year"].isdigit() else None,
             "title": r["title"],
-            "authors": authors,
+            "authors": [a.strip() for a in r["authors"].split(";") if a.strip()],
             "venue": r["venue"],
             "url": r["doi_or_url"],
-            "category": CATEGORIES.get(r["category"], r["category"]),
+            "category": MODEL_CATEGORIES.get(r["category"], r["category"]),
             "background": r["category"].startswith("09"),
             "downloaded": downloaded,
             "model_family": r["model_family"],
@@ -215,13 +378,29 @@ def build(include_all: bool) -> list[dict]:
             "n_leads": clean(r["n_leads"]),
             "fs_hz": clean(r["fs_hz"]),
             "signal_length_s": clean(r["signal_length_s"]),
+            "n_leads_generated": n_leads,
+            "fs_hz_model": fs,
+            "segment_length_model": seg,
+            "leads_bin": leads_bin(n_leads),
+            "fs_bin": fs_bin(fs),
+            "length_bin": length_bin(seg),
+            "data_type": [v for v in s.get("data_type", []) if v != "Not applicable"],
+            "data_format": [v for v in s.get("data_format", []) if v != "Not applicable"],
+            "conditioning": [v for v in s.get("conditioning", []) if v != "Not applicable"],
+            "data_access": s.get("data_access") or "Not reported",
             "loss_functions": r["loss_functions"],
             "loss_families": families(r["loss_functions"], LOSSES),
-            "eval_metrics": metrics_text,
-            "metric_families": metric_fams,
-            "metric_types": sorted({METRICS[f][0] for f in metric_fams} | set(tags)),
+            "eval_metrics": r["eval_metrics"],
+            "evaluations": evaluations,
+            "metric_families": sorted({e["family"] for e in evaluations}),
+            "eval_categories": [c for c in EVAL_CATEGORIES if c in eval_cats],
+            "fairness": s.get("fairness") or "",
+            "robustness": s.get("robustness") or "",
+            "privacy": s.get("privacy") or "",
             "embedding_extractor": clean(r["feature_extractor_for_embedding_metrics"]),
-            "code": r["code_available"] if r["code_available"].lower().startswith("http") else "",
+            "code": code,
+            "code_flag": "Code available" if code else "No code link",
+            "venue_type": venue_type(r["venue"]),
             "source": r["extraction_source"],
             "notes": r["notes"],
             "takeaway": takeaway(basename) if basename else "",
@@ -233,26 +412,29 @@ SCHEMA = """
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
 
 CREATE TABLE papers (
-    id                  TEXT PRIMARY KEY,   -- P001 ... (stable review ID)
-    year                INTEGER,
-    title               TEXT NOT NULL,
-    venue               TEXT,
-    url                 TEXT,               -- DOI / arXiv / landing page
-    model_family        TEXT,               -- free text as extracted
-    task                TEXT,
-    datasets            TEXT,
-    n_leads             TEXT,
-    fs_hz               TEXT,
-    signal_length_s     TEXT,
-    loss_functions      TEXT,               -- verbatim extracted losses
-    eval_metrics        TEXT,               -- verbatim extracted metrics
-    embedding_extractor TEXT,
-    code_url            TEXT,
-    extraction_source   TEXT,               -- full-text | abstract-only
-    pdf_downloaded      INTEGER NOT NULL,   -- 1 if the PDF is in the review folder
-    background          INTEGER NOT NULL,   -- 1 for pre-Oct-2023 seminal works
-    notes               TEXT,
-    takeaway            TEXT                -- takeaway for ECGEN-Eval
+    id                    TEXT PRIMARY KEY,   -- P001 ... (stable review ID)
+    year                  INTEGER,
+    title                 TEXT NOT NULL,
+    venue                 TEXT,
+    url                   TEXT,               -- DOI / arXiv / landing page
+    model_family          TEXT,               -- free text as extracted
+    task                  TEXT,
+    datasets              TEXT,
+    n_leads_generated     REAL,
+    fs_hz                 REAL,               -- sampling rate used by the model
+    segment_length_s      REAL,
+    loss_functions        TEXT,               -- verbatim extracted losses
+    eval_metrics          TEXT,               -- verbatim extracted metrics
+    fairness              TEXT,               -- description of fairness analysis, if any
+    robustness            TEXT,               -- description of robustness analysis, if any
+    privacy               TEXT,               -- description of privacy analysis, if any
+    embedding_extractor   TEXT,
+    code_url              TEXT,
+    extraction_source     TEXT,               -- full-text | abstract-only
+    pdf_downloaded        INTEGER NOT NULL,
+    background            INTEGER NOT NULL,   -- 1 for pre-Oct-2023 seminal works
+    notes                 TEXT,
+    takeaway              TEXT                -- takeaway for ECGEN-Eval
 );
 
 CREATE TABLE authors (id INTEGER PRIMARY KEY, name TEXT UNIQUE NOT NULL);
@@ -264,23 +446,24 @@ CREATE TABLE paper_authors (
     PRIMARY KEY (paper_id, author_id)
 );
 
--- Facets are the filter dimensions (category, metric, loss, ...). New dimensions are added as
--- rows here, not as new tables.
+-- Facets are the filter dimensions; new dimensions are added as rows, not tables.
 CREATE TABLE facets (
     id          INTEGER PRIMARY KEY,
-    name        TEXT UNIQUE NOT NULL,       -- machine name, e.g. 'metric'
-    label       TEXT NOT NULL,              -- display name, e.g. 'Metric'
+    name        TEXT UNIQUE NOT NULL,
+    label       TEXT NOT NULL,
     multi       INTEGER NOT NULL,           -- 1 if a paper can have several terms
     sort_order  INTEGER NOT NULL
 );
 
--- Terms are the values within a facet. parent_id links e.g. a metric to its metric type.
+-- Values of a facet. For metrics, parent_id is the default evaluation category and
+-- ecgen_eval names the matching ECGEN-Eval metric key(s).
 CREATE TABLE terms (
     id          INTEGER PRIMARY KEY,
     facet_id    INTEGER NOT NULL REFERENCES facets(id),
     name        TEXT NOT NULL,
     parent_id   INTEGER REFERENCES terms(id),
-    ecgen_eval  TEXT,                       -- matching ECGEN-Eval metric key(s), if any
+    ecgen_eval  TEXT,
+    description TEXT,
     UNIQUE (facet_id, name)
 );
 
@@ -289,37 +472,45 @@ CREATE TABLE paper_terms (
     term_id  INTEGER NOT NULL REFERENCES terms(id),
     PRIMARY KEY (paper_id, term_id)
 );
-
 CREATE INDEX idx_paper_terms_term ON paper_terms(term_id);
 
--- Convenience view: one row per (paper, facet, term).
+-- One row per metric / protocol a paper uses (or, for surveys, reviews).
+CREATE TABLE evaluations (
+    id          INTEGER PRIMARY KEY,
+    paper_id    TEXT    NOT NULL REFERENCES papers(id),
+    metric_name TEXT    NOT NULL,            -- as named in the paper
+    family_id   INTEGER NOT NULL REFERENCES terms(id),   -- canonical metric family
+    how         TEXT                         -- what was compared, on what features
+);
+CREATE INDEX idx_evaluations_paper ON evaluations(paper_id);
+
+CREATE TABLE evaluation_categories (
+    evaluation_id INTEGER NOT NULL REFERENCES evaluations(id),
+    category_id   INTEGER NOT NULL REFERENCES terms(id),
+    PRIMARY KEY (evaluation_id, category_id)
+);
+
 CREATE VIEW paper_facets AS
 SELECT pt.paper_id, f.name AS facet, f.label AS facet_label, t.name AS term, t.ecgen_eval
 FROM paper_terms pt
 JOIN terms t  ON t.id = pt.term_id
 JOIN facets f ON f.id = t.facet_id;
 
--- Convenience view: metrics with their type and ECGEN-Eval coverage, and usage counts.
-CREATE VIEW metric_usage AS
-SELECT m.name AS metric, mt.name AS metric_type, m.ecgen_eval, COUNT(pt.paper_id) AS n_papers
-FROM terms m
-JOIN facets f ON f.id = m.facet_id AND f.name = 'metric'
-LEFT JOIN terms mt ON mt.id = m.parent_id
-LEFT JOIN paper_terms pt ON pt.term_id = m.id
-GROUP BY m.id ORDER BY n_papers DESC;
-"""
+CREATE VIEW evaluation_details AS
+SELECT e.id AS evaluation_id, e.paper_id, p.year, p.title, e.metric_name,
+       fam.name AS family, cat.name AS category, fam.ecgen_eval, e.how
+FROM evaluations e
+JOIN papers p   ON p.id = e.paper_id
+JOIN terms fam  ON fam.id = e.family_id
+JOIN evaluation_categories ec ON ec.evaluation_id = e.id
+JOIN terms cat  ON cat.id = ec.category_id;
 
-# name, label, multi, paper-dict key
-FACETS = [
-    ("category", "Category", 0, "category"),
-    ("year", "Year", 0, "year"),
-    ("metric_type", "Metric type", 1, "metric_types"),
-    ("metric", "Metric", 1, "metric_families"),
-    ("loss", "Loss function", 1, "loss_families"),
-    ("task", "Task", 1, "task_tags"),
-    ("dataset", "Dataset", 1, "dataset_tags"),
-    ("extraction_source", "Extraction source", 0, "source"),
-]
+CREATE VIEW metric_usage AS
+SELECT category, family AS metric, ecgen_eval, COUNT(DISTINCT paper_id) AS n_papers
+FROM evaluation_details
+GROUP BY category, family
+ORDER BY category, n_papers DESC;
+"""
 
 
 def write_sqlite(papers: list[dict], meta: dict, path: Path) -> None:
@@ -331,43 +522,41 @@ def write_sqlite(papers: list[dict], meta: dict, path: Path) -> None:
 
     facet_ids = {}
     for i, (name, label, multi, _) in enumerate(FACETS):
-        cur = con.execute("INSERT INTO facets (name, label, multi, sort_order) VALUES (?,?,?,?)",
-                          (name, label, multi, i))
-        facet_ids[name] = cur.lastrowid
+        facet_ids[name] = con.execute(
+            "INSERT INTO facets (name, label, multi, sort_order) VALUES (?,?,?,?)",
+            (name, label, multi, i)).lastrowid
 
     term_ids: dict[tuple[str, str], int] = {}
 
-    def term(facet: str, name: str, parent: int | None = None, ecgen: str = "") -> int:
+    def term(facet: str, name: str, parent: int | None = None, ecgen: str = "",
+             description: str = "") -> int:
         key = (facet, name)
         if key not in term_ids:
-            cur = con.execute(
-                "INSERT INTO terms (facet_id, name, parent_id, ecgen_eval) VALUES (?,?,?,?)",
-                (facet_ids[facet], name, parent, ecgen or None))
-            term_ids[key] = cur.lastrowid
+            term_ids[key] = con.execute(
+                "INSERT INTO terms (facet_id, name, parent_id, ecgen_eval, description) "
+                "VALUES (?,?,?,?,?)",
+                (facet_ids[facet], name, parent, ecgen or None, description or None)).lastrowid
         return term_ids[key]
 
-    # Register the full vocabularies so unused terms are still queryable.
-    types = sorted({v[0] for v in METRICS.values()} | set(TAGS))
-    for t in types:
-        term("metric_type", t)
-    for name, (mtype, ecgen, _) in METRICS.items():
-        term("metric", name, term("metric_type", mtype), ecgen)
-    for name in LOSSES:
-        term("loss", name)
-    for name in TASKS:
-        term("task", name)
-    for name in DATASETS:
-        term("dataset", name)
-    for name in CATEGORIES.values():
+    # Register the controlled vocabularies so unused values are still queryable.
+    for name, desc in EVAL_CATEGORIES.items():
+        term("eval_category", name, description=desc)
+    for name, (cat, ecgen, _) in METRICS.items():
+        term("metric", name, term("eval_category", cat), ecgen)
+    for vocab, facet in ((LOSSES, "loss"), (TASKS, "task"), (DATASETS, "dataset")):
+        for name in vocab:
+            term(facet, name)
+    for name in MODEL_CATEGORIES.values():
         term("category", name)
 
     author_ids: dict[str, int] = {}
     for p in papers:
         con.execute(
-            "INSERT INTO papers VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO papers VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (p["id"], p["year"], p["title"], p["venue"], p["url"], p["model_family"], p["task"],
-             p["datasets"], p["n_leads"], p["fs_hz"], p["signal_length_s"], p["loss_functions"],
-             p["eval_metrics"], p["embedding_extractor"], p["code"], p["source"],
+             p["datasets"], p["n_leads_generated"], p["fs_hz_model"], p["segment_length_model"],
+             p["loss_functions"], p["eval_metrics"], p["fairness"], p["robustness"],
+             p["privacy"], p["embedding_extractor"], p["code"], p["source"],
              int(p["downloaded"]), int(p["background"]), p["notes"], p["takeaway"]))
         for pos, name in enumerate(p["authors"]):
             if name not in author_ids:
@@ -375,6 +564,15 @@ def write_sqlite(papers: list[dict], meta: dict, path: Path) -> None:
                     "INSERT INTO authors (name) VALUES (?)", (name,)).lastrowid
             con.execute("INSERT OR IGNORE INTO paper_authors VALUES (?,?,?)",
                         (p["id"], author_ids[name], pos))
+        for e in p["evaluations"]:
+            fam = e["family"]
+            parent = term("eval_category", METRICS[fam][0]) if fam in METRICS else None
+            eid = con.execute(
+                "INSERT INTO evaluations (paper_id, metric_name, family_id, how) VALUES (?,?,?,?)",
+                (p["id"], e["metric"], term("metric", fam, parent), e["how"])).lastrowid
+            for c in e["categories"]:
+                con.execute("INSERT OR IGNORE INTO evaluation_categories VALUES (?,?)",
+                            (eid, term("eval_category", c)))
         for facet, _, _, key in FACETS:
             vals = p[key] if isinstance(p[key], list) else [p[key]]
             for v in vals:
@@ -397,20 +595,23 @@ def main() -> None:
         "n_papers": str(len(papers)),
         "scope": "all indexed papers" if args.all else "papers with downloaded full text",
         "review_window": "2023-10-01 to 2026-10-25",
-        "source": "literature_review_claude/papers_index.csv",
+        "source": "literature_review_claude/papers_index.csv + structured_extraction.jsonl",
     }
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     write_sqlite(papers, meta, DB_PATH)
 
-    flat =["id", "year", "title", "authors", "venue", "url", "category", "model_family", "task",
-            "datasets", "n_leads", "fs_hz", "signal_length_s", "loss_functions", "loss_families",
-            "eval_metrics", "metric_families", "metric_types", "embedding_extractor", "code",
-            "source", "notes", "takeaway"]
+    flat = ["id", "year", "title", "authors", "venue", "url", "category", "model_family", "task",
+            "conditioning", "data_type", "data_format", "n_leads_generated", "fs_hz_model",
+            "segment_length_model", "datasets", "data_access", "loss_functions", "loss_families",
+            "eval_metrics", "metric_families", "eval_categories", "fairness", "robustness",
+            "privacy", "embedding_extractor", "code", "venue_type", "source", "notes",
+            "takeaway"]
     with (OUT_DIR / "papers.csv").open("w", newline="") as f:
         w = csv.writer(f)
         w.writerow(flat)
         for p in papers:
-            w.writerow(["; ".join(p[k]) if isinstance(p[k], list) else p[k] for k in flat])
+            w.writerow(["; ".join(map(str, p[k])) if isinstance(p[k], list) else p[k]
+                        for k in flat])
     print(f"wrote {len(papers)} papers to {DB_PATH} and {OUT_DIR / 'papers.csv'}")
 
 

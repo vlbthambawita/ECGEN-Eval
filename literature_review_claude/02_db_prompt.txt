@@ -1,1 +1,3 @@
 From the extracted details, I want to make a database (sqlite with expandable tables) which can be hosted in github and access via documentation page. So, users can see the summary of literature review in the documentation and select and filters under different categories, types, years, metrices, metric types etc. 
+
+Step 2: Add interactive interface to explore the database via documentation page. so, user can filter the papers by year, evaluation type, evaluation metrics, data type, data format etc. feel free to add more fields if necessoyr. Also, I want to find metrices and corresponding papers based on categories, Privacy, Utility, Fidelity, faireness and robustness  

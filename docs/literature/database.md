@@ -6,16 +6,30 @@ hide:
 
 # Paper Database
 
-Interactive database of the papers in the [literature review](index.md). Use the search box
-and the filters to narrow the list, then click a paper to see its model, loss functions,
-evaluation metrics, datasets and notes.
+Interactive database of the papers in the [literature review](index.md). It has three views:
 
-- Filters within a group match **any** selected value by default; click *match ANY* to switch a
-  group to *match ALL* (e.g. papers that use both FID **and** a Turing test).
-- The number next to each value shows how many papers would match if you selected it.
-- The bars summarise metrics and losses in the currently filtered papers.
-- Metric and loss families are assigned automatically from the extracted text. Check the
-  original paper before citing a detail.
+- **Papers**: filter by model category, year, evaluation category, evaluation metric, loss
+  function, task, conditioning, data type, data format, number of leads, sampling rate,
+  segment length, dataset, data access, code availability and publication type. Click a paper
+  to see each metric it uses, how it was used, and any fairness, robustness or privacy
+  analysis.
+- **Metrics by evaluation category**: pick *Fidelity*, *Diversity*, *Utility*, *Privacy*,
+  *Fairness*, *Robustness*, *Clinical validity*, *Human / expert*, *Conditional consistency* or
+  *Efficiency* to list the metric families in that category, the number of papers using
+  each, and whether ECGEN-Eval implements it. Click a metric to list the papers and how
+  each one used it. The filters on the Papers tab also apply here.
+- **SQL console**: run read-only SQL against the database.
+
+Quick links: [Fidelity](#metrics/Fidelity) · [Diversity](#metrics/Diversity) ·
+[Utility](#metrics/Utility) · [Privacy](#metrics/Privacy) · [Fairness](#metrics/Fairness) ·
+[Robustness](#metrics/Robustness) · [Clinical validity](#metrics/Clinical%20validity)
+
+!!! note "How the data was produced"
+    Every paper was read in full text. Each metric was recorded as the paper names it, then
+    mapped to a canonical metric family and one or two evaluation categories. Some fields were
+    judgement calls, so check the original paper before citing a detail. Filters within a group
+    match **any** selected value by default; click *match ANY* to switch the group to
+    *match ALL*.
 
 <div id="litdb" data-src="../ecgen_literature.sqlite"
      data-sqljs="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></div>
@@ -43,14 +57,26 @@ facets are added as rows rather than new tables:
 
 | Table / view | Contents |
 |---|---|
-| `papers` | One row per paper: bibliographic data, model family, task, datasets, signal shape, verbatim extracted `loss_functions` and `eval_metrics`, notes and takeaway for ECGEN-Eval |
+| `papers` | One row per paper: bibliographic data, model family, task, datasets, leads, sampling rate and segment length, verbatim `loss_functions` and `eval_metrics`, descriptions of any `fairness` / `robustness` / `privacy` analysis, notes and takeaway for ECGEN-Eval |
+| `evaluations` | One row per metric or protocol a paper uses: name as in the paper, canonical metric family, and how it was used |
+| `evaluation_categories` | Evaluation categories of each evaluation (Fidelity, Diversity, Utility, Privacy, Fairness, Robustness, Clinical validity, Human / expert, Conditional consistency, Efficiency) |
 | `authors`, `paper_authors` | Authors and their order on each paper |
-| `facets` | Filter dimensions: `category`, `year`, `metric_type`, `metric`, `loss`, `task`, `dataset`, `extraction_source` |
-| `terms` | Values of each facet. `parent_id` links a metric to its metric type, and `ecgen_eval` names the matching ECGEN-Eval metric key |
+| `facets` | Filter dimensions, e.g. `category`, `year`, `eval_category`, `metric`, `loss`, `task`, `conditioning`, `data_type`, `data_format`, `leads`, `sampling_rate`, `segment_length`, `dataset`, `data_access`, `code`, `venue_type` |
+| `terms` | Values of each facet. For metrics, `parent_id` is the default evaluation category and `ecgen_eval` names the matching ECGEN-Eval metric key; categories have a `description` |
 | `paper_terms` | Which terms apply to which paper |
-| `paper_facets` (view) | One row per (paper, facet, term), the easiest table to query |
-| `metric_usage` (view) | Each metric family with its type, ECGEN-Eval coverage and number of papers |
+| `paper_facets` (view) | One row per (paper, facet, term), the easiest table to filter on |
+| `evaluation_details` (view) | One row per (evaluation, category) with paper, metric name, family, ECGEN-Eval key and how it was used |
+| `metric_usage` (view) | Papers per (evaluation category, metric family), with ECGEN-Eval coverage |
 | `meta` | Build date, scope and source |
+
+Example: privacy metrics and the papers that use them.
+
+```sql
+SELECT family, metric_name, paper_id, year, how
+FROM evaluation_details
+WHERE category = 'Privacy'
+ORDER BY family, year DESC;
+```
 
 Example: papers that use both an embedding FID and a Turing test.
 
@@ -63,8 +89,8 @@ WHERE p.id IN (SELECT paper_id FROM paper_facets WHERE facet = 'metric' AND term
 
 ### Rebuilding
 
-The database is generated from the review's `papers_index.csv` by
-`literature_review_claude/build_db.py`:
+The database is generated by `literature_review_claude/build_db.py` from the review's
+`papers_index.csv` and the per-metric records in `structured_extraction.jsonl`:
 
 ```bash
 python literature_review_claude/build_db.py         # papers with full text

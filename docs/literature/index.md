@@ -31,6 +31,30 @@ datasets, loss functions, evaluation metrics) was extracted from the full text.
     The database currently contains the 91 papers whose full text was available. The remaining
     papers were only seen as abstracts and will be added once their full text has been obtained.
 
+## Evaluation categories
+
+Each metric a paper uses is assigned one or two evaluation categories. The table counts papers
+in the database (91 papers with full text) that evaluate each category. Click a category to
+see its metrics and the papers that use them.
+
+| Category | What it measures | Papers | Most used metric families (papers) |
+|---|---|---:|---|
+| [Fidelity](database.md#metrics/Fidelity) | Realism / similarity of synthetic samples to real data | 81 | RMSE (31); FID / embedding Fréchet (24); DTW (18); MAE (16) |
+| [Diversity](database.md#metrics/Diversity) | Coverage and variety of the synthetic data (recall, mode collapse) | 20 | Precision / recall / density / coverage (7); t-SNE / UMAP / PCA plots (6); Inception-score-like (3); Diversity / mode-collapse measure (2) |
+| [Utility](database.md#metrics/Utility) | Usefulness for downstream tasks (TSTR, TRTS, augmentation) | 66 | Augmentation gain (35); Downstream classification (21); TSTR / TRTS (16); Statistical tests (3) |
+| [Privacy](database.md#metrics/Privacy) | Memorisation, re-identification and membership-inference risk | 9 | Membership inference / re-identification (7); Nearest-neighbour / DCR distance (3) |
+| [Fairness](database.md#metrics/Fairness) | Behaviour across demographic subgroups; demographic attribute preservation | 8 | Subgroup performance gap (2); Demographic attribute preservation (2); Downstream classification (1); Augmentation gain (1) |
+| [Robustness](database.md#metrics/Robustness) | Behaviour under noise, perturbation, domain shift; external validation | 50 | Cross-dataset / external validation (19); Seed / run variability (8); Metric sensitivity analysis (8); Noise / perturbation robustness (7) |
+| [Clinical validity](database.md#metrics/Clinical%20validity) | Physiological plausibility: intervals, HR/HRV, fiducials, lead physics | 46 | Clinical intervals (PR/QRS/QT/ST) (17); Heart rate / HRV (13); Fiducial / R-peak timing (7); Inter-lead consistency (6) |
+| [Human / expert](database.md#metrics/Human%20/%20expert) | Cardiologist ratings and visual Turing tests | 17 | Expert / Turing test (16); Expert diagnostic agreement (6); Statistical tests (1); Label / condition adherence (1) |
+| [Conditional consistency](database.md#metrics/Conditional%20consistency) | Agreement between the generated ECG and the requested condition | 22 | Label / condition adherence (10); Text–ECG alignment (CLIP) (5); TSTR / TRTS (4); Expert diagnostic agreement (3) |
+| [Efficiency](database.md#metrics/Efficiency) | Sampling cost: runtime, number of function evaluations, parameters | 17 | Efficiency (NFE / runtime / params) (15); Downstream classification (1) |
+
+Fairness and privacy are rarely evaluated. Only a handful of papers compare quality or
+utility across sex or age groups, or test for memorisation with membership-inference or
+nearest-neighbour attacks. Robustness is mostly assessed by external or cross-dataset
+validation, with fewer papers testing noise, seed variance or metric sensitivity.
+
 ## Most used evaluation metrics
 
 Share of the 167 included papers whose evaluation uses each metric family (counted by keyword
