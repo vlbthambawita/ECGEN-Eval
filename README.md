@@ -13,22 +13,27 @@ Part of the ECGEN research suite (ECGEN-FM, ECGEN-VAE, Pulse2Pulse).
 
 ## Installation
 
+Install the latest release from [PyPI](https://pypi.org/project/ecgen-eval/):
+
 ```bash
-pip install -e .           # core
-pip install -e ".[dev]"    # + pytest, black, ruff
+pip install ecgen-eval
 ```
 
-Optional dependencies:
+Optional extras:
+```bash
+pip install "ecgen-eval[features]"        # clinical feature extraction (neurokit2 + scipy)
+pip install "ecgen-eval[fed]"             # Fréchet ECG Distance (torch, transformers, huggingface_hub)
+pip install "ecgen-eval[features,fed]"    # both
+```
+
+Other optional packages:
 ```bash
 pip install wfdb           # for loading PTB-XL / WFDB records
 pip install scipy          # for Welch PSD, resampling, and R-peak detection (recommended)
-pip install dtaidistance   # fast Cython DTW (falls back to pure-Python)
-
-# Clinical feature extraction (Task 1.2)
-pip install -e ".[features]"   # installs neurokit2 + scipy
-# or individually:
-pip install neurokit2 scipy
 ```
+
+To work on ECGEN-Eval itself, install from source instead; see the
+[contributing guide](https://vajira.info/ECGEN-Eval/development/contributing/).
 
 ## Quick start
 

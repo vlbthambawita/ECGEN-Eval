@@ -10,7 +10,7 @@ real and synthetic distributions can be compared numerically and visually.
 ## Installation
 
 ```bash
-pip install -e ".[features]"    # neurokit2 + scipy
+pip install "ecgen-eval[features]"    # neurokit2 + scipy
 ```
 
 Without NeuroKit2 the extractor still runs, using a SciPy-based Pan–Tompkins R-peak detector

@@ -17,7 +17,7 @@ Lower is better; 0 means identical embedding statistics.
 ## Installation
 
 ```bash
-pip install -e ".[fed]"   # torch, transformers, huggingface_hub
+pip install "ecgen-eval[fed]"   # torch, transformers, huggingface_hub
 ```
 
 ## Backbones

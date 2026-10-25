@@ -18,7 +18,7 @@ and Pulse2Pulse, but it works with output from any ECG generator.
 
     ---
 
-    `pip install -e .` and optional extras for clinical features and foundation-model metrics.
+    `pip install ecgen-eval` from PyPI, plus optional extras for clinical features and foundation-model metrics.
 
     [:octicons-arrow-right-24: Installation](getting-started/installation.md)
 
