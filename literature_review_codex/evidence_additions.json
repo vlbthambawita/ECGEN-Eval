@@ -1,0 +1,92 @@
+{
+ "Adib_2025_GANComparison": {
+  "task_model":"Five normal-beat GANs: classic, DC-DC, BiLSTM-DC, AE/VAE-DC and WGAN (Model designs).",
+  "data_protocol":"MIT-BIH48 records/47people,360Hz;109,338 segmented beats,90,502 normal;280points resampled256. Generator uses normal beats. Patient-disjoint holdout not established (Dataset and segmentation).",
+  "metrics":"DTW, curve Fréchet and Euclidean distances, evaluated as all-pairs300×300 means, distance to chosen template, minimum/best beat and thresholded productivity fraction; subjective morphology inspection (Methods1–5,Eqs14–22). Template/threshold choice changes rankings. Classification accuracy,precision,recall,F1/confusion matrices (Tables13–16). No FID: curve Fréchet is different.",
+  "losses":"Hyperparameter subsection states BCE for models,30epochs,batch9; hybrid model adversarial plus weightedL1 reconstruction, coefficient not reported. WGAN naming and blanket BCE statement leave objective ambiguity; do not substitute a presumed Wasserstein implementation.",
+  "evidence":"Productivity72.3% for classicGAN under DTW, whereas expert visual judgment favors BiLSTM/WGAN (Table12,Performance metrics). Artificially imbalanced binary classifier accuracy .54→.97 after augmentation; real-balanced .95 (Tables13–16). No repeated-seed interval; inconsistent test supports across tables.",
+  "utility_expert_privacy":"Binary normal/LBBB stress test: normal training class reduced to500 versus~6460 LBBB, then restored using synthetic beats;3216 nominal unseen test beats. No documented patient exclusion from generator pool. Expert protocol unspecified; no privacy attack.",
+  "reproducibility":"Published2025 article analyzed; code/data statements in original. Exact template choice, hybrid weight and test membership require clarification.",
+  "critique":"Reviewer: minimum-distance scores reward best-case selection and larger sample pools; productivity threshold constructed from generated outputs is not independent clinical acceptance."
+ },
+ "Nishikimi_2024_FEMVAE": {
+  "task_model":"Conditional Gaussian VAE emulator of UT-Heart finite-element simulations, parameter-conditioned12-lead synthesis; qualifies because learned generator is evaluated (Methods,Model).",
+  "data_protocol":"2,880 simulated ECG parameter combinations,16cardiac parameters encoded24dimensions;random1728/576/576 train/val/test;500samples/1s beat at500Hz,HRfixed60;ECG/1024 normalization. No real-patient training or external validation (Dataset,Experimental condition). Online publication2023-12-22;2024 issue.",
+  "metrics":"Paired Q/R/S/T position MAE in samples,convert to seconds /500; manually marked simulator references versus NeuroKit2 generated landmarks. PSNR=10log10(1/MSE) dB after[0,1]normalization. Abnormal landmark detections excluded; P-wave assessment omitted because identical template (Experimental condition,Table2).",
+  "losses":"Maximize conditional ELBO: expected Gaussian decoder log-likelihood minus KL(q(z|x,Y)||N(0,I));unit KL coefficient,encoder and decoder learned jointly (Training). Inference fixes z=0 rather than sampling (Inference).",
+  "evidence":"Grid over4–10layers and latent2–128;largest latent improves PSNR,optimal depth5–7;NeuroKit2 reference Q/S errors7.58/19.15samples dominate landmark evaluation (Results,Table2,Figs3–6). Architecture ablation,not KL ablation.",
+  "utility_expert_privacy":"Medical specialist supervises ground-truth landmarks,not blinded realism test. No downstream classifier or privacy evaluation; patient separation not applicable to simulated parameter combinations.",
+  "reproducibility":"Simulator source cited. Annotation exclusion rule contains inconsistent150ms/100samples conversion; preserve rather than correct. Seed/run uncertainty not reported.",
+  "critique":"Reviewer: excellent example of defensible paired errors, but emulator accuracy against a simulator is not clinical distribution coverage; z=0 results cannot support stochastic diversity."
+ },
+ "Yehuda_2024_MultiODE": {
+  "task_model":"WaveGAN/WGAN-GP with intra-/interlead ODE residuals;diagnosis/RR-conditioned12lead300sample beats (§§3–5). Analyzed arXivv2 identifies itself as TMLR02/2026;first preprint2024-09-26.",
+  "data_protocol":"G12EC10,344records/7,871patients;PTB-XL21,799/18,869;500Hz;patient split80%train+validation,20%test before NeuroKit2 R-centered crop/pad300samples. Only recordings with persistent abnormality propagate labels to beats (§5).",
+  "metrics":"Specificity at validation-selected target sensitivity;AUROC,AUPRC;interlead identity MSE;visual waveform comparisons.5fold paired t-tests and fold variability;fixed real:synthetic1:2,ratio sweep AppendixA (§6,Tables1–4).",
+  "losses":"Generator −E D(G(z))+lambda_EUL[delta L_intra+(1−delta)L_inter],delta=.6. Intra squared residual of finite-difference derivative versus McSharry RHS;inter matches dependent lead derivative to linear combinations of parent RHS (Eqs8–14). Simulator parameters fitted on training beats. Overall lambda_EUL and GP coefficient not established from extracted text; no guessed defaults.",
+  "evidence":"Delta sweep Fig2 supports retaining both terms. G12EC IAVB specificity .82→.85 at sensitivity .94;PTB-XL NSIVCB AUROC .750→.786 (Tables1,3). Fivefold paired tests reported without multiplicity adjustment; test/cross-validation relationship needs clarification.",
+  "utility_expert_privacy":"Two classifier backbones,real-only and multiple generative baselines. No privacy attack or blinded specialist assessment demonstrated in extracted main sections.",
+  "reproducibility":"Published-version text via arXiv,explicit patient separation and fixed augmentation ratio. Source equations and coefficient sweep stronger than rationale alone; code not inspected.",
+  "critique":"Reviewer: ODE priors may suppress unseen pathology; algebraic limb-lead checks are necessary but do not validate precordial spatial physiology."
+ },
+ "Lai_2025_ECGTwin": {
+  "task_model":"Personalized reference-ECG+target-text/demographics latent diffusion;contrastive Individual Base Extractor and AdaX condition injection (§3).",
+  "data_protocol":"MIMIC794,372 retained records split744,372/50,000 then grouped by subject into6,408,782/399,499 pairs;explicit cross-split patient exclusion unclear in AppendixC. 12leads10s102.4Hz. ExternalPTB-XL4,269pairs,no fine-tuning (AppendicesC–D).",
+  "metrics":"Inherited Net1D-based FID/manifoldprecision,recall,F1,HRMAE,CLIP;intra-minus-interpatient cosine similarity Eq9,silhouette,t-SNE;personalized diagnosis metrics and inference steps/s. Quality tests5repeats mean±SD (Table1,AppendixD). Same extractor trains and evaluates identity consistency.",
+  "losses":"Stage1 symmetric contrastive cosine loss with learnabletemperature,positive same-patient pairs (Eq1; denominator printed j≠i);stage2 DDPMnoiseMSE (Eq8). Frozen pretrainedDiffuSETSVAE;no new reconstructionloss. Reference condition and base-vector dropout.15;batch65536 via accumulation for extractor (AppendixC).",
+  "evidence":"Table1 DiT FID26±2.8,F1 .884±.002,HRMAE7.03±.50. External HRMAE10.23 worse than two ablations6.88/7.35 despite bestFID41;tradeoff matters (Table6). Component ablations isolate conditioning architecture,not denoising objective.",
+  "utility_expert_privacy":"293held-out evaluation patients;earliestECG reference,synthetic normal/abnormal twins fine-tune patient classifiers,remainingtest records train population model (§4.4). No empirical privacy test; preserving identity raises distinct disclosure questions.",
+  "reproducibility":"https://github.com/Raiiyf/ECGTwin;not inspected. Preprint analyzed;CIKM2026 program lists acceptance,publication date not independently established.",
+  "critique":"Reviewer: personalize evaluation with an independent identity model and verify generator/VAE patient overlap;pair counts are not independent patient counts."
+ },
+ "Wang_2025_SEDiff": {
+  "task_model":"Text/EHR-conditioned latent diffusion with frozenVAE/beatdecoder,simulatorEuler and interlead constraints (§3).",
+  "data_protocol":"MIMIC-IV-ECG800,03510s12lead500Hz records linked to clinical EHR;4×128latents;XQRS whenHRmissing. Final split sizes,patient separation and retrieval-index restrictions unclear (§4).",
+  "metrics":"Conditional rawMAE,NRMSE,Pearson;HRMAE;relativeCLIP=generated/real paired-text cosine;relativeFID=synthetic-realFID/real-realFID (Eq26);classificationF1,accuracy,AUROC (Tables1–2). RelativeFID formula should decrease, but table labels upward: unresolved discrepancy.",
+  "losses":"VAE fullMSE+beta_KL KL+beatMSE+alpha_spec averaged squared log-rFFT discrepancy over allbeats (Eqs12–16). Diffusion noiseMSE+lambda Euler+gamma interlead (Eqs17–23);globalcoefficients not specified. Simulatorfitting adds affine/trendMSE,scale,width,amplitude and phase-order penalties (AppendixA.3).",
+  "evidence":"Table1 noSim HRMAE14.28 versusfull8.43;noInterLead19.21. Critical equation ambiguity: regularizers described on h=Dbeat(z0) with frozen encoder/decoder,not predicted z0;as written no denoiser gradient path. Code inspection needed before assuming implemented regularization matches paper. No CI/test statistics in comparison tables.",
+  "utility_expert_privacy":"Minoritysex andSVT augmentation versus skewed/balancedreal andDiffuSETS;SVTAUROC .80→.85,balancedreference .93 (Table2). No blindedclinician or privacy attacks reported.",
+  "reproducibility":"Preprint;weights and gradient-path ambiguity are material. Same-label waveform pairing does not imply temporal groundtruth alignment.",
+  "critique":"Reviewer: promising hybrid objective, but cannot recommend exact reproduction without resolving gradient dependence and relativeFID direction."
+ },
+ "Nunez_2024_Augmentation": {
+  "task_model":"Comparison of SSSD/Diffwave,conditionalUnet1D(Time-Diffusion),and Time-VQVAE with bidirectional masked-tokenpriors (§5).",
+  "data_protocol":"PTB-XL andChapman,12lead10s,seven commonrhythm classes. Dataset descriptive counts18,885 and45,152patients;per-class selectedcountsTable4. Hz/split patientgrouping not fully resolved from methods;do not infer from originaldataset (§4,§8).",
+  "metrics":"t-SNE,UMAP,PaCMAP;RBF-MMD;two-sample real/fakeclassifier accuracy50%target;classificationaccuracy,precision,recall,F1,ROC-AUC;25repeataverages (§7–8).",
+  "losses":"Diffusion variational/noisedenoising objectives inherited;Time-VQVAE separatesLF/HF STFT quantization thenmasked-tokenpriortraining. Complete weightedobjectives/codeconfigs not specified in paper (§5);classificationloss separate from generatorloss.",
+  "evidence":"Single-datasetaugmentation benefit limited;mergingdatasets improves results;syntheticpretraining alone remains weaker thanreal-only (Results,Conclusion).25repeats improve repeatability but do not fix patientleakage.",
+  "utility_expert_privacy":"TRTR,TSTS,TSTR,TRTS,mixedtrain/realtest;fine-tunes classifierhead on20/40/60/80%realdata withfeaturelayersfrozen (§7–8). No expert/privacyattackstudy.",
+  "reproducibility":"Selects openimplementations thattrain without major tuning;reproducibility selection limits completeness of modelcomparison. Preprint analyzed.",
+  "critique":"Reviewer: negativefindings and real-only reference are valuable;TSTS and embeddings cannot replace held-outrealutility."
+ },
+ "Yang_2024_CECGGAN": {
+  "task_model":"TransformerconditionalGAN with encoder/decoder latentmapping for minoritybeataugmentation (Methods).",
+  "data_protocol":"MIT-BIH47subjects,300point R-centeredbeats;db5nine-levelwaveletdenoising;N/A/V/L/R. CSPC2020additional10patients,~24h each. ResNettrainrate.8;independentpatienttest and generator/classifier split boundaries unclear (Methods,Tables3,9–11).",
+  "metrics":"PRD,curveFD,RMSE,MAE;classificationprecision,recall,F1;denoisingSNR is preprocessingassessment,not generativefidelity. FD formula underdefined. Sample-selection accepts generateddata when classifierperformance improves (Table4,selectionsection).",
+  "losses":"Encoder/decoderreconstruction,latentgeneratoralignment,and conditionaladversarialtraining described as stages;complete equations and coefficients not reported in methods. No directlossablation (Table4).",
+  "evidence":"MIT-BIH averageF1 94.102→98.7255%;minorityA1950→68024examples;CSPCresults also improve (Tables9–11). No independenttest restriction on classifier-driven sampleselection stated;potentialselectionleakage.",
+  "utility_expert_privacy":"Augmentation experiments,not TSTR. No blindedexpert or privacyattack. Synthesizing from3–4people per grouplimits diversity (Discussion).",
+  "reproducibility":"Normalization/pairing and exactobjective incomplete. Reported externaldataset is retrainingevaluation,not verifiedzero-shotvalidation.",
+  "critique":"Reviewer: benefits cannot be attributed to a specific loss;validate selection onvalidationdata only and keep realtest untouched."
+ },
+ "Tiwari_2026_Minority": {
+  "task_model":"Class-conditionedWGAN-GP plus hierarchicalmultistreamResNet34 (Proposedmodel).",
+  "data_protocol":"MIT-BIH109,446beats/47subjects,5AAMIclasses;1lead360Hz360sample R-centeredz-scoredbeats,db6denoising;S/F raisedto10,000each. Cross-validation described on fullyaugmenteddataset;patientdisjointreal-onlytest not established (Dataset,Results).",
+  "metrics":"Macro/per-classF1,accuracy,ROC-AUC,visualwaveforms,claimedlowDTW/highSSIM without detailed numericalprotocol (Tables2–4,Fig3).",
+  "losses":"ConditionalWassersteincritic withGPweight10 and auxiliaryclassificationlogit. Eq1 prints +GP under criticmaximization,opposite a penalizedcritic;faithful issueflag,not silentlycorrected. Auxiliarylossweight not supplied (augmentationmodule).",
+  "evidence":"NoaugmentationmacroF1 .78;GAN+singleResNet .89;full .94 (Table3).5fold scores .932,.945,.938,.941,.944 do not support printedSD .012 under usual SDdefinition (Table4);uncertainty reporting needs clarification.",
+  "utility_expert_privacy":"S/FclassF1 .72/.65→.92/.90;classifierandaugmentation effects partly separated. No independentclinicalassessment orprivacytest.",
+  "reproducibility":"Some objectiveandvarianceinconsistencies;dataset-onlyvalidation acknowledged. Sourcecode not inspected.",
+  "critique":"Reviewer: CVafteraugmentation may leak generator knowledge acrossfolds;do not accept reported gains as patientgeneralization without retraininggeneratorwithin eachfold."
+ },
+ "Zhang_2026_QualityGAN": {
+  "task_model":"Kurtosis-quality-weightedGAN forAFaugmentation plusPEAC-Netclassifier (§3).",
+  "data_protocol":"PhysioNet2017 8528 singlelead300Hzrecords;exclude46noisy;80/20 recording split then10ssegments;trainAF1841→6000segments(4159synthetic). Patientidentityseparation unclear;MIT-BIHsecondaryassessment (§3.1,Table4).",
+  "metrics":"Generationvisualization/t-SNE,trainingkurtosis;classifieraccuracy,precision,sensitivity,specificity,F1;noise robustness. GFLOPs,parameters,6.82mslatency describe CLASSIFIER,not generator (§4–5,Table12).",
+  "losses":"KurtosisK=E[(x−mu)^4]/sigma^4;realsofttarget alpha+(1−alpha)tanh(log((K+1)/5));alpha=.7selected. Discriminator −E[y_real logD(real)]−Elog(1−D(fake)) (Eqs3–5),a weightedpositivelogterm rather than full soft-labelBCE. Generatorobjective not separatelyexpanded in extracted subsection.",
+  "evidence":"QA-GANablationF1 .816 vs noaug .793,weightedloss .809;fullsystem .880 includes classifierchanges (§5.3,Tables10–11). Alpha sweep supports .7;sharp artifacts can also havehighkurtosis (Methods).",
+  "utility_expert_privacy":"Real-only,randomoversampling,SMOTE,weightedlosscomparators. No blindedclinicalpanel,formaldiversitycoverage metric,or privacyattack.",
+  "reproducibility":"Record counts andtrainingaugmentationtraceable. Paper's Eq11specificity denominator printedTN+FP+TN (duplicatedTN),contradicts standarddefinition;do not copyinto benchmark.",
+  "critique":"Reviewer: t-SNEoverlap is not proof of coverage;qualitygating may discard genuine low-voltagepathology. Evaluate rejectionrates bydiagnosis."
+ }
+}

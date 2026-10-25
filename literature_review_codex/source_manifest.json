@@ -1,0 +1,1632 @@
+[
+  {
+    "study_id": "Nunez_2024_Augmentation",
+    "title": "Synthetic ECG Generation for Data Augmentation and Transfer Learning in Arrhythmia Classification",
+    "authors": "José Fernando Núñez and Jamie Arjona and Javier Béjar",
+    "year": "2024",
+    "arxiv": "2411.18456v1",
+    "doi": "",
+    "first_public_date": "2024-11-27",
+    "updated": "2024-11-27",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2411.18456v1",
+    "abstract": "Deep learning models need a sufficient amount of data in order to be able to find the hidden patterns in it. It is the purpose of generative modeling to learn the data distribution, thus allowing us to sample more data and augment the original dataset. In the context of physiological data, and more specifically electrocardiogram (ECG) data, given its sensitive nature and expensive data collection, we can exploit the benefits of generative models in order to enlarge existing datasets and improve downstream tasks, in our case, classification of heart rhythm. In this work, we explore the usefulness of synthetic data generated with different generative models from Deep Learning namely Diffweave, Time-Diffusion and Time-VQVAE in order to obtain better classification results for two open source multivariate ECG datasets. Moreover, we also investigate the effects of transfer learning, by fine-tuning a synthetically pre-trained model and then progressively adding increasing proportions of real data. We conclude that although the synthetic samples resemble the real ones, the classification improvement when simply augmenting the real dataset is barely noticeable on individual datasets, but when both datasets are merged the results show an increase across all metrics for the classifiers when using synthetic samples as augmented data. From the fine-tuning results the Time-VQVAE generative model has shown to be superior to the others but not powerful enough to achieve results close to a classifier trained with real data only. In addition, methods and metrics for measuring closeness between synthetic data and the real one have been explored as a side effect of the main research questions of this study.",
+    "source_key": "arxiv:0",
+    "pdf_pages": 23,
+    "files": [
+      "papers/2024/Nunez_2024_Augmentation/paper.pdf",
+      "papers/2024/Nunez_2024_Augmentation/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2411.18456v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 328259
+      },
+      {
+        "url": "https://arxiv.org/abs/2411.18456v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 44305
+      }
+    ]
+  },
+  {
+    "study_id": "Speziale_2026_Amyloidosis",
+    "title": "A Usable GAN-Based Tool for Synthetic ECG Generation in Cardiac Amyloidosis Research",
+    "authors": "Francesco Speziale and Ugo Lomoio and Fabiola Boccuto and Pierangelo Veltri and Pietro Hiram Guzzi",
+    "year": "2026",
+    "arxiv": "2601.08260v1",
+    "doi": "",
+    "first_public_date": "2026-01-13",
+    "updated": "2026-01-13",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2601.08260v1",
+    "abstract": "Cardiac amyloidosis (CA) is a rare and underdiagnosed infiltrative cardiomyopathy, and available datasets for machine-learning models are typically small, imbalanced and heterogeneous. This paper presents a Generative Adversarial Network (GAN) and a graphical command-line interface for generating realistic synthetic electrocardiogram (ECG) beats to support early diagnosis and patient stratification in CA. The tool is designed for usability, allowing clinical researchers to train class-specific generators once and then interactively produce large volumes of labelled synthetic beats that preserve the distribution of minority classes.",
+    "source_key": "arxiv:1",
+    "pdf_pages": 8,
+    "files": [
+      "papers/2026/Speziale_2026_Amyloidosis/paper.pdf",
+      "papers/2026/Speziale_2026_Amyloidosis/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2601.08260v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 328396
+      },
+      {
+        "url": "https://arxiv.org/abs/2601.08260v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 39936
+      }
+    ]
+  },
+  {
+    "study_id": "Huang_2025_MIDT",
+    "title": "High-Fidelity Synthetic ECG Generation via Mel-Spectrogram Informed Diffusion Training",
+    "authors": "Zhuoyi Huang and Nutan Sahoo and Anamika Kumari and Girish Kumar and Kexuan Cai and Shixing Cao and Yue Kang and Tian Xia and Somya Chatterjee and Nicholas Hausman and Aidan Jay and Eric S. Rosenthal and Soundar Srinivasan and Sadid Hasan and Alex Fedorov and Sulaiman Vesal",
+    "year": "2025",
+    "arxiv": "2510.05492v2",
+    "doi": "",
+    "first_public_date": "2025-10-07",
+    "updated": "2025-10-09",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2510.05492v2",
+    "abstract": "The development of machine learning for cardiac care is severely hampered by privacy restrictions on sharing real patient electrocardiogram (ECG) data. Although generative AI offers a promising solution, the real-world use of existing model-synthesized ECGs is limited by persistent gaps in trustworthiness and clinical utility. In this work, we address two major shortcomings of current generative ECG methods: insufficient morphological fidelity and the inability to generate personalized, patient-specific physiological signals. To address these gaps, we build on a conditional diffusion-based Structured State Space Model (SSSD-ECG) with two principled innovations: (1) MIDT-ECG (Mel-Spectrogram Informed Diffusion Training), a novel training paradigm with time-frequency domain supervision to enforce physiological structural realism, and (2) multi-modal demographic conditioning to enable patient-specific synthesis. We comprehensively evaluate our approach on the PTB-XL dataset, assessing the synthesized ECG signals on fidelity, clinical coherence, privacy preservation, and downstream task utility. MIDT-ECG achieves substantial gains: it improves morphological coherence, preserves strong privacy guarantees with all metrics evaluated exceeding the baseline by 4-8%, and notably reduces the interlead correlation error by an average of 74%, while demographic conditioning enhances signal-to-noise ratio and personalization. In critical low-data regimes, a classifier trained on datasets supplemented with our synthetic ECGs achieves performance comparable to a classifier trained solely on real data. Together, we demonstrate that ECG synthesizers, trained with the proposed time-frequency structural regularization scheme, can serve as personalized, high-fidelity, privacy-preserving surrogates when real data are scarce, advancing the responsible use of generative AI in healthcare.",
+    "source_key": "arxiv:4",
+    "pdf_pages": 16,
+    "files": [
+      "papers/2025/Huang_2025_MIDT/paper.pdf",
+      "papers/2025/Huang_2025_MIDT/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2510.05492v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 4472355
+      },
+      {
+        "url": "https://arxiv.org/abs/2510.05492v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 46574
+      }
+    ]
+  },
+  {
+    "study_id": "Pohl_2025_MultiBeat",
+    "title": "Generating Realistic Multi-Beat ECG Signals",
+    "authors": "Paul Pöhl and Viktor Schlegel and Hao Li and Anil Bharath",
+    "year": "2025",
+    "arxiv": "2505.18189v1",
+    "doi": "",
+    "first_public_date": "2025-05-19",
+    "updated": "2025-05-19",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2505.18189v1",
+    "abstract": "Generating synthetic ECG data has numerous applications in healthcare, from educational purposes to simulating scenarios and forecasting trends. While recent diffusion models excel at generating short ECG segments, they struggle with longer sequences needed for many clinical applications. This paper proposes a novel three-layer synthesis framework for generating realistic long-form ECG signals. We first generate high-fidelity single beats using a diffusion model, then synthesize inter-beat features preserving critical temporal dependencies, and finally assemble beats into coherent long sequences using feature-guided matching. Our comprehensive evaluation demonstrates that the resulting synthetic ECGs maintain both beat-level morphological fidelity and clinically relevant inter-beat relationships. In arrhythmia classification tasks, our long-form synthetic ECGs significantly outperform end-to-end long-form ECG generation using the diffusion model, highlighting their potential for increasing utility for downstream applications. The approach enables generation of unprecedented multi-minute ECG sequences while preserving essential diagnostic characteristics.",
+    "source_key": "arxiv:6",
+    "pdf_pages": 8,
+    "files": [
+      "papers/2025/Pohl_2025_MultiBeat/paper.pdf",
+      "papers/2025/Pohl_2025_MultiBeat/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2505.18189v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 1493677
+      },
+      {
+        "url": "https://arxiv.org/abs/2505.18189v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 41663
+      }
+    ]
+  },
+  {
+    "study_id": "Bondar_2025_FlowECG",
+    "title": "FlowECG: Using Flow Matching to Create a More Efficient ECG Signal Generator",
+    "authors": "Vitalii Bondar and Serhii Semenov and Vira Babenko and Dmytro Holovniak",
+    "year": "2025",
+    "arxiv": "2509.10491v1",
+    "doi": "10.1007/978-3-032-18415-3_32",
+    "first_public_date": "2025-08-31",
+    "updated": "2025-08-31",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2509.10491v1",
+    "abstract": "Synthetic electrocardiogram generation serves medical AI applications requiring privacy-preserving data sharing and training dataset augmentation. Current diffusion-based methods achieve high generation quality but require hundreds of neural network evaluations during sampling, creating computational bottlenecks for clinical deployment. We propose FlowECG, a flow matching approach that adapts the SSSD-ECG architecture by replacing the iterative diffusion process with continuous flow dynamics. Flow matching learns direct transport paths from noise to data distributions through ordinary differential equation solving. We evaluate our method on the PTB-XL dataset using Dynamic Time Warping, Wasserstein distance, Maximum Mean Discrepancy, and spectral similarity metrics. FlowECG matches SSSD-ECG performance at 200 neural function evaluations, outperforming the baseline on three metrics. The key finding shows that FlowECG maintains generation quality with substantially fewer sampling steps, achieving comparable results with 10-25 evaluations compared to 200 for diffusion methods. This efficiency improvement reduces computational requirements by an order of magnitude while preserving physiologically realistic 12-lead ECG characteristics. The approach enables practical deployment in resource-limited clinical settings where real-time generation or large-scale synthetic data creation is needed.",
+    "source_key": "arxiv:10",
+    "pdf_pages": 8,
+    "files": [
+      "papers/2025/Bondar_2025_FlowECG/paper.pdf",
+      "papers/2025/Bondar_2025_FlowECG/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2509.10491v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 742531
+      },
+      {
+        "url": "https://arxiv.org/abs/2509.10491v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 44460
+      }
+    ]
+  },
+  {
+    "study_id": "Yehuda_2024_MultiODE",
+    "title": "ODE-Constrained Generative Modeling of Cardiac Dynamics for 12-Lead ECG Synthesis",
+    "authors": "Yakir Yehuda and Kira Radinsky",
+    "year": "2024",
+    "arxiv": "2409.17833v2",
+    "doi": "",
+    "first_public_date": "2024-09-26",
+    "updated": "2026-03-19",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2409.17833v2",
+    "abstract": "Generating realistic training data for supervised learning remains a significant challenge in artificial intelligence, particularly in domains where large, expert-labeled datasets are scarce or costly to obtain. This is especially true for electrocardiograms (ECGs), where privacy constraints, class imbalance, and the need for physician annotation limit the availability of labeled 12-lead recordings, motivating the development of high-fidelity synthetic ECG data. The primary challenge in this task lies in accurately modeling the intricate biological and physiological interactions among different ECG leads. Although mathematical process models have shed light on these dynamics, effectively incorporating this understanding into generative models is not straightforward. We introduce an innovative method that employs ordinary differential equations (ODEs) to enhance the fidelity of 12-lead ECG data generation. This approach integrates cardiac dynamics directly into the generative optimization process via a novel Euler Loss, producing biologically plausible data that respects real-world variability and inter-lead constraints. Empirical analysis on the G12EC and PTB-XL datasets demonstrates that augmenting training data with MultiODE-GAN yields consistent, statistically significant improvements in specificity across multiple cardiac abnormalities. This highlights the value of enforcing physiological coherence in synthetic medical data.",
+    "source_key": "arxiv:11",
+    "pdf_pages": 19,
+    "files": [
+      "papers/2024/Yehuda_2024_MultiODE/paper.pdf",
+      "papers/2024/Yehuda_2024_MultiODE/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2409.17833v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 808570
+      },
+      {
+        "url": "https://arxiv.org/abs/2409.17833v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 42175
+      }
+    ]
+  },
+  {
+    "study_id": "Sviridov_2025_cNVAE",
+    "title": "Conditional Electrocardiogram Generation Using Hierarchical Variational Autoencoders",
+    "authors": "Ivan Sviridov and Konstantin Egorov",
+    "year": "2025",
+    "arxiv": "2503.13469v2",
+    "doi": "10.3103/S0005105525701407",
+    "first_public_date": "2025-03-03",
+    "updated": "2025-04-28",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2503.13469v2",
+    "abstract": "Cardiovascular diseases (CVDs) are disorders impacting the heart and circulatory system. These disorders are the foremost and continuously escalating cause of mortality worldwide. One of the main tasks when working with CVDs is analyzing and identifying pathologies on a 12-lead electrocardiogram (ECG) with a standard 10-second duration. Using machine learning (ML) in automatic ECG analysis increases CVD diagnostics' availability, speed, and accuracy. However, the most significant difficulty in developing ML models is obtaining a sufficient training dataset. Due to the limitations of medical data usage, such as expensiveness, errors, the ambiguity of labels, imbalance of classes, and privacy issues, utilizing synthetic samples depending on specific pathologies bypasses these restrictions and improves algorithm quality. Existing solutions for the conditional generation of ECG signals are mainly built on Generative Adversarial Networks (GANs), and only a few papers consider the architectures based on Variational Autoencoders (VAEs), showing comparable results in recent works. This paper proposes the publicly available conditional Nouveau VAE model for ECG signal generation (cNVAE-ECG), which produces high-resolution ECGs with multiple pathologies. We provide an extensive comparison of the proposed model on various practical downstream tasks, including transfer learning scenarios showing an area under the receiver operating characteristic (AUROC) increase up to 2% surpassing GAN-like competitors.",
+    "source_key": "arxiv:12",
+    "pdf_pages": 10,
+    "files": [
+      "papers/2025/Sviridov_2025_cNVAE/paper.pdf",
+      "papers/2025/Sviridov_2025_cNVAE/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2503.13469v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 1657392
+      },
+      {
+        "url": "https://arxiv.org/abs/2503.13469v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 44800
+      }
+    ]
+  },
+  {
+    "study_id": "Oladunni_2026_Complementarity",
+    "title": "Complementarity-Preserving Generative Theory for Multimodal ECG Synthesis: A Quantum-Inspired Approach",
+    "authors": "Timothy Oladunni and Farouk Ganiyu-Adewumi and Clyde Baidoo and Kyndal Maclin",
+    "year": "2026",
+    "arxiv": "2603.26695v1",
+    "doi": "",
+    "first_public_date": "2026-03-16",
+    "updated": "2026-03-16",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2603.26695v1",
+    "abstract": "Multimodal deep learning has substantially improved electrocardiogram (ECG) classification by jointly leveraging time, frequency, and time-frequency representations. However, existing generative models typically synthesize these modalities independently, resulting in synthetic ECG data that are visually plausible yet physiologically inconsistent across domains. This work establishes a Complementarity-Preserving Generative Theory (CPGT), which posits that physiologically valid multimodal signal generation requires explicit preservation of cross-domain complementarity rather than loosely coupled modality synthesis. We instantiate CPGT through Q-CFD-GAN, a quantum-inspired generative framework that models multimodal ECG structure within a complex-valued latent space and enforces complementarity-aware constraints regulating mutual information, redundancy, and morphological coherence. Experimental evaluation demonstrates that Q-CFD-GAN reduces latent embedding variance by 82%, decreases classifier-based plausibility error by 26.6%, and restores tri-domain complementarity from 0.56 to 0.91, while achieving the lowest observed morphology deviation (3.8%). These findings show that preserving multimodal information geometry, rather than optimizing modality-specific fidelity alone, is essential for generating synthetic ECG signals that remain physiologically meaningful and suitable for downstream clinical machine-learning applications.",
+    "source_key": "arxiv:13",
+    "pdf_pages": 10,
+    "files": [
+      "papers/2026/Oladunni_2026_Complementarity/paper.pdf",
+      "papers/2026/Oladunni_2026_Complementarity/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2603.26695v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 449469
+      },
+      {
+        "url": "https://arxiv.org/abs/2603.26695v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 43638
+      }
+    ]
+  },
+  {
+    "study_id": "Skorik_2024_SSSDnle",
+    "title": "SSSD-ECG-nle: New Label Embeddings with Structured State-Space Models for ECG generation",
+    "authors": "Sergey Skorik and Aram Avetisyan",
+    "year": "2024",
+    "arxiv": "2407.11108v1",
+    "doi": "",
+    "first_public_date": "2024-07-15",
+    "updated": "2024-07-15",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2407.11108v1",
+    "abstract": "An electrocardiogram (ECG) is vital for identifying cardiac diseases, offering crucial insights for diagnosing heart conditions and informing potentially life-saving treatments. However, like other types of medical data, ECGs are subject to privacy concerns when distributed and analyzed. Diffusion models have made significant progress in recent years, creating the possibility for synthesizing data comparable to the real one and allowing their widespread adoption without privacy concerns. In this paper, we use diffusion models with structured state spaces for generating digital 10-second 12-lead ECG signals. We propose the SSSD-ECG-nle architecture based on SSSD-ECG with a modified conditioning mechanism and demonstrate its efficiency on downstream tasks. We conduct quantitative and qualitative evaluations, including analyzing convergence speed, the impact of adding positive samples, and assessment with physicians' expert knowledge. Finally, we share the results of physician evaluations and also make synthetic data available to ensure the reproducibility of the experiments described.",
+    "source_key": "arxiv:14",
+    "pdf_pages": 7,
+    "files": [
+      "papers/2024/Skorik_2024_SSSDnle/paper.pdf",
+      "papers/2024/Skorik_2024_SSSDnle/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2407.11108v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 609592
+      },
+      {
+        "url": "https://arxiv.org/abs/2407.11108v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 41468
+      }
+    ]
+  },
+  {
+    "study_id": "Lai_2025_ECGTwin",
+    "title": "ECGTwin: Personalized ECG Generation Using Controllable Diffusion Model",
+    "authors": "Yongfan Lai and Bo Liu and Xinyan Guan and Qinghao Zhao and Hongyan Li and Shenda Hong",
+    "year": "2025",
+    "arxiv": "2508.02720v2",
+    "doi": "",
+    "first_public_date": "2025-08-01",
+    "updated": "2026-02-02",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2508.02720v2",
+    "abstract": "Personalized electrocardiogram (ECG) generation is to simulate a patient's ECG digital twins tailored to specific conditions. It has the potential to transform traditional healthcare into a more accurate individualized paradigm, while preserving the key benefits of conventional population-level ECG synthesis. However, this promising task presents two fundamental challenges: extracting individual features without ground truth and injecting various types of conditions without confusing generative model. In this paper, we present ECGTwin, a two-stage framework designed to address these challenges. In the first stage, an Individual Base Extractor trained via contrastive learning robustly captures personal features from a reference ECG. In the second stage, the extracted individual features, along with a target cardiac condition, are integrated into the diffusion-based generation process through our novel AdaX Condition Injector, which injects these signals via two dedicated and specialized pathways. Both qualitative and quantitative experiments have demonstrated that our model can not only generate ECG signals of high fidelity and diversity by offering a fine-grained generation controllability, but also preserving individual-specific features. Furthermore, ECGTwin shows the potential to enhance ECG auto-diagnosis in downstream application, confirming the possibility of precise personalized healthcare solutions.",
+    "source_key": "arxiv:16",
+    "pdf_pages": 23,
+    "files": [
+      "papers/2025/Lai_2025_ECGTwin/paper.pdf",
+      "papers/2025/Lai_2025_ECGTwin/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2508.02720v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 15342909
+      },
+      {
+        "url": "https://arxiv.org/abs/2508.02720v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 43808
+      }
+    ]
+  },
+  {
+    "study_id": "Wang_2025_SEDiff",
+    "title": "Simulator and Experience Enhanced Diffusion Model for Comprehensive ECG Generation",
+    "authors": "Xiaoda Wang and Kaiqiao Han and Yuhao Xu and Xiao Luo and Yizhou Sun and Wei Wang and Carl Yang",
+    "year": "2025",
+    "arxiv": "2511.09895v1",
+    "doi": "",
+    "first_public_date": "2025-11-13",
+    "updated": "2025-11-13",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2511.09895v1",
+    "abstract": "Cardiovascular disease (CVD) is a leading cause of mortality worldwide. Electrocardiograms (ECGs) are the most widely used non-invasive tool for cardiac assessment, yet large, well-annotated ECG corpora are scarce due to cost, privacy, and workflow constraints. Generating ECGs can be beneficial for the mechanistic understanding of cardiac electrical activity, enable the construction of large, heterogeneous, and unbiased datasets, and facilitate privacy-preserving data sharing. Generating realistic ECG signals from clinical context is important yet underexplored. Recent work has leveraged diffusion models for text-to-ECG generation, but two challenges remain: (i) existing methods often overlook the physiological simulator knowledge of cardiac activity; and (ii) they ignore broader, experience-based clinical knowledge grounded in real-world practice. To address these gaps, we propose SE-Diff, a novel physiological simulator and experience enhanced diffusion model for comprehensive ECG generation. SE-Diff integrates a lightweight ordinary differential equation (ODE)-based ECG simulator into the diffusion process via a beat decoder and simulator-consistent constraints, injecting mechanistic priors that promote physiologically plausible waveforms. In parallel, we design an LLM-powered experience retrieval-augmented strategy to inject clinical knowledge, providing more guidance for ECG generation. Extensive experiments on real-world ECG datasets demonstrate that SE-Diff improves both signal fidelity and text-ECG semantic alignment over baselines, proving its superiority for text-to-ECG generation. We further show that the simulator-based and experience-based knowledge also benefit downstream ECG classification.",
+    "source_key": "arxiv:17",
+    "pdf_pages": 17,
+    "files": [
+      "papers/2025/Wang_2025_SEDiff/paper.pdf",
+      "papers/2025/Wang_2025_SEDiff/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2511.09895v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 3386015
+      },
+      {
+        "url": "https://arxiv.org/abs/2511.09895v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 44854
+      }
+    ]
+  },
+  {
+    "study_id": "Jin_2025_UniECG",
+    "title": "UniECG: Understanding and Generating ECG in One Unified Model",
+    "authors": "Jiarui Jin and Haoyu Wang and Xiang Lan and Jun Li and Hongyan Li and Shenda Hong",
+    "year": "2025",
+    "arxiv": "2509.18588v2",
+    "doi": "",
+    "first_public_date": "2025-09-23",
+    "updated": "2026-06-17",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2509.18588v2",
+    "abstract": "Electrocardiogram (ECG) interpretation is a fundamental skill in medical education, yet students often need more than static examples to connect waveform evidence with diagnostic reasoning. This paper presents UniECG as a step toward interactive ECG education. UniECG supports two complementary learning interactions: given an ECG signal or image, it generates an evidence-based explanation; given a textual learning objective, it generates a corresponding ECG signal example for case-based learning. The model follows a two-stage design. First, it learns grounded ECG explanation from ECG signal--image--text data. Second, it introduces special ECG generation tokens and aligns their hidden representations with a pretrained text-conditioned ECG diffusion model, enabling controllable signal-level ECG generation. We evaluate UniECG through grounded ECG explanation and generation-oriented qualitative analysis, examining its potential to support explanation and case-based learning. UniECG is intended as an educational aid and a research step toward interactive AI-assisted ECG learning, rather than a clinically validated diagnostic system.",
+    "source_key": "arxiv:18",
+    "pdf_pages": 8,
+    "files": [
+      "papers/2025/Jin_2025_UniECG/paper.pdf",
+      "papers/2025/Jin_2025_UniECG/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2509.18588v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 2548804
+      },
+      {
+        "url": "https://arxiv.org/abs/2509.18588v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 42054
+      }
+    ]
+  },
+  {
+    "study_id": "Wang_2026_PGLRF",
+    "title": "PG-LRF: Physiology-Guided Latent Rectified Flow for Electro-Hemodynamic PPG-to-ECG Generation",
+    "authors": "Xiaoda Wang and Minxiao Wang and Kaiqiao Han and Defu Cao and Ching Chang and Yidan Shi and Runze Yan and Xiao Luo and Yan Liu and Xiao Hu and Yizhou Sun and Wei Wang and Carl Yang",
+    "year": "2026",
+    "arxiv": "2605.12541v1",
+    "doi": "",
+    "first_public_date": "2026-05-09",
+    "updated": "2026-05-09",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2605.12541v1",
+    "abstract": "Electrocardiography (ECG) is the clinical standard for cardiac assessment but requires dedicated hardware that does not scale to daily-life monitoring. Photoplethysmography (PPG) is ubiquitous in wearables but lacks ECG-specific diagnostic morphology and is corrupted by motion and sensor noise. PPG-to-ECG generation aims to bridge this gap by recovering electrical morphology and timing from peripheral pulse signals. However, existing methods largely rely on statistical alignment and data-driven generation. They fail to explicitly structure the latent space around physiology-aware electro-hemodynamic factors and lack constraints from forward physiological dynamics. To address these challenges, we propose PG-LRF, a physiology-guided latent rectified flow framework. PG-LRF introduces an electro-hemodynamic simulator that co-models ECG and PPG through shared cardiac phase dynamics. Guided by this simulator, a Physiology-Aware AutoEncoder learns a structured electro-hemodynamic latent space. Then we integrate this simulator guidance into a PPG-conditioned latent rectified flow, enforcing ECG-side morphology consistency and ECG-to-PPG forward hemodynamic consistency during generative transport. Experiments on the large-scale MC-MED dataset demonstrate that PG-LRF significantly improves PPG-to-ECG generation and downstream cardiovascular disease classification, proving its ability to generate ECGs that are both signal-faithful and physiologically plausible under the ECG-to-PPG hemodynamic pathway",
+    "source_key": "arxiv:22",
+    "pdf_pages": 17,
+    "files": [
+      "papers/2026/Wang_2026_PGLRF/paper.pdf",
+      "papers/2026/Wang_2026_PGLRF/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2605.12541v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 2042834
+      },
+      {
+        "url": "https://arxiv.org/abs/2605.12541v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 44588
+      }
+    ]
+  },
+  {
+    "study_id": "Hu_2024_DigitalTwin",
+    "title": "Personalized Heart Disease Detection via ECG Digital Twin Generation",
+    "authors": "Yaojun Hu and Jintai Chen and Lianting Hu and Dantong Li and Jiahuan Yan and Haochao Ying and Huiying Liang and Jian Wu",
+    "year": "2024",
+    "arxiv": "2404.11171v2",
+    "doi": "10.24963/ijcai.2024/649",
+    "first_public_date": "2024-04-17",
+    "updated": "2024-05-11",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "IJCAI2024",
+    "landing_url": "https://arxiv.org/abs/2404.11171v2",
+    "abstract": "Heart diseases rank among the leading causes of global mortality, demonstrating a crucial need for early diagnosis and intervention. Most traditional electrocardiogram (ECG) based automated diagnosis methods are trained at population level, neglecting the customization of personalized ECGs to enhance individual healthcare management. A potential solution to address this limitation is to employ digital twins to simulate symptoms of diseases in real patients. In this paper, we present an innovative prospective learning approach for personalized heart disease detection, which generates digital twins of healthy individuals' anomalous ECGs and enhances the model sensitivity to the personalized symptoms. In our approach, a vector quantized feature separator is proposed to locate and isolate the disease symptom and normal segments in ECG signals with ECG report guidance. Thus, the ECG digital twins can simulate specific heart diseases used to train a personalized heart disease detection model. Experiments demonstrate that our approach not only excels in generating high-fidelity ECG signals but also improves personalized heart disease detection. Moreover, our approach ensures robust privacy protection, safeguarding patient data in model development.",
+    "source_key": "arxiv:28",
+    "pdf_pages": 12,
+    "files": [
+      "papers/2024/Hu_2024_DigitalTwin/paper.pdf",
+      "papers/2024/Hu_2024_DigitalTwin/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2404.11171v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 5756732
+      },
+      {
+        "url": "https://arxiv.org/abs/2404.11171v2",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 45507
+      }
+    ]
+  },
+  {
+    "study_id": "Fang_2025_PPGFlow",
+    "title": "PPGFlowECG: Latent Rectified Flow with Cross-Modal Encoding for PPG-Guided ECG Generation and Cardiovascular Disease Detection",
+    "authors": "Xiaocheng Fang and Jiarui Jin and Haoyu Wang and Che Liu and Jieyi Cai and Yujie Xiao and Guangkun Nie and Bo Liu and Shun Huang and Hongyan Li and Shenda Hong",
+    "year": "2025",
+    "arxiv": "2509.19774v3",
+    "doi": "",
+    "first_public_date": "2025-09-24",
+    "updated": "2026-10-13",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2509.19774v3",
+    "abstract": "Electrocardiography (ECG) is the clinical gold standard for cardiovascular disease (CVD) assessment, yet continuous monitoring is constrained by the need for dedicated hardware and trained personnel. Photoplethysmography (PPG) is ubiquitous in wearable devices and readily scalable, but it lacks electrophysiological specificity, limiting diagnostic reliability. While generative methods aim to translate PPG into clinically useful ECG signals, existing approaches are limited by the misalignment of physiological semantics in generative models and the complexity of modeling in high-dimensional signals. To address these limitations, we propose PPGFlowECG, a two-stage framework that aligns PPG and ECG in a shared latent space using the CardioAlign Encoder and then synthesizes ECGs with latent rectified flow. We further provide a formal analysis of this coupling, showing that the CardioAlign Encoder is necessary to guarantee stable and semantically consistent ECG synthesis under our formulation. Extensive experiments on four datasets demonstrate improved synthesis fidelity and downstream diagnostic utility. These results indicate that PPGFlowECG supports scalable, wearable-first CVD screening when standard ECG acquisition is unavailable.",
+    "source_key": "arxiv:32",
+    "pdf_pages": 10,
+    "files": [
+      "papers/2025/Fang_2025_PPGFlow/paper.pdf",
+      "papers/2025/Fang_2025_PPGFlow/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2509.19774v3",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 5458855
+      },
+      {
+        "url": "https://arxiv.org/abs/2509.19774v3",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 44731
+      }
+    ]
+  },
+  {
+    "study_id": "Cardoso_2023_Bayesian",
+    "title": "Bayesian ECG reconstruction using denoising diffusion generative models",
+    "authors": "Gabriel V. Cardoso and Lisa Bedin and Josselin Duchateau and Rémi Dubois and Eric Moulines",
+    "year": "2023",
+    "arxiv": "2401.05388v1",
+    "doi": "",
+    "first_public_date": "2023-12-18",
+    "updated": "2023-12-18",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2401.05388v1",
+    "abstract": "In this work, we propose a denoising diffusion generative model (DDGM) trained with healthy electrocardiogram (ECG) data that focuses on ECG morphology and inter-lead dependence. Our results show that this innovative generative model can successfully generate realistic ECG signals. Furthermore, we explore the application of recent breakthroughs in solving linear inverse Bayesian problems using DDGM. This approach enables the development of several important clinical tools. These include the calculation of corrected QT intervals (QTc), effective noise suppression of ECG signals, recovery of missing ECG leads, and identification of anomalous readings, enabling significant advances in cardiac health monitoring and diagnosis.",
+    "source_key": "arxiv:33",
+    "pdf_pages": 21,
+    "files": [
+      "papers/2023/Cardoso_2023_Bayesian/paper.pdf",
+      "papers/2023/Cardoso_2023_Bayesian/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2401.05388v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 2205770
+      },
+      {
+        "url": "https://arxiv.org/abs/2401.05388v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 39817
+      }
+    ]
+  },
+  {
+    "study_id": "Kong_2024_fGAN",
+    "title": "f-GAN: A frequency-domain-constrained generative adversarial network for PPG to ECG synthesis",
+    "authors": "Nathan C. L. Kong and Dae Lee and Huyen Do and Dae Hoon Park and Cong Xu and Hongda Mao and Jonathan Chung",
+    "year": "2024",
+    "arxiv": "2406.16896v1",
+    "doi": "",
+    "first_public_date": "2024-05-15",
+    "updated": "2024-05-15",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2406.16896v1",
+    "abstract": "Electrocardiograms (ECGs) and photoplethysmograms (PPGs) are generally used to monitor an individual's cardiovascular health. In clinical settings, ECGs and fingertip PPGs are the main signals used for assessing cardiovascular health, but the equipment necessary for their collection precludes their use in daily monitoring. Although PPGs obtained from wrist-worn devices are susceptible to noise due to motion, they have been widely used to continuously monitor cardiovascular health because of their convenience. Therefore, we would like to combine the ease with which PPGs can be collected with the information that ECGs provide about cardiovascular health by developing models to synthesize ECG signals from paired PPG signals. We tackled this problem using generative adversarial networks (GANs) and found that models trained using the original GAN formulations can be successfully used to synthesize ECG signals from which heart rate can be extracted using standard signal processing pipelines. Incorporating a frequency-domain constraint to model training improved the stability of model performance and also the performance on heart rate estimation.",
+    "source_key": "arxiv:36",
+    "pdf_pages": 5,
+    "files": [
+      "papers/2024/Kong_2024_fGAN/paper.pdf",
+      "papers/2024/Kong_2024_fGAN/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2406.16896v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 527565
+      },
+      {
+        "url": "https://arxiv.org/abs/2406.16896v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 41337
+      }
+    ]
+  },
+  {
+    "study_id": "Jang_2025_CoFE",
+    "title": "CoFE: A Framework Generating Counterfactual ECG for Explainable Cardiac AI-Diagnostics",
+    "authors": "Jong-Hwan Jang and Junho Song and Yong-Yeon Jo",
+    "year": "2025",
+    "arxiv": "2508.16033v1",
+    "doi": "",
+    "first_public_date": "2025-08-22",
+    "updated": "2025-08-22",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2508.16033v1",
+    "abstract": "Recognizing the need for explainable AI (XAI) approaches to enable the successful integration of AI-based ECG prediction models (AI-ECG) into clinical practice, we introduce a framework generating \\textbf{Co}unter\\textbf{F}actual \\textbf{E}CGs (i,e., named CoFE) to illustrate how specific features, such as amplitudes and intervals, influence the model's predictive decisions. To demonstrate the applicability of the CoFE, we present two case studies: atrial fibrillation classification and potassium level regression models. The CoFE reveals feature changes in ECG signals that align with the established clinical knowledge. By clarifying both \\textbf{where valid features appear} in the ECG and \\textbf{how they influence the model's predictions}, we anticipate that our framework will enhance the interpretability of AI-ECG models and support more effective clinical decision-making. Our demonstration video is available at: https://www.youtube.com/watch?v=YoW0bNBPglQ.",
+    "source_key": "arxiv:38",
+    "pdf_pages": 5,
+    "files": [
+      "papers/2025/Jang_2025_CoFE/paper.pdf",
+      "papers/2025/Jang_2025_CoFE/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2508.16033v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 1511735
+      },
+      {
+        "url": "https://arxiv.org/abs/2508.16033v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 40503
+      }
+    ]
+  },
+  {
+    "study_id": "Li_2025_CLEPGAN",
+    "title": "CLEP-GAN: An Innovative Approach to Subject-Independent ECG Reconstruction from PPG Signals",
+    "authors": "Xiaoyan Li and Shixin Xu and Faisal Habib and Neda Aminnejad and Arvind Gupta and Huaxiong Huang",
+    "year": "2025",
+    "arxiv": "2502.17536v1",
+    "doi": "",
+    "first_public_date": "2025-02-24",
+    "updated": "2025-02-24",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2502.17536v1",
+    "abstract": "This study addresses the challenge of reconstructing unseen ECG signals from PPG signals, a critical task for non-invasive cardiac monitoring. While numerous public ECG-PPG datasets are available, they lack the diversity seen in image datasets, and data collection processes often introduce noise, complicating ECG reconstruction from PPG even with advanced machine learning models. To tackle these challenges, we first introduce a novel synthetic ECG-PPG data generation technique using an ODE model to enhance training diversity. Next, we develop a novel subject-independent PPG-to-ECG reconstruction model that integrates contrastive learning, adversarial learning, and attention gating, achieving results comparable to or even surpassing existing approaches for unseen ECG reconstruction. Finally, we examine factors such as sex and age that impact reconstruction accuracy, emphasizing the importance of considering demographic diversity during model training and dataset augmentation.",
+    "source_key": "arxiv:39",
+    "pdf_pages": 52,
+    "files": [
+      "papers/2025/Li_2025_CLEPGAN/paper.pdf",
+      "papers/2025/Li_2025_CLEPGAN/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2502.17536v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 11036044
+      },
+      {
+        "url": "https://arxiv.org/abs/2502.17536v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 41908
+      }
+    ]
+  },
+  {
+    "study_id": "Xu_2025_DFNet",
+    "title": "Lightweight Multi-task CNN for ECG Diagnosis with GRU-Diffusion",
+    "authors": "Lehuai Xu and Zirui Lu and Haoran Yang and Yina Zhou",
+    "year": "2025",
+    "arxiv": "2511.14104v1",
+    "doi": "",
+    "first_public_date": "2025-11-18",
+    "updated": "2025-11-18",
+    "peer_reviewed_date": "",
+    "status": "preprint; publication status to verify",
+    "venue": "arXiv",
+    "landing_url": "https://arxiv.org/abs/2511.14104v1",
+    "abstract": "With the increasing demand for real-time Electrocardiogram (ECG) classification on edge devices, existing models face challenges of high computational cost and limited accuracy on imbalanced datasets.This paper presents Multi-task DFNet, a lightweight multi-task framework for ECG classification across the MIT-BIH Arrhythmia Database and the PTB Diagnostic ECG Database, enabling efficient task collaboration by dynamically sharing knowledge across tasks, such as arrhythmia detection, myocardial infarction (MI) classification, and other cardiovascular abnormalities. The proposed method integrates GRU-augmented Diffusion, where the GRU is embedded within the diffusion model to capture temporal dependencies better and generate high-quality synthetic signals for imbalanced classes. The experimental results show that Multi-task DFNet achieves 99.72% and 99.89% accuracy on the MIT-BIH dataset and PTB dataset, respectively, with significantly fewer parameters compared to traditional models, making it suitable for deployment on wearable ECG monitors. This work offers a compact and efficient solution for multi-task ECG diagnosis, providing a promising potential for edge healthcare applications on resource-constrained devices.",
+    "source_key": "arxiv:46",
+    "pdf_pages": 15,
+    "files": [
+      "papers/2025/Xu_2025_DFNet/paper.pdf",
+      "papers/2025/Xu_2025_DFNet/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2511.14104v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 6583174
+      },
+      {
+        "url": "https://arxiv.org/abs/2511.14104v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 40731
+      }
+    ]
+  },
+  {
+    "study_id": "Zanchi_2026_Validation",
+    "title": "Introducing a Comprehensive Framework for Synthetic ECG Validation",
+    "authors": "Zanchi B and Monachino G and Metaldi M and Conte G and Meystre S and Faraci FD",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.1109/ojemb.2026.3716291",
+    "first_public_date": "2026-07-23",
+    "peer_reviewed_date": "2026-07-23",
+    "status": "peer-reviewed",
+    "venue": "IEEE open journal of engineering in medicine and biology",
+    "pmid": "42877876",
+    "pmcid": "PMC13667384",
+    "landing_url": "https://doi.org/10.1109/ojemb.2026.3716291",
+    "abstract": "Goal:  While Generative AI addresses data scarcity and privacy in healthcare, the lack of standardized validation protocols hinders the deployment of safe and trustworthy AI. This study introduces a comprehensive framework for rigorously evaluating the authenticity and fidelity of synthetic biosignals, addressing the critical need for medical data quality assurance.  Methods:  The framework was validated using synthetic electrocardiograms (ECG) for Brugada Syndrome generated via Generative Adversarial Networks (GANs). The protocol integrates four complementary analytics layers: (1) visual morphological inspection; (2) statistical assessment of clinical biomarkers (e.g., QT-interval); (3) computational similarity metrics (e.g. MSE, DTW) to assess distributional fidelity; and (4) a human-centered validation where blinded expert cardiologist scored clinical realism.  Results:  Results demonstrated high statistical fidelity and morphological realism. Quantitative analysis showed no statistically significant differences in key clinical features between real and synthetic distributions. An expert cardiologist achieved near 50% accuracy (random chance) in distinguishing real from synthetic signals, consistent with the high authenticity of the generated data.  Conclusions:  This framework proposes a comprehensive methodology for validating generative healthcare models, intended as an initial step toward standardization in the field. By ensuring high-fidelity data generation, this approach supports robust predictive modeling and AI-based decision support, facilitating privacy-sensitive clinical research.",
+    "source_key": "epmc:42877876",
+    "files": [
+      "papers/2026/Zanchi_2026_Validation/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13667384/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 81125
+      }
+    ]
+  },
+  {
+    "study_id": "Russo_2026_Robustness",
+    "title": "Assessing the robustness of evaluation metrics for synthetic ECG signal quality",
+    "authors": "Russo M and Sousa I and Santos R and Rebelo J and Clemente F and Ribeiro G and Carreiro A and Barandas M",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.1016/j.compbiomed.2026.111824",
+    "first_public_date": "2026-06-29",
+    "peer_reviewed_date": "2026-06-29",
+    "status": "peer-reviewed",
+    "venue": "Computers in biology and medicine",
+    "pmid": "42372472",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1016/j.compbiomed.2026.111824",
+    "abstract": "The evaluation of synthetic biomedical data remains inconsistent across studies, limiting comparability and reproducibility. This work examines the robustness of evaluation metrics used for synthetic data assessment, using electrocardiograms (ECGs) as a case study. Five generative models, SSSD-ECG, WaveGAN*, Pulse2Pulse, cNVAE-ECG and YData's proprietary model, were assessed through metrics covering fidelity, diversity, privacy, and utility dimensions. Controlled perturbations were applied to synthetic ECGs across magnitude, time, and frequency domains to examine whether metrics remained stable under clinically irrelevant changes while responding to progressive degradations in waveform morphology. Results revealed distinct behaviors across quality dimensions. Within fidelity, density consistently captured structural distortions. For diversity, coverage provided a reliable assessment, decreasing as perturbations intensified. Privacy metrics increased with transformations, confirming the expected fidelity-privacy trade-off, whereas utility, measured by macro-AUROC, remained stable under moderate perturbations and declined only when diagnostic information was severely disrupted. Overall, findings indicate that metric robustness varies across quality dimensions and many of the commonly used metrics may fail to reflect meaningful signal degradations. The proposed perturbation analysis provides relevant insights, constituting a first step toward more reliable and interpretable evaluation pipelines for synthetic time-series data and underscores the need for continued research on robust evaluation metrics.",
+    "source_key": "epmc:42372472",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1016/j.compbiomed.2026.111824",
+        "error": "HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S0010482526003884 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Lai_2025_DiffuSETS",
+    "title": "DiffuSETS: 12-Lead ECG generation conditioned on clinical text reports and patient-specific information",
+    "authors": "Lai Y and Chen J and Zhao Q and Zhang D and Wang Y and Geng S and Li H and Hong S",
+    "year": "2025",
+    "arxiv": "2501.05932v1",
+    "doi": "10.1016/j.patter.2025.101291",
+    "first_public_date": "2025-01-10",
+    "peer_reviewed_date": "2025-06-11",
+    "status": "peer-reviewed",
+    "venue": "Patterns (New York, N.Y.)",
+    "pmid": "41142907",
+    "pmcid": "PMC12546759",
+    "landing_url": "https://doi.org/10.1016/j.patter.2025.101291",
+    "abstract": "The scarcity of high-quality electrocardiogram (ECG) data, driven by privacy concerns and limited medical resources, creates a pressing need for effective ECG signal generation. Existing approaches for generating ECG signals typically rely on small training datasets, lack comprehensive evaluation frameworks, and overlook potential applications beyond data augmentation. To address these challenges, we propose DiffuSETS, a framework capable of generating ECG signals with high semantic alignment and fidelity. DiffuSETS accepts various modalities of clinical text reports and patient-specific information as inputs, enabling the creation of clinically meaningful ECG signals. Additionally, we introduce a comprehensive benchmarking methodology to assess the effectiveness of ECG generative models. Our model achieves excellent results in tests, proving its superiority in the task of ECG generation. Furthermore, we showcase its potential to mitigate data scarcity while exploring applications in cardiology education and medical knowledge discovery.",
+    "source_key": "epmc:41142907",
+    "pdf_pages": 25,
+    "files": [
+      "papers/2025/Lai_2025_DiffuSETS/fulltext.xml",
+      "papers/2025/Lai_2025_DiffuSETS/paper.pdf",
+      "papers/2025/Lai_2025_DiffuSETS/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12546759/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 182174
+      },
+      {
+        "url": "https://arxiv.org/pdf/2501.05932v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 2791831
+      },
+      {
+        "url": "https://arxiv.org/abs/2501.05932v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 45378
+      }
+    ]
+  },
+  {
+    "study_id": "Adib_2025_GANComparison",
+    "title": "Synthetic ECG signal generation using generative neural networks",
+    "authors": "Adib E and Afghah F and Prevost JJ",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1371/journal.pone.0271270",
+    "first_public_date": "2025-03-25",
+    "peer_reviewed_date": "2025-03-25",
+    "status": "peer-reviewed",
+    "venue": "PloS one",
+    "pmid": "40132047",
+    "pmcid": "PMC11936209",
+    "landing_url": "https://doi.org/10.1371/journal.pone.0271270",
+    "abstract": "Electrocardiogram (ECG) datasets tend to be highly imbalanced due to the scarcity of abnormal cases. Additionally, the use of real patients' ECGs is highly regulated due to privacy issues. Therefore, there is always a need for more ECG data, especially for the training of automatic diagnosis machine learning models, which perform better when trained on a balanced dataset. We studied the synthetic ECG generation capability of 5 different models from the generative adversarial network (GAN) family and compared their performances, the focus being only on Normal cardiac cycles. Dynamic Time Warping (DTW), Fréchet, and Euclidean distance functions were employed to quantitatively measure performance. Five different methods for evaluating generated beats were proposed and applied. We also proposed 3 new concepts (threshold, accepted beat and productivity rate) and employed them along with the aforementioned methods as a systematic way for comparison between models. The results show that all the tested models can, to an extent, successfully mass-generate acceptable heartbeats with high similarity in morphological features, and potentially all of them can be used to augment imbalanced datasets. However, visual inspections of generated beats favors BiLSTM-DC GAN and WGAN, as they produce statistically more acceptable beats. Also, with regards to productivity rate, the Classic GAN is superior with a 72% productivity rate. We also designed a simple experiment with the state-of-the-art classifier (ECGResNet34) to show empirically that the augmentation of the imbalanced dataset by synthetic ECG signals could improve the performance of classification significantly.",
+    "source_key": "epmc:40132047",
+    "files": [
+      "papers/2025/Adib_2025_GANComparison/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11936209/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 192234
+      }
+    ]
+  },
+  {
+    "study_id": "Zhou_2024_BiLSTMCBAM",
+    "title": "ECG data enhancement method using generate adversarial networks based on Bi-LSTM and CBAM",
+    "authors": "Zhou F and Li J",
+    "year": "2024",
+    "arxiv": "",
+    "doi": "10.1088/1361-6579/ad2218",
+    "first_public_date": "2024-02-12",
+    "peer_reviewed_date": "2024-02-12",
+    "status": "peer-reviewed",
+    "venue": "Physiological measurement",
+    "pmid": "38266299",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1088/1361-6579/ad2218",
+    "abstract": "Objective. The classification performance of electrocardiogram (ECG) classification algorithms is easily affected by data imbalance, which often leads to poor model prediction performance for a few classes and a consequent decrease in the overall performance of the model. Approach. To address this problem, this paper proposed an ECG data augmentation method based on a generative adversarial network (GAN) that combines bidirectional long short-term memory (Bi-LSTM) networks and convolutional block attention mechanism (CBAM) to improve the overall performance of ECG classification models. In this paper, we used two ECG databases, namely the MIT-BIH arrhythmia (MIT-BIH-AR) database and the Chinese cardiovascular disease database (CCDD). The quality of the ECG signals produced by the generated models was assessed using the percent relative difference, root mean square error, Frechet distance, dynamic time warping (DTW), and Pearson correlation metrics. In addition, we also validated the impact of our proposed data augmentation method on ECG classification performance on MIT-BIH-AR database and CCDD. Main results. On the MIT-BIH-AR database, the overall accuracy of the data-enhanced balanced dataset was improved to 99.46% for 15 types of heartbeat classification task. On the CCDD, which focuses on the detection of ventricular precession (PVC), the overall accuracy of PVC detection improved to 99.15% after performing data enhancement. Significance. The experimental results indicate that the data augmentation method proposed in this paper can further improve the ECG classification performance.",
+    "source_key": "epmc:38266299",
+    "files": [
+      "papers/2024/Zhou_2024_BiLSTMCBAM/publisher.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1088/1361-6579/ad2218",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 176264
+      }
+    ]
+  },
+  {
+    "study_id": "Nishikimi_2024_FEMVAE",
+    "title": "Variational autoencoder-based neural electrocardiogram synthesis trained by FEM-based heart simulator",
+    "authors": "Nishikimi R and Nakano M and Kashino K and Tsukada S",
+    "year": "2024",
+    "arxiv": "",
+    "doi": "10.1016/j.cvdhj.2023.12.002",
+    "first_public_date": "2023-12-22",
+    "peer_reviewed_date": "2023-12-22",
+    "status": "peer-reviewed",
+    "venue": "Cardiovascular digital health journal",
+    "pmid": "38390581",
+    "pmcid": "PMC10879006",
+    "landing_url": "https://doi.org/10.1016/j.cvdhj.2023.12.002",
+    "abstract": "Background For comprehensive electrocardiogram (ECG) synthesis, a recent promising approach has been based on a heart model with physical and chemical cardiac parameters. However, the problem is that such approach requires a high-cost and limited environment using supercomputers owing to the massive computation. Objective The purpose of this study is to develop an efficient method for synthesizing 12-lead ECG signals from cardiac parameters. Methods The proposed method is based on a variational autoencoder (VAE). The encoder and decoder of the VAE are conditioned by the cardiac parameters so that it can model the relationship between the ECG signals and the cardiac parameters. The training data are produced by a comprehensive, finite element method (FEM)-based heart simulator. New ECG signals can then be synthesized by inputting the cardiac parameters into the trained VAE decoder without relying on enormous computational resources. We used 2 metrics to evaluate the quality of ECG signals synthesized by the proposed model. Results Experimental results showed that the proposed model synthesized adequate ECG signals while preserving empirically important feature points and the overall signal shapes. We also explored the optimal model by varying the number of layers and the size of latent variables in the proposed model that balances the model complexity and the simulation accuracy. Conclusion The proposed method has the potential to become an alternative to computationally expensive FEM-based heart simulators. It is able to synthesize ECGs from various cardiac parameters within seconds on a personal laptop computer.",
+    "source_key": "epmc:38390581",
+    "files": [
+      "papers/2024/Nishikimi_2024_FEMVAE/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10879006/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 111303
+      }
+    ]
+  },
+  {
+    "study_id": "Yang_2024_CECGGAN",
+    "title": "Data imbalance in cardiac health diagnostics using CECG-GAN",
+    "authors": "Yang Y and Lan T and Wang Y and Li F and Liu L and Huang X and Gao F and Jiang S and Zhang Z and Chen X",
+    "year": "2024",
+    "arxiv": "",
+    "doi": "10.1038/s41598-024-65619-8",
+    "first_public_date": "2024-06-26",
+    "peer_reviewed_date": "2024-06-26",
+    "status": "peer-reviewed",
+    "venue": "Scientific reports",
+    "pmid": "38926539",
+    "pmcid": "PMC11208545",
+    "landing_url": "https://doi.org/10.1038/s41598-024-65619-8",
+    "abstract": "Heart disease is the world's leading cause of death. Diagnostic models based on electrocardiograms (ECGs) are often limited by the scarcity of high-quality data and issues of data imbalance. To address these challenges, we propose a conditional generative adversarial network (CECG-GAN). This strategy enables the generation of samples that closely approximate the distribution of ECG data. Additionally, CECG-GAN addresses waveform jitter, slow processing speeds, and dataset imbalance issues through the integration of a transformer architecture. We evaluated this approach using two datasets: MIT-BIH and CSPC2020. The experimental results demonstrate that CECG-GAN achieves outstanding performance metrics. Notably, the percentage root mean square difference (PRD) reached 55.048, indicating a high degree of similarity between generated and actual ECG waveforms. Additionally, the Fréchet distance (FD) was approximately 1.139, the root mean square error (RMSE) registered at 0.232, and the mean absolute error (MAE) was recorded at 0.166.",
+    "source_key": "epmc:38926539",
+    "files": [
+      "papers/2024/Yang_2024_CECGGAN/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11208545/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 196128
+      }
+    ]
+  },
+  {
+    "study_id": "Kranz_2025_ECGEN",
+    "title": "Exploring latent diffusion models for ECG generation on the minute scale",
+    "authors": "Kranz DD and Krämer JF and Kahriman O and Nelde A and Wessel N and Meisel C",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1016/j.cmpb.2025.109138",
+    "first_public_date": "2025-11-01",
+    "peer_reviewed_date": "2025-11-01",
+    "status": "peer-reviewed",
+    "venue": "Computer methods and programs in biomedicine",
+    "pmid": "41205561",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1016/j.cmpb.2025.109138",
+    "abstract": "Background and objective Artificial Intelligence (AI) models for electrocardiogram (ECG) interpretation rely on large, diverse datasets, but existing clinical datasets are often skewed, overrepresenting normal rhythms and lacking rare pathologies. This limits model performance and generalizability. While generative AI has shown promise in other domains, its application to biosignals has so far been restricted to short segments, reducing clinical utility. Additionally, potentially promising tools like inpainting for artefact removal have not yet been explored in the biosignal domain. To overcome these limitations, we propose ECGEN, a latent diffusion model (LDM) designed to synthesize long-duration, realistic ECGs for data augmentation, rhythm-specific generation, and signal restoration. Methods We developed ECGEN in three configurations: (1) ECGEN-Small, a 30-second conditional generator for sinus rhythm and atrial fibrillation (AFib); (2) ECGEN-Medium, a 90-second model for inpainting tasks; and (3) ECGEN-Large, an unconditional model for generating 320-second ECGs. Models were trained on real clinical ECGs from stroke patients using a vector quantized-variational autoencoder (VQ-VAE) for encoding and a denoising diffusion implicit model (DDIM) as the latent space backbone. We evaluated model outputs using heart rate (HR), heart rate variability (HRV), and morphological coherence. Results ECGEN-Small achieved an AUC of 0.98 for the AFib vs. sinus rhythm classification. ECGEN-Medium successfully inpainted missing segments with plausible HR dynamics. ECGEN-Large generated long ECGs with consistent morphology but showed distributional shifts in HRV (e.g., inflated standard deviation of normal-to-normal intervals, SdNN), indicating incomplete modeling of global temporal dependencies. Network depth was found to significantly influence output quality and training stability. Conclusions ECGEN demonstrates the feasibility of long-duration ECG generation using LDMs, offering applications in dataset augmentation and signal restoration. However, distributional mismatches and occasional artefacts highlight challenges in unsupervised biosignal synthesis. Future work should address long-range temporal modeling and refine realism through conditioning or adversarial training.",
+    "source_key": "epmc:41205561",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1016/j.cmpb.2025.109138",
+        "error": "HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S0169260725005541 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Qiu_2026_PhysDiff",
+    "title": "A Physics-Aware Diffusion Framework for Robust ECG Synthesis Using Mesoscopic Lattice Boltzmann Constraints",
+    "authors": "Qiu X and Cao H and Yang L and Wang H",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.3390/biology15050431",
+    "first_public_date": "2026-03-05",
+    "peer_reviewed_date": "2026-03-05",
+    "status": "peer-reviewed",
+    "venue": "Biology",
+    "pmid": "41823858",
+    "pmcid": "PMC12985248",
+    "landing_url": "https://doi.org/10.3390/biology15050431",
+    "abstract": "Cardiovascular disease has become the leading cause of death worldwide, underscoring the urgent need for widespread cardiac monitoring, while the Electrocardiogram (ECG) remains the diagnostic gold standard, the complexity of its acquisition limits its long-term feasibility. In contrast, Photoplethysmography (PPG), ubiquitous in wearable devices, is increasingly adopted due to its accessibility. However, synthesizing ECG from PPG poses an intrinsically ill-posed inverse problem. Existing purely data-driven paradigms often neglect underlying biophysical mechanisms, resulting in a lack of physical constraints and interpretability, which renders them prone to generating non-physiological hallucinations. To address this, we propose PhysDiff-LBM, a novel physics-aware framework that incorporates Lattice Boltzmann hemodynamic constraints into a conditional diffusion model. Employing a dual-stream architecture, our framework captures high-frequency morphological details via a cross-attention-guided diffusion model with region-wise adaptability. Synergistically, we physically regularize the ECG synthesis by leveraging the mesoscopic streaming and collision operators of LBM. By forcing the synthesized waveform gradients to evolve consistently with hemodynamic momentum, this mechanism constrains the model to strictly adhere to the fluid dynamic conservation laws governing pulse wave propagation. Experimental results demonstrate that our method achieves superior signal fidelity and exhibits significant advantages in downstream clinical applications.",
+    "source_key": "epmc:41823858",
+    "files": [
+      "papers/2026/Qiu_2026_PhysDiff/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12985248/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 209606
+      }
+    ]
+  },
+  {
+    "study_id": "Ji_2026_P2Es",
+    "title": "P2Es: Physiology-Conditioned Diffusion for 12-Lead ECG Generation from PPG",
+    "authors": "Ji H and Gao W and Zhou P",
+    "year": "2026",
+    "arxiv": "2509.25480v1",
+    "doi": "10.1016/j.smhl.2026.100684",
+    "first_public_date": "2025-09-29",
+    "peer_reviewed_date": "2026-07-13",
+    "status": "peer-reviewed",
+    "venue": "Smart health (Amsterdam, Netherlands)",
+    "pmid": "42583232",
+    "pmcid": "PMC13459857",
+    "landing_url": "https://doi.org/10.1016/j.smhl.2026.100684",
+    "abstract": "The 12-lead electrocardiogram (ECG) is the gold standard for cardiovascular monitoring, offering superior diagnostic granularity and specificity compared to photoplethysmography (PPG). However, existing 12-lead ECG systems rely on cumbersome multi-electrode setups, limiting sustained monitoring in ambulatory settings, while current PPG-based methods fail to reconstruct multi-lead ECG due to the lack of explicit inter-lead constraints and insufficient modeling of spatial-temporal dependencies across leads. To bridge this gap, we introduce P2Es, a physiology-conditioned diffusion framework that integrates several synergistic innovations. First, to resolve the physiological information gap, we propose GroupFinder, a contrastive alignment module that retrieves optimal affinity matrices by aligning the PPG latent space with ECG-derived clusters. Furthermore, to mimic real-world distortions, the forward process applies frequency blurring and temporal noise, while the reverse process employs a hierarchical multi-scale generation module with frequency deblurring to recover fine-grained diagnostic details. Finally, we implement a resource-efficient edge architecture for rapid on-device inference. Extensive experiments demonstrate that P2Es significantly outperforms state-of-the-art baselines. This provides a scalable solution for longitudinal cardiac screening and pre-clinical risk stratification.",
+    "source_key": "epmc:42583232",
+    "pdf_pages": 15,
+    "files": [
+      "papers/2026/Ji_2026_P2Es/paper.pdf",
+      "papers/2026/Ji_2026_P2Es/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13459857/fullTextXML",
+        "http_status": 500,
+        "valid": false,
+        "bytes": 151
+      },
+      {
+        "url": "https://arxiv.org/pdf/2509.25480v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 2230018
+      },
+      {
+        "url": "https://arxiv.org/abs/2509.25480v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 42518
+      }
+    ]
+  },
+  {
+    "study_id": "Zanchi_2025_Brugada",
+    "title": "Synthetic electrocardiograms for Brugada syndrome: from data generation to expert cardiologists evaluation",
+    "authors": "Zanchi B and Monachino G and Faraci FD and Metaldi M and Brugada P and Sarquella-Brugada G and Behr ER and Brugada J and Crotti L and Belhassen B and Conte G",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1093/ehjdh/ztaf039",
+    "first_public_date": "2025-04-24",
+    "peer_reviewed_date": "2025-04-24",
+    "status": "peer-reviewed",
+    "venue": "European heart journal. Digital health",
+    "pmid": "40703115",
+    "pmcid": "PMC12282356",
+    "landing_url": "https://doi.org/10.1093/ehjdh/ztaf039",
+    "abstract": "Aims Synthetic electrocardiograms (ECGs) for inherited cardiac diseases may overcome the issue related to data scarcity for artificial intelligence (AI)-based algorithms. This study aimed to evaluate experienced cardiologists' ability to differentiate synthetic and real Brugada ECGs. Methods and results A total of 2244 ECG instances (50% synthetic generated by a generative adversarial network, 50% real Brugada patients' ECGs) were evaluated by 7 cardiologists, each with >15 years of experience. All ECGs were standard 12-lead recordings acquired with identical settings (paper speed 25 mm/s, amplitude 10 mm/mV) and randomly assigned without identifying markers. The examination was blinded and conducted in 2 rounds with at least 2 h gap between rounds to assess potential learning effects and intra-rater reliability. Each physician classified the recordings as 'real' or 'synthetic' without having any additional information. Performance metrics, including accuracy, sensitivity, specificity, and intra-rater reliability (Cohen's Kappa), were analyzed. Brugada syndrome (BrS) specialists' repeated evaluations were characterized by low accuracy (first round 40%, second round 42%), specificity (first round 22%, second round 26%) and sensitivity (first round 58%, second round 58%). Intra-rater reliability varied widely (Cohen's Kappa: -0.12 to 0.80). Conclusion Synthetic Brugada ECGs cannot be adequately distinguished from real patients' ECGs by BrS specialists.",
+    "source_key": "epmc:40703115",
+    "files": [
+      "papers/2025/Zanchi_2025_Brugada/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12282356/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 46945
+      }
+    ]
+  },
+  {
+    "study_id": "Tiwari_2026_Minority",
+    "title": "Minority class-aware multiclass arrhythmia detection using conditional GAN augmentation",
+    "authors": "Tiwari A and Kishore J and Singh R",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.1038/s41598-026-51237-z",
+    "first_public_date": "2026-05-11",
+    "peer_reviewed_date": "2026-05-11",
+    "status": "peer-reviewed",
+    "venue": "Scientific reports",
+    "pmid": "42115724",
+    "pmcid": "PMC13350726",
+    "landing_url": "https://doi.org/10.1038/s41598-026-51237-z",
+    "abstract": "The detection of cardiac arrhythmias from electrocardiogram (ECG) signals is essential for preventing sudden cardiac deaths. However, model performance on minority classes, such as supraventricular (S) and fusion (F) beats, which make up less than 3% of samples, is severely hampered by severe class imbalance in benchmark datasets like MIT-BIH. Conventional methods, such as basic GAN-based augmentation, oversampling, and undersampling, frequently result in low-fidelity synthetic samples or fail to preserve important ECG morphological features, leading to less-than-ideal F1-scores for uncommon arrhythmias. In this paper, a novel framework for high-fidelity minority class augmentation using conditional Wasserstein GAN with gradient penalty (cWGAN-GP) is proposed. It is integrated with a hierarchical multi-stream ResNet34 classifier that combines raw, Parzen-filtered, and similarity map features. In order to generate realistic ECG beats, the cWGAN-GP conditions generation on class labels. Mode collapse is prevented by enforcing gradient penalties and Wasserstein distance. Extensive experiments on the MIT-BIH arrhythmia database (5 AAMI classes) demonstrate significant improvements: minority S and F classes achieve F1-score increases of up to 28%, while the macro F1-score improves from 0.78 (baseline) to 0.94. The approach is computationally efficient for possible wearable device deployment and outperforms state-of-the-art GAN-augmented models in minority class detection.",
+    "source_key": "epmc:42115724",
+    "files": [
+      "papers/2026/Tiwari_2026_Minority/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13350726/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 112421
+      }
+    ]
+  },
+  {
+    "study_id": "Zhang_2026_QualityGAN",
+    "title": "Single-Lead ECG Arrhythmia Classification Based on Peak-Enhanced Attention Network and Quality-Aware GAN Data Augmentation Framework",
+    "authors": "Zhang Y and Xia Y",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.3390/s26123852",
+    "first_public_date": "2026-06-17",
+    "peer_reviewed_date": "2026-06-17",
+    "status": "peer-reviewed",
+    "venue": "Sensors (Basel, Switzerland)",
+    "pmid": "42356824",
+    "pmcid": "PMC13307092",
+    "landing_url": "https://doi.org/10.3390/s26123852",
+    "abstract": "Single-lead electrocardiogram (ECG) is widely used in wearable devices for atrial fibrillation (AF) screening. Nevertheless, subtle pathological characteristics like P-waves and f-waves in practical signals are vulnerable to noise contamination. Meanwhile, the scarcity of high-quality annotated abnormal data instances leads to severe class imbalance. To mitigate these issues, we present an end-to-end framework designed for arrhythmia diagnosis using single-lead ECG signals, which integrates quality-aware data augmentation with a Peak-Enhanced attention mechanism. First, to mitigate the problem of data imbalance, a Quality-Aware Generative Adversarial Network (QA-GAN) is designed. This network integrates a signal quality evaluation module based on signal kurtosis, together with a dynamic soft-label training scheme, guiding the generator to prioritize learning high-quality morphological features, thereby synthesizing high-fidelity minority class samples. Second, to accurately capture subtle pathological features in electrocardiograms, a Peak-Enhanced Attention Convolutional Network (PEAC-Net) classification model is proposed. This model incorporates a Peak-Enhanced Attention (PE-Att) module, which employs learnable derivative convolutional kernels to precisely identify the transition points in the ECG signal. Furthermore, by integrating one-dimensional multi-scale dilated convolution (DSGC1D) with bidirectional LSTM, the model achieves effective capturing of both fine-grained local morphological features and long-range global rhythm patterns. Experimental results on the PhysioNet 2017 dataset indicate that the presented model attains an accuracy of 0.902 and a macro-F1 score of 0.880, respectively, outperforming other state-of-the-art models and also exhibiting robust data adaptability on the MIT-BIH dataset.",
+    "source_key": "epmc:42356824",
+    "files": [
+      "papers/2026/Zhang_2026_QualityGAN/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13307092/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 179090
+      }
+    ]
+  },
+  {
+    "study_id": "Hegde_2025_Utility",
+    "title": "ECG Synthesis and Utility Analysis - A Diffusion Model Based Approach",
+    "authors": "Hegde S and Prüser M and Cenic N and Bollinger A and Arens M and Köhlen J and Martens E and Dieterich C",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.3233/shti251414",
+    "first_public_date": "2025-09-01",
+    "peer_reviewed_date": "2025-09-01",
+    "status": "peer-reviewed",
+    "venue": "Studies in health technology and informatics",
+    "pmid": "40899558",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.3233/shti251414",
+    "abstract": "Introduction With the growing demand for privacy-preserving healthcare solutions, the generation of synthetic electrocardiograms (ECGs) offers a valuable alternative to using real patient data. Methods In this study, we present the adaptation of the SSSD-ECG diffusion model to generate high-quality synthetic 12-lead ECGs for Sinus Rhythm/Normal and Atrial Fibrillation (AF) conditions using 10-second recordings from the 12-lead MIMIC-IV ECG dataset. Results We validate the utility of the generated ECGs through downstream classification tasks, with models trained on synthetic ECG features achieving an F1-score of 0.80 when tested on real data, and 0.91 when trained on real data and tested on synthetic data. Additionally, blind tests conducted by physicians at two university hospital sites demonstrated that the synthetic signals effectively mimic real ECGs in both morphology and key features. Conclusion This work establishes diffusion-based models as an effective tool for generating realistic synthetic ECGs, providing valuable resources for model development, supporting testing of clinical decision- making solutions, and enabling research in contexts where real data is scarce or not shareable.",
+    "source_key": "epmc:40899558",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.3233/shti251414",
+        "error": "HTTPSConnectionPool(host='ebooks.iospress.nl', port=443): Max retries exceeded with url: /doi/10.3233/SHTI251414 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Xiao_2026_Disentangled",
+    "title": "Disentangled conditional generation of ECG signals with interpretable latent factors",
+    "authors": "Xiao R and Xiao Z and Li J and Liu C",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.1016/j.cmpb.2026.109621",
+    "first_public_date": "2026-08-23",
+    "peer_reviewed_date": "2026-08-23",
+    "status": "peer-reviewed",
+    "venue": "Computer methods and programs in biomedicine",
+    "pmid": "42664696",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1016/j.cmpb.2026.109621",
+    "abstract": "Background and objective Electrocardiogram modeling supports signal synthesis, analysis, and data augmentation. Existing generative approaches primarily focus on waveform fidelity and diversity, with limited interpretability of the underlying generation mechanisms, whereas disentangled representation learning improves interpretability through semantically structured latent factors but has been less explored from a generative perspective. Methods We propose an electrocardiogram modeling framework that integrates disentangled representation learning with conditional generative modeling to support interpretable and controllable ECG synthesis. Disentangled latent representations are learned using a β-Total Correlation Variational Autoencoder, and a self-attention mechanism is incorporated to promote semantic alignment between latent dimensions and signal morphological characteristics. A conditional flow module is further introduced in the latent space to enable condition-aware prior reshaping, mitigating distributional collapse while preserving the learned disentangled structure. Results Experimental results demonstrate that the proposed framework mitigates the generation collapse induced by strong disentanglement learning. While preserving a morphology-oriented latent structure, as indicated by a proxy-based mutual information gap score of 0.53, the conditional flow module improves generative performance. In an out-of-domain evaluation where only the flow is fine-tuned on the target dataset, the framework achieves a fidelity of 0.66 and diversity of 0.80, compared with 0.33 and 0.32 under standard prior sampling without flow adaptation. Conclusions In summary, the proposed framework supports interpretable and controllable electrocardiogram generation through disentangled latent representations and condition-aware distribution alignment. The results demonstrate partial semantic consistency under out-of-domain evaluation and show that latent-space flow adaptation can mitigate generation collapse to some extent under strong disentanglement constraints.",
+    "source_key": "epmc:42664696",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1016/j.cmpb.2026.109621",
+        "error": "HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S0169260726003706 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Dissanayake_2026_MultiStep",
+    "title": "Continuous multi-step ECG and PPG generation through latent disentanglement",
+    "authors": "Dissanayake T and Fernando T and Denman S and Sridharan S and Fookes C",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.1016/j.compbiomed.2026.111996",
+    "first_public_date": "2026-10-23",
+    "peer_reviewed_date": "2026-10-23",
+    "status": "peer-reviewed",
+    "venue": "Computers in biology and medicine",
+    "pmid": "42914828",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1016/j.compbiomed.2026.111996",
+    "abstract": "Artificial data synthesis is a valuable tool for overcoming the challenges of collecting large datasets, particularly in the medical domain where privacy concerns are significant. However, synthesising complex biomedical signals remains difficult due to their intricate morphologies and subject-specific constraints. While GANs have shown promise, existing methods have largely been limited to short-duration outputs or morphology-centered single-pulse events. In this study, we propose a generative framework combining autoencoders and adversarial learning-based disentanglement to enable multi-step, subject-specific biosignal generation with transferable properties, evaluated under a within-recording, segment-level protocol. We evaluate our model on two modalities: Electrocardiogram (ECG; 17 subjects) and Photoplethysmogram (PPG; 7 subjects). The model generates continuous ECG sequences of approximately 6 s (two forward recurrent steps beyond the seed segment), with a subset of subjects retaining recognisable waveform structure up to approximately 8 s. It shows similar performance for PPG, suggesting adaptability across periodic biosignal modalities. With recurrent subject-conditional generation demonstrated across both ECG and PPG, and exploratory style-transfer capabilities demonstrated for selected ECG subjects, the proposed framework serves as a proof of concept for multi-step sequential biosignal generation.",
+    "source_key": "epmc:42914828",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1016/j.compbiomed.2026.111996",
+        "error": "HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S0010482526005640 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Lin_2025_TransDiff",
+    "title": "TransDiffECG: Semantically controllable ECG synthesis via transformer-based diffusion modeling",
+    "authors": "Lin Y and Ma J and Dong S and Sun C and Cong W and Wang K and Luo G and Wang W",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1016/j.jbi.2025.104948",
+    "first_public_date": "2025-10-27",
+    "peer_reviewed_date": "2025-10-27",
+    "status": "peer-reviewed",
+    "venue": "Journal of biomedical informatics",
+    "pmid": "41161556",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1016/j.jbi.2025.104948",
+    "abstract": "Objective Existing generative models for electrocardiogram (ECG) synthesis often lack fine-grained, interpretable control, limiting their utility for addressing data scarcity and imbalance. This study aims to develop a model capable of producing diverse and semantically controllable synthetic ECGs to fill this critical gap. Methods We propose TransDiffECG, a novel Transformer-based diffusion model that integrates semantic information injection and global temporal modeling to enable fine-grained control over ECG synthesis. The model allows user-controllable generation of ECG signals with customized physiological details. We establish a comprehensive evaluation protocol, including downstream segmentation and classification tasks, to rigorously assess the authenticity and utility of the generated signals. Extensive experiments are conducted on both single-lead (QTDB) and multi-lead (LUDB) ECG datasets. Results TransDiffECG significantly outperforms state-of-the-art baselines. On the multi-lead LUDB dataset, it achieved superior signal quality (MMD: 3.21×10 -2 ; Pearson Correlation: 0.6177). The utility of the synthetic data was confirmed in downstream tasks, where data augmentation improved atrial fibrillation classification to an AUROC of 0.9451. Moreover, a segmentation model trained solely on our synthetic data rivaled one trained on real data (e.g., ∼98% precision/recall on QTDB). Conclusion TransDiffECG represents a significant advancement in synthetic medical signal generation by bridging the gap between clinical interpretability and generative flexibility. Its ability to generate semantically controllable and clinically valid ECGs greatly expands the application potential of generative models in healthcare research and practice.",
+    "source_key": "epmc:41161556",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1016/j.jbi.2025.104948",
+        "error": "HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S1532046425001777 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Zhang_2026_MorphDiff",
+    "title": "MorphDiff-ECG: A Diffusion Model for Multimodal Feature Fusion of ECG Signals",
+    "authors": "Zhang L and Su C and Ou M and Wang M and Xu Z and Wei S and Liu C and Lei T and Wan Y",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.1109/tbme.2026.3735103",
+    "first_public_date": "2026-09-17",
+    "peer_reviewed_date": "2026-09-17",
+    "status": "peer-reviewed",
+    "venue": "IEEE transactions on bio-medical engineering",
+    "pmid": "42752421",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1109/tbme.2026.3735103",
+    "abstract": "Objective Electrocardiogram (ECG) generation is crucial for computer-aided diagnosis and medical data augmentation, yet existing generative models struggle with waveform fidelity, morphological accuracy, and rhythm consistency. Methods We propose a novel diffusion model for multimodal feature fusion of ECG signals, namely MorphDiff-ECG. Inspired by the hierarchical \"morphology-rhythm-trend\" logic that clinicians follow when interpreting ECGs, we designed a two-stage hierarchical decoding architecture comprising two core stages. The first stage, termed Feature Decoupling Enhancement (FDE), comprises three parallel branches dedicated to modeling the trend, periodic, and morphological components of physiological signals. This explicit decoupling design not only aligns the learned features with clinically interpretable terms, but also enhances the model's sensitivity to abnormal morphological patterns. Specifically, the trend branch captures low-frequency baseline drift and global amplitude variations, ensuring stable signal horizons; the periodic branch extracts rhythmic cardiac patterns through multi-scale time-frequency analysis, preserving both regular and irregular heart rate dynamics; the morphological branch isolates fine-grained local waveform geometry, enabling precise reconstruction of diagnostically critical features such as P-waves, QRS complexes, and T-waves. This tripartite decomposition embeds the hierarchical diagnostic logic of cardiology directly into the network architecture, providing both physiological plausibility and mechanistic interpretability. The second stage, termed Cross-Feature Attention Fusion (CFAF), integrates the decoupled features through an efficient attention-based mechanism to reconstruct complete physiological signals. To further preserve critical high-frequency transients, exemplified by QRS complexes, we introduce a hybrid training objective that combines time-domain reconstruction with wavelet-based time-frequency loss. This approach takes advantage of the inherent time-frequency coupling of the ECG signals, ensuring structural integrity and spectral fidelity in the generated outputs. Results Experiments on three classic public datasets show that MorphDiff-ECG outperforms state-of-the-art methods in generation fidelity on the MIT-BIH, CPSC2020, and extended nine-class CPSC2018 benchmarks. Compared to the best-performing baseline, it reduces PRD by 1.97%, FD by 2.38%, RMSE by 10.39% and MAE drops by 0.61%. Conclusion This work provides an effective solution for high-quality and controllable ECG synthesis. Significance MorphDiff-ECG advances cardiac diagnosis and personalized medical data generation through improved quality of ECG synthesis.",
+    "source_key": "epmc:42752421",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1109/tbme.2026.3735103",
+        "http_status": 202,
+        "valid": false,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "study_id": "Tang_2025_PCCGAN",
+    "title": "Principal component conditional generative adversarial networks for imbalanced ECG classification enhancement",
+    "authors": "Tang C",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1371/journal.pone.0330707",
+    "first_public_date": "2025-08-22",
+    "peer_reviewed_date": "2025-08-22",
+    "status": "peer-reviewed",
+    "venue": "PloS one",
+    "pmid": "40845011",
+    "pmcid": "PMC12373255",
+    "landing_url": "https://doi.org/10.1371/journal.pone.0330707",
+    "abstract": "With over a century of development, electrocardiogram (ECG) diagnostics has become the preferred tool for healthcare professionals in cardiovascular disease diagnosis and monitoring. As wearable devices and mobile monitoring technologies become widespread, ECG data are trending toward diversity and long-term collection, making traditional manual annotation methods inadequate for massive data analysis demands. This research addresses core challenges in ECG signal classification-extremely imbalanced data, significant individual physiological differences, and difficulties in long sequence fitting-by proposing a Principal Component Analysis-based Conditional Generative Adversarial Network (PCA-CGAN). Through in-depth analysis of ECG signal principal component distribution characteristics, we discovered that just a few principal components can explain over 90% of signal variance, revealing the inherent inefficiency and limitations of traditional complete waveform generation methods. Based on this theoretical foundation, we shift the data augmentation paradigm from generating surface waveforms to generating high information density principal component features, resolving waveform jitter and heterogeneity issues present in traditional methods. Simultaneously, we designed a two-stage conditional encoding-decoding architecture that builds category-independent feature spaces from early training stages, fundamentally breaking the feature space bias caused by the \"Matthew effect\" and effectively preventing majority classes from compressing minority class features during generation. Using the Transformer's global attention mechanism, the model precisely captures key diagnostic features of various arrhythmias, maximizing inter-class differences while maintaining intra-class consistency. Experiments demonstrate that PCA-CGAN not only achieves stable convergence on a large-scale heterogeneous dataset comprising 43 patients for the first time but also resolves the \"dilution effect\" problem in data augmentation, avoiding the asymmetric phenomenon where Precision increases while Recall decreases. After data augmentation, the ResNet model's average F1 score improved significantly, with particularly outstanding performance on rare categories such as atrial premature beats, far surpassing traditional methods like SigCWGAN and TD-GAN. This research redefines the objectives and methods of ECG signal generation from the theoretical perspectives of information entropy and feature manifolds, providing a systematic solution to data imbalance problems in the medical field while establishing a theoretical foundation for the application of ECG-assisted diagnostic systems in real clinical environments.",
+    "source_key": "epmc:40845011",
+    "files": [
+      "papers/2025/Tang_2025_PCCGAN/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12373255/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 303982
+      }
+    ]
+  },
+  {
+    "study_id": "Xiao_2025_VariableBeta",
+    "title": "ECG Signal Generation Using Variable β-Conditional Variational Autoencoder",
+    "authors": "Xiao R and Zhang S and Wang Z and Li J and Liu C",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1109/embc58623.2025.11251611",
+    "first_public_date": "2025-07-01",
+    "peer_reviewed_date": "2025-07-01",
+    "status": "peer-reviewed",
+    "venue": "Annual International Conference of the IEEE Engineering in Medicine and Biology Society. IEEE Engineering in Medicine and Biology Society. Annual International Conference",
+    "pmid": "41336838",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1109/embc58623.2025.11251611",
+    "abstract": "Machine learning methods offer a shortcut for automated cardiovascular disease diagnosis. However, the high cost of ECG signal annotation, along with insufficient labeled data and class imbalance, severely limits the generalization of these methods in real-world applications. Recently, generative models, especially generative adversarial networks and their variants, have made significant progress in image and natural language generation tasks, and have been applied to electrocardiogram synthesis. However, adversarial networks require complex training and typically generate data for each ECG class separately, which not only complicates the process but also may lead to class imbalance issues. To address these problems, we propose a conditional variational autoencoderbased ECG generation method. This approach simplifies the generation process, handles multiple ECG classes efficiently, and uses a variable β parameter to adjusts the KL divergence weight, balancing the fedility and diversity of the generated signals. Experimental results show that the conditional variational autoencoder model can generate high-quality ECG signals, improving arrhythmia classification accuracy, and demonstrating its potential in ECG data augmentationClinical Relevance- This study highlights the potential of conditional variational autoencoder-based ECG signal generation as an effective strategy for augmenting limited clinical datasets, thereby optimizing arrhythmia diagnostic performance by alleviating sample insufficiency and class distribution bias.",
+    "source_key": "epmc:41336838",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1109/embc58623.2025.11251611",
+        "http_status": 202,
+        "valid": false,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "study_id": "Xiao_2025_DisentangleAE",
+    "title": "ECG signal generation using feature disentanglement auto-encoder",
+    "authors": "Xiao H and Xia Y",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1088/1361-6579/adab4f",
+    "first_public_date": "2025-01-30",
+    "peer_reviewed_date": "2025-01-30",
+    "status": "peer-reviewed",
+    "venue": "Physiological measurement",
+    "pmid": "39820006",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1088/1361-6579/adab4f",
+    "abstract": "Objective. The demand for electrocardiogram (ECG) datasets, particularly those containing rare classes, poses a significant challenge as deep learning becomes increasingly prevalent in ECG signal research. While generative adversarial networks (GANs) and variational autoencoders (VAEs) are widely adopted, they encounter difficulties in effectively generating samples for classes with limited instances. Approach. To address this issue, we propose a novel F eature D isentanglement Auto-Encoder (FDAE) designed to dissect various generative factors under a contrastive learning framework within ECG data to facilitate the generation of new ECG samples. The FDAE enhances and extends the AE structure with novel methodologies, which involve: (1) partitioning the latent space into three distinct representations to capture various generative factors; (2) utilizing a contrastive loss function to improve feature disentanglement capabilities; and (3) incorporating additional classifiers to enhance representation learning, alongside a discriminator aimed at boosting the realism of synthesized signals. Furthermore, our FDAE generates new signals by swapping latent codes of existing signals and combining freely or substituting patient-independent representations with those randomly generated by a VAE. Main results. To validate our approach, we conduct heartbeat classification experiments on the publicly available MIT-BIH arrhythmia database, using FAKE-train/FAKE-test partitions and data augmentation. The results highlight the FDAE's ability to improve ECG classifier performance and excel in synthesizing ECG signals. Furthermore, we apply the model to the Icentia11K dataset and conducted classification enhancement experiments. The results further highlight the model's strong generalization ability in ECG synthesis. Significance. This work has the potential to improve the robustness and generalization of deep learning models for ECG analysis, particularly in medical applications where rare cardiac events are often underrepresented in available datasets.",
+    "source_key": "epmc:39820006",
+    "files": [
+      "papers/2025/Xiao_2025_DisentangleAE/publisher.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1088/1361-6579/adab4f",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 176802
+      }
+    ]
+  },
+  {
+    "study_id": "Sepahvand_2026_TransferGAN",
+    "title": "Morphology-preserving transfer-guided GAN with adaptive discriminative loss for robust and imbalanced ECG arrhythmia detection",
+    "authors": "Sepahvand M and Dourgham Karim Al-Harizi B and Meqdad MN",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "10.1016/j.compbiomed.2026.111862",
+    "first_public_date": "2026-07-21",
+    "peer_reviewed_date": "2026-07-21",
+    "status": "peer-reviewed",
+    "venue": "Computers in biology and medicine",
+    "pmid": "42480127",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1016/j.compbiomed.2026.111862",
+    "abstract": "Electrocardiogram (ECG) based arrhythmia detection remains challenging due to severe class imbalance, morphological variability, and noise commonly present in wearable monitoring environments. Traditional augmentation techniques often distort clinically meaningful waveform characteristics, while deep learning classifiers typically underperform on minority arrhythmia categories. This study proposes a unified morphology-preserving framework that integrates a Transfer-Guided Multi-Stage Generative Adversarial Network (TG-MS-GAN), an EfficientNetV2-S classifier, and an adaptive discriminative loss to enhance minority-class representation and improve overall diagnostic robustness. The TG-MS-GAN progressively reconstructs ECG beats across multi-resolution stages, synthesizing high-fidelity minority-class waveforms that preserve P-wave integrity, QRS morphology, and ST-segment structure. A transfer-guidance mechanism introduces physiological priors into early-stage generators, stabilizing convergence under extreme sample scarcity. EfficientNetV2-S serves as a lightweight yet expressive backbone capable of capturing fine-grained temporal features with low computational cost, making the method suitable for real-time wearable deployment. An adaptive hybrid loss combining weighted cross-entropy, center loss, and difficulty-based focusing improves inter-class separability and stabilizes optimization under severe imbalance. Experimental results demonstrate consistent performance across different ECG classification tasks, achieving accuracies of 99.1%, 97.6%, 91.4%, and 99.0% on the MIT-BIH, Chapman-Shaoxing, PTB-XL, and Fetal ECG datasets, respectively. The corresponding Macro-F1 scores reach 0.987, 0.962, 0.839, and 0.989, while the AUPRC values attain 0.989, 0.891, 0.846, and 0.991, respectively. These results indicate that the proposed framework effectively addresses class imbalance while maintaining robust classification performance across heterogeneous ECG datasets. The source code is available at https://github.com/phdmajidsepahvand/TG-MS-GAN-ECG.",
+    "source_key": "epmc:42480127",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1016/j.compbiomed.2026.111862",
+        "error": "HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S0010482526004269 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Battiston_2025_InvertibleGAN",
+    "title": "Invertible Conditional Generative Adversarial Networks to Effectively Generate Myocardial Infarction from Normal ECG",
+    "authors": "Battiston S and Sassi R and Rivolta MW",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1109/embc58623.2025.11253299",
+    "first_public_date": "2025-07-01",
+    "peer_reviewed_date": "2025-07-01",
+    "status": "peer-reviewed",
+    "venue": "Annual International Conference of the IEEE Engineering in Medicine and Biology Society. IEEE Engineering in Medicine and Biology Society. Annual International Conference",
+    "pmid": "41335953",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1109/embc58623.2025.11253299",
+    "abstract": "Style transfer techniques based on Deep Learning have shown significant promise in biomedical signal processing, particularly in generating synthetic physiological signals from real ones. In this study, we explored the use of Invertible Conditional Generative Adversarial Networks (IcGANs) for style transfer, specifically transforming 12-lead ECG heartbeats from normal sinus rhythm to myocardial infarction (inferior and antero-septal myocardial infarction). Unlike CycleGAN, another style transfer technique which requires multiple models for each class transformation, Ic-Gan only requires training a single conditional GAN and an encoder, offering a more efficient and flexible framework. We trained both IcGAN and CycleGAN on ECG heartbeats extracted from the PTB-XL dataset available on Physionet. We assessed the quality of the generated ECG signals using visual inspection, GAN-train and GAN-test scores, and quantitative metrics such as ST-segment amplitude comparisons. The results showed that the IcGAN effectively captured the relevant features affected by myocardial infarction while preserving the original ECG ones, generating clinically meaningful variations. The comparison between IcGAN and CycleGAN with similar model architectures demonstrated the advantages of the former in terms of efficiency and performance. In conclusion, the potential of IcGAN for controlled ECG feature modification may find applications in domain adaptation, synthetic data generation for rare conditions, and enhancing model generalization for personalized treatment.",
+    "source_key": "epmc:41335953",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1109/embc58623.2025.11253299",
+        "http_status": 202,
+        "valid": false,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "study_id": "Simone_2025_SSLGAN",
+    "title": "ECG synthesis for cardiac arrhythmias: Integrating self-supervised learning and generative adversarial networks",
+    "authors": "Simone L and Bacciu D and Gervasi V",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1016/j.artmed.2025.103162",
+    "first_public_date": "2025-05-26",
+    "peer_reviewed_date": "2025-05-26",
+    "status": "peer-reviewed",
+    "venue": "Artificial intelligence in medicine",
+    "pmid": "40460597",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1016/j.artmed.2025.103162",
+    "abstract": "Arrhythmia classifiers relying on supervised deep learning models usually require a substantial amount of labeled clinical data. The distribution of these labels is strictly related to the statistics of cardiovascular diseases among the population, which inherently narrows models' performance for classification tasks. Furthermore, during acquisition and data retrieval from electronic health records, concerns arise regarding patient anonymization due to stringent clinical policies. We introduce a conditional generative architecture for electrocardiography time series, which integrates self-supervision and generative adversarial principles. Empirical validation confirms the enhancement of morphological plausibility in synthetic data, showcasing its effectiveness in generating realistic signals. We propose a novel model (ECGAN), proving its capability of conditioning the probability distribution of ECG recordings. The proposed methodology is assessed upon various rhythm abnormalities including severe congestive heart failure, myocardial infarction, sinus rhythm, and premature ventricular contractions. Our proposed workflow for synthetic time series assessment demonstrates competitive performance compared to state-of-the-art models, achieving an average improvement of 2.4% in arrhythmia classification accuracy across MIT-BIH, BIDMC, and PTB datasets, while ensuring realistic synthetic data and improving training stability.",
+    "source_key": "epmc:40460597",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1016/j.artmed.2025.103162",
+        "error": "HTTPSConnectionPool(host='linkinghub.elsevier.com', port=443): Max retries exceeded with url: /retrieve/pii/S0933365725000971 (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)')))"
+      }
+    ]
+  },
+  {
+    "study_id": "Chen_2025_ClassifierDiff",
+    "title": "Classifier-Guided Diffusion Model for Generating Disease-Specific ECG Data: A Case Pilot Study on Inferior Myocardial Infarction",
+    "authors": "Chen H and Kato S and Eguchi K and Kawaji T and Kano M",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1109/embc58623.2025.11253197",
+    "first_public_date": "2025-07-01",
+    "peer_reviewed_date": "2025-07-01",
+    "status": "peer-reviewed",
+    "venue": "Annual International Conference of the IEEE Engineering in Medicine and Biology Society. IEEE Engineering in Medicine and Biology Society. Annual International Conference",
+    "pmid": "41335641",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1109/embc58623.2025.11253197",
+    "abstract": "As a non-invasive diagnostic tool, electrocardiography (ECG) is one of the most widely used cardiac screening methods. However, due to privacy concerns and limitations in medical resources, the scarcity of high-quality ECG data with clear signals and accurate clinical annotations presents a common challenge for researchers. Although synthetic ECG generation offers a solution, existing disease-specific methods rely on costly labeled datasets. To reduce this cost, we propose a method that employs a classifier-guided diffusion model to generate ECG data for a specific disease without requiring extensive annotations. We applied our proposed method to the public PTB-XL dataset and generated ECG data for inferior myocardial infarction (IMI). To evaluate the quality of the generated data, we conducted two analyses: classification performance evaluation using a classifier trained on the synthetic dataset and a statistical analysis of the generated IMI ECGs. In the first analysis, we trained classifiers to distinguish between IMI and normal ECGs. The only difference between these classifiers was the training dataset: one was trained on fully real data, while the others were trained on merged datasets containing both real and synthetic data. The classifiers trained on the merged datasets achieved performance comparable to that of the classifier trained solely on real data, indicating that synthetic data can partially replace real data without degrading model performance. In the second analysis, we conducted a statistical distribution analysis of a key IMI ECG feature: Q wave depth. This analysis revealed that the distribution of the generated IMI ECGs closely resembled that of the real IMI ECGs. These results validate the high quality and reliability of the generated data and confirm the effectiveness of our proposed method.",
+    "source_key": "epmc:41335641",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1109/embc58623.2025.11253197",
+        "http_status": 202,
+        "valid": false,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "study_id": "Wang_2025_Attacks",
+    "title": "Presentation Attacks on the PCA-Based Biometric System Using cGAN-Generated ECGs",
+    "authors": "Wang CC and Chiu JK and Lee CH and Wu SC",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1109/embc58623.2025.11253493",
+    "first_public_date": "2025-07-01",
+    "peer_reviewed_date": "2025-07-01",
+    "status": "peer-reviewed",
+    "venue": "Annual International Conference of the IEEE Engineering in Medicine and Biology Society. IEEE Engineering in Medicine and Biology Society. Annual International Conference",
+    "pmid": "41337268",
+    "pmcid": "",
+    "landing_url": "https://doi.org/10.1109/embc58623.2025.11253493",
+    "abstract": "Electrocardiograms (ECGs) have emerged as promising biometric traits, offering enhanced security through their intrinsic and dynamic properties. These characteristics make ECGs more resistant to theft or forgery compared to traditional biometrics. However, like other biometric systems, ECG biometrics remain vulnerable to hostile attacks that often start with the use of a complete ECG trace. One straightforward method to generate such a trace involves concatenating reconstructed heartbeats to form continuous waveforms. This approach, however, is easily detected by basic presentation attack detection techniques, leading to an unrealistic evaluation of the biometric system's security and susceptibility to attacks. To address this limitation, this study proposes a conditional generative adversarial network-based approach to generate synthetic continuous ECG traces with dynamic variability, including inter-beat and heart rate changes. By employing adversarial training, the generator produces realistic ECG traces capable of compromising a principal component analysis-based ECG biometric system. Experimental results reveal that this approach increases the false-positive identification error rate by 5.75%, highlighting both the effectiveness of the proposed method and the vulnerability of the ECG biometric system to non-zero effort attacks.",
+    "source_key": "epmc:41337268",
+    "files": [],
+    "attempts": [
+      {
+        "url": "https://doi.org/10.1109/embc58623.2025.11253493",
+        "http_status": 202,
+        "valid": false,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "study_id": "Guan_2026_WearECG",
+    "title": "Reconstructing 12-lead ECG from 3-lead ECG using variational autoencoder to improve cardiac disease detection of wearable ECG devices",
+    "authors": "Guan X and Wang H and Lai Y and Jin J and Li J and Zhao Q and Zhang D and Geng S and Mu G and Wang Y and Wu R and Hong S",
+    "year": "2026",
+    "arxiv": "2510.11442v1",
+    "doi": "10.1371/journal.pdig.0001335",
+    "first_public_date": "2025-10-13",
+    "peer_reviewed_date": "2026-05-22",
+    "status": "peer-reviewed",
+    "venue": "PLOS digital health",
+    "pmid": "42172249",
+    "pmcid": "PMC13196927",
+    "landing_url": "https://doi.org/10.1371/journal.pdig.0001335",
+    "abstract": "Twelve-lead electrocardiograms (ECGs) are the clinical gold standard for cardiac diagnosis, offering comprehensive spatial coverage of the heart necessary for detecting conditions such as myocardial infarction (MI). However, their lack of portability limits continuous and large-scale deployment. In contrast, three-lead ECG systems are widely used in wearable devices due to their simplicity and mobility, but they often fail to capture pathologies localized in unmeasured regions. To bridge this gap, we propose WearECG, a Variational Autoencoder (VAE) method that reconstructs 12-lead ECGs from three leads (II, V1, V5). Our model includes architectural improvements to better capture temporal and spatial dependencies in ECG signals. We evaluate generation quality using MSE, MAE, and Fréchet Inception Distance (FID), and assess clinical validity via a Turing test with expert cardiologists. To further validate the diagnostic utility, we fine-tune ECGFounder-a large-scale pretrained ECG model-on a multi-label classification task involving over 40 cardiac conditions, including 6 different myocardial infarction locations using both real and generated signals. Experiments on the MIMIC and PTB-XL datasets show that our method produces physiologically realistic and diagnostically informative signals, with robust performance in downstream tasks. This work demonstrates the potential of generative modeling for ECG reconstruction and its implications for scalable, low-cost cardiac screening.",
+    "source_key": "epmc:42172249",
+    "pdf_pages": 24,
+    "files": [
+      "papers/2026/Guan_2026_WearECG/fulltext.xml",
+      "papers/2026/Guan_2026_WearECG/paper.pdf",
+      "papers/2026/Guan_2026_WearECG/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13196927/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 177957
+      },
+      {
+        "url": "https://arxiv.org/pdf/2510.11442v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 14574778
+      },
+      {
+        "url": "https://arxiv.org/abs/2510.11442v1",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 44944
+      }
+    ]
+  },
+  {
+    "study_id": "Fang_2025_CardioPPG",
+    "title": "AI modeling photoplethysmography to electrocardiography useful for predicting cardiovascular disease",
+    "authors": "Ding Z and Hu Y and Li Z and Mao Y and Li H and Zhou D and Chu X and Yu L and Liu Z and Wu F and Zhang H and Xu Q and Chen T and Huang Z",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.1038/s41746-025-02228-3",
+    "first_public_date": "2025-12-14",
+    "peer_reviewed_date": "2025-12-14",
+    "status": "peer-reviewed",
+    "venue": "NPJ digital medicine",
+    "pmid": "41392270",
+    "pmcid": "PMC12820394",
+    "landing_url": "https://doi.org/10.1038/s41746-025-02228-3",
+    "abstract": "Cardiovascular diseases (CVDs) remain the leading cause of global mortality, with early detection critical for improving patient outcomes. Photoplethysmography (PPG) is a widely used, non-invasive signal in both clinical monitors and consumer wearables; however, noise susceptibility and the absence of direct electrophysiological markers limit its utility across home and clinical settings. We present CardioPPG, a cross-modal learning framework that augments PPG with ECG-derived representations to improve CVD prediction and enable ECG synthesis for interpretability. Through cross-modal contrastive learning, CardioPPG aligns PPG and ECG features in a shared latent space, followed by an autoregressive generative model that synthesizes high-quality ECG signals. Extensive evaluations show that CardioPPG surpasses a PPG-only self-supervised baseline across multiple CVDs screening-including mitral and aortic valvular disease, atrial fibrillation, cardiomyopathy, and paroxysmal supraventricular tachycardia, among others-with relative AUC gains over the baseline of 41.3%, 12.2%, 8.8%, and 30.3%, respectively. On an external atrial-fibrillation dataset with 86 samples, CardioPPG achieved high AUCs of 99.5% and 98.6% on two PPG channels, confirming the model's generalizability. Furthermore, it generates ECG signals whose distributions closely match those of authentic ECGs, enhancing the interpretability. CardioPPG offers a scalable, real-time, non-invasive solution for CVD monitoring, with significant potential for use in-home settings and resource-limited environments, thus facilitating early detection and timely intervention.",
+    "source_key": "epmc:41392270",
+    "files": [
+      "papers/2025/Fang_2025_CardioPPG/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12820394/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 172998
+      }
+    ]
+  },
+  {
+    "study_id": "Sang_2025_Personalization",
+    "title": "Deep conditional generative model for personalization of 12-lead electrocardiograms and cardiovascular risk prediction",
+    "authors": "Sang Y and Banerjee A and Beetz M and Grau V",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.3389/fdgth.2025.1558589",
+    "first_public_date": "2025-04-16",
+    "peer_reviewed_date": "2025-04-16",
+    "status": "peer-reviewed",
+    "venue": "Frontiers in digital health",
+    "pmid": "40309320",
+    "pmcid": "PMC12040958",
+    "landing_url": "https://doi.org/10.3389/fdgth.2025.1558589",
+    "abstract": "<h4>Background</h4>12-lead electrocardiograms (ECGs) are a cornerstone for diagnosing and monitoring cardiovascular diseases (CVDs). They play a key role in detecting abnormalities such as arrhythmias and myocardial infarction, enabling early intervention and risk stratification. However, traditional analysis relies heavily on manual interpretation, which is time-consuming and expertise-dependent. Moreover, existing machine learning models often lack personalization, as they fail to integrate subject-specific anatomical and demographic information. Advances in deep generative models offer an opportunity to overcome these challenges by synthesizing personalized ECGs and extracting clinically relevant features for improved risk assessment.<h4>Methods</h4>We propose a conditional Variational Autoencoder (cVAE) framework to generate realistic, subject-specific 12-lead ECGs by incorporating demographic metadata, anatomical heart features, and ECG electrodes' positions as conditioning factors. This allows for physiologically consistent and personalized ECG synthesis. Furthermore, we introduce a revised Cox proportional-hazards regression model that utilizes the latent embeddings learned by the cVAE to predict future CVD risk. This approach not only enhances the interpretability of ECG-derived risk factors but also demonstrates the potential of deep generative models in personalized cardiac assessment.<h4>Results</h4>Our model is trained and validated on the UK Biobank dataset and <i>in silico</i> simulation data. By incorporating heart position and electrodes' positions, the generated ECGs demonstrate strong consistency with <i>in silico</i> simulations, providing insights into the relationship between cardiac anatomy and ECG morphology. Furthermore, our CVD risk prediction model achieves a C-index of 0.65, indicating that ECG signals, together with demographic and anatomical information, contain valuable prognostic information for stratifying subjects based on future cardiovascular risk.<h4>Conclusion</h4>This work marks a significant advancement in ECG analysis by providing a conditional VAE framework that not only improves ECG generation but also enriches our understanding of the relationship between ECG patterns and subject-specific information. Importantly, our approach enables clinically significant information to be extracted from 12-lead ECGs, providing valuable insights for predicting future CVD risks.",
+    "source_key": "epmc:40309320",
+    "files": [
+      "papers/2025/Sang_2025_Personalization/fulltext.xml"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12040958/fullTextXML",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 128610
+      }
+    ]
+  },
+  {
+    "study_id": "Neifar_2024_DiffECG",
+    "title": "DiffECG: A Versatile Probabilistic Diffusion Model for ECG Signals Synthesis",
+    "authors": "Nour Neifar and Achraf Ben-Hamadou and Afef Mdhaffar and Mohamed Jmaiel",
+    "year": "2024",
+    "arxiv": "2306.01875",
+    "doi": "",
+    "first_public_date": "2023-06-02",
+    "peer_reviewed_date": "",
+    "status": "peer-reviewed SERA 2024; arXiv manuscript analyzed",
+    "venue": "IEEE SERA 2024",
+    "landing_url": "https://arxiv.org/abs/2306.01875",
+    "abstract": "",
+    "source_key": "citation:Pohl2025:20",
+    "pdf_pages": 7,
+    "files": [
+      "papers/2024/Neifar_2024_DiffECG/paper.pdf",
+      "papers/2024/Neifar_2024_DiffECG/landing.html"
+    ],
+    "attempts": [
+      {
+        "url": "https://arxiv.org/pdf/2306.01875",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 14744656
+      },
+      {
+        "url": "https://arxiv.org/abs/2306.01875",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 41453
+      }
+    ]
+  },
+  {
+    "study_id": "Li_2026_EvaluationThesis",
+    "title": "A Comprehensive Evaluation Framework for Synthetic ECG: Assessing Fidelity, Utility, and Privacy",
+    "authors": "Yixin Li",
+    "year": "2026",
+    "arxiv": "",
+    "doi": "",
+    "first_public_date": "2026-05-08",
+    "peer_reviewed_date": "",
+    "status": "MSc thesis; public repository deposit",
+    "venue": "University of Waterloo MSc thesis",
+    "landing_url": "https://uwspace.uwaterloo.ca/items/0fff9cd3-cb39-4e3a-b81d-2ade38b1dd22",
+    "abstract": "Evaluation of conditional SSSD-ECG on PTB-XL using utility, fidelity and membership-inference attacks.",
+    "files": [
+      "papers/2026/Li_2026_EvaluationThesis/paper.pdf"
+    ],
+    "attempts": [
+      {
+        "url": "https://dspacemainprd01.lib.uwaterloo.ca/server/api/core/bitstreams/2c35ab52-959e-48f6-81a9-6e772d18fbbc/content",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "study_id": "Russo_2025_HumanFeedback",
+    "title": "Towards High-Fidelity ECG Generation: Evaluation via Quality Metrics and Human Feedback",
+    "authors": "Maria Russo and Joana Rebelo and Nuno Bento and Hugo Gamboa",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "10.5220/0013400500003911",
+    "first_public_date": "2024-12",
+    "peer_reviewed_date": "2025-02-01",
+    "status": "Peer-reviewed conference paper; related thesis version analyzed",
+    "venue": "BIOSTEC 2025",
+    "landing_url": "https://www.scitepress.org/Papers/2025/134005/134005.pdf",
+    "abstract": "SSSD-ECG refinement and evaluation with fidelity/diversity/utility metrics and clinician feedback.",
+    "files": [
+      "papers/2024/Russo_2024_HumanFeedback/paper.pdf"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.scitepress.org/Papers/2025/134005/134005.pdf",
+        "http_status": "not_downloaded",
+        "valid": false,
+        "bytes": 0
+      },
+      {
+        "url": "https://run.unl.pt/server/api/core/bitstreams/6f7314ad-ba0b-4e7d-9917-82ff54662db9/content",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 0
+      }
+    ],
+    "version_note": "Proceedings full text not downloaded; analyzed linked 2024 thesis PDF. Thesis is not equivalent to the published four-author paper; results attributed to thesis where details differ."
+  },
+  {
+    "study_id": "Zhou_2025_DiffECGClassification",
+    "title": "DiffECG: Diffusion Model-Powered Label-Efficient and Personalized Arrhythmia Diagnosis",
+    "authors": "Tianren Zhou and Zhenge Jia and Dongxiao Yu and Zhaoyan Shen",
+    "year": "2025",
+    "arxiv": "",
+    "doi": "",
+    "first_public_date": "2025",
+    "peer_reviewed_date": "2025",
+    "status": "Peer-reviewed conference paper; excluded classification-only",
+    "venue": "IJCAI 2025",
+    "landing_url": "https://www.ijcai.org/proceedings/2025/0890.pdf",
+    "abstract": "Classification and representation learning; no synthetic ECG waveform generation evaluation.",
+    "files": [
+      "papers/2025/Zhou_2025_DiffECGClassification/paper.pdf"
+    ],
+    "attempts": [
+      {
+        "url": "https://www.ijcai.org/proceedings/2025/0890.pdf",
+        "http_status": 200,
+        "valid": true,
+        "bytes": 5901924
+      }
+    ]
+  }
+]

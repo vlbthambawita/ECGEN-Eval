@@ -1,0 +1,9 @@
+# Personalized Heart Disease Detection via ECG Digital Twin Generation
+- **ID / Year / Venue:** P178 / 2024 / not reported
+- **Model & task:** Hybrid (GAN + VQ: LAVQ-Editor with VQ-Separator / Disease Embedding Codebook, ClinicalBERT text guidance, AdaIN decoder, StyleGAN-like discriminator); text-cond / other (ECG editing: personalised 'digital twin' disease ECGs from a healthy patient ECG + reference disease ECG/report)
+- **Losses:** Generator: non-saturating logistic adversarial loss + L2 reconstruction + cosine disease-similarity loss + VQ loss; Discriminator: logistic adversarial loss + cosine disease-feature similarity loss
+- **Evaluation:** Fréchet ResNet Distance (FRD); ResNet Score (RS, Inception-Score analogue); k-NN precision, recall (Kynkäänniemi) and their F1; membership inference risk (F1 of distance-threshold attack in ResNet feature space, ε = τ·mean distance); patient-level personalised accuracy/F1 and Average Treatment Effect (ATE); ECG-level accuracy, F1, AUROC of 1D ResNet-34/GoogleNet; DTW to patient's real ECG (ablation); t-SNE of personal-information retention (tags: distribution;privacy;utility-TSTR;fidelity)
+- **Data:** PTB-XL (single-label superclasses; 291 test patients with both normal and disease ECGs); leads: 12; fs: not reported (segments R1-100 to R7+100 samples rescaled to 4096 points); length: ~7 beats rescaled to 4096 samples
+- **Notes:** FRD real 0.30 vs ours 1.63 vs baselines 3.8-5.4; CGAN precision 0.997 but recall 0.069 — illustrates why precision alone misleads (mode collapse). MIA evaluated across thresholds τ. Compared CGAN, WGAN, StyleGAN, VQ-VAE2, PGANs.
+- **Takeaway for ECGEN-Eval:** Strong template: FD on an ECG-trained classifier + precision/recall/F1 + distance-threshold membership-inference curve; include a real-vs-real FD reference row.
+- *Extraction source: full-text*

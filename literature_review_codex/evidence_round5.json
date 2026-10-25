@@ -1,0 +1,82 @@
+{
+  "Li_2025_CLEPGAN": {
+    "task_model": "CLEP-GAN and CLEP-VQGAN use contrastive PPG/ECG latent alignment and waveform GAN decoding for PPG-conditioned ECG synthesis (pp.15–18).",
+    "data_protocol": "BIDMC and CapnoBase paired PPG/ECG;34 pairs/dataset selected,15% random test split, subject-disjointness unclear.512 samples at125Hz (~4s).",
+    "metrics": "Paired RMSE, FD in feature space, HR MAE, RR interval mean/SD, RR-distribution rHI/rRMSE/rEMD/KL/KS; generator timing/FLOPs and FD efficiency table. Accuracy endpoints on generated traces are not diagnostic validation (pp.18–25).",
+    "losses": "Generation Eq.16: NT-Xent PPG→ECG tau.1 + smooth-L1 PPG autoencoding, ECG autoencoding, crossmodal ECG reconstruction. VQVAE variant adds dictionary/commitment losses lambda=.25 (Eqs.17–18). Time- and STFT-frequency logistic GAN losses, total alpha Lgen+beta Lt+gamma Lf; alpha30,beta3,gamma1 (Eqs.19–21).",
+    "evidence": "Table4: BIDMC RMSE .37 and FD22.27 CLEP-GAN; CapnoBase .33 and FD32.45. Ablation removing contrastive/adversarial losses has mixed HRV/error outcomes (Table7), so no uniform component win.",
+    "utility_expert_privacy": "No clinician or privacy study. Synthesis uses paired translation, not independent random sampling. RR results include many nearly zero SD values suggesting errors in peak timing or reporting.",
+    "reproducibility": "Full arXiv v1 (52 pages), objective equations and code references; protocol has small selected test sets and epoch budgets differ among baselines.",
+    "critique": "Useful stress test for frequency adversarial losses, but HRV and paired RMSE should be reported alongside clinically meaningful intervals; this is adjacent PPG translation."
+  },
+  "Xu_2025_DFNet": {
+    "task_model": "GRU-Diffusion synthesizes minority ECG beats for augmentation; separate multitask classifier (pp.3–11).",
+    "data_protocol": "MIT-BIH two-lead and PTB 12-lead; selected single channel resampled250Hz,512 samples; shuffled80/20 record/sample split, no patient separation stated. Five minority MIT-BIH classes receive900 samples each.",
+    "metrics": "PCA feature FID, mean/SD DTW for random real–synthetic pairs, Welch PSD then KL; classification metrics assess augmentation. Metric extractor, normalization and pairing detail limited (pp.8–9).",
+    "losses": "Diffusion noise prediction follows DDPM; exact loss equation is standard DDPM MSE (Sec2.4), no extra ECG term. Separate DFNet classifier combines two cross-entropies and L2 regularization lambda=1e-5, task weights alpha/beta unspecified (p.7).",
+    "evidence": "Table2 average FID64.43→16.13; mean DTW133.28→111, KL.044→.0226. Some per-class DTW worsens (VFW 220.96→141.68 still improvement; compare all class values). Table5 augmentation gains classifier scores but shuffled split risks record leakage.",
+    "utility_expert_privacy": "Augmentation benefit is tested; no real/fake panel, physiological biomarker, privacy attack or held-out patient design reported.",
+    "reproducibility": "PyTorch/RTR3090/Adam settings detailed; GAN/diffusion comparisons, loss schedule and exact feature model incomplete.",
+    "critique": "FID+DTW+PSD cover distinct domains, but PCA FID and random-pair DTW are implementation-sensitive. Classification lift under non-patient split may overstate utility."
+  },
+  "Qiu_2026_PhysDiff": {
+    "task_model": "PhysDiff-LBM diffusion reconstructs ECG from paired PPG using lattice-Boltzmann-inspired latent physics and QRS topology mask; included as generated-waveform translation subgroup.",
+    "data_protocol": "MIMIC-III curated5000+ subjects and external VitalDB; PPG→ECG reconstruction; 128Hz, nonoverlap4s, min-max[-1,1], NeuroKit2/Pan-Tompkins (full text §§3.1–3.2). Exact split sizes and subject disjointness unclear.",
+    "metrics": "Paired RMSE, Pan-Tompkins HR-MAE, raw-signal vector Fréchet distance; downstream AF/arrhythmia diagnostic metrics, t-SNE (evaluation §§3.2,3.5). Distribution FD treats flattened raw windows, not learned ECG features.",
+    "losses": "Total lambda_diff noise-prediction MSE + lambda_reg QRS-mask BCE + lambda_phys squared temporal derivative versus LBM momentum field (Eqs.17–19); weights not specified. Preprocess uses128Hz/4s windows and 32-sample QRS mask (Eq.21).",
+    "evidence": "Ablation table: full MIMIC RMSE .22, HRMAE1.26, FD6.23; VitalDB .25,1.95,4.35. No CIs/seeds in displayed table.",
+    "utility_expert_privacy": "Paper claims downstream validity; independent classifier split and training/testing provenance require scrutiny. No clinicians or privacy attacks.",
+    "reproducibility": "Full XML read; paper has equations/ablation, but high-level architecture and derived “clinical-grade” wording should not substitute for patient-level external validation.",
+    "critique": "Task is PPG-conditioned reconstruction, not free unconditional generation. Physical residual is against a fitted simplified model; agreement can reflect model assumptions."
+  },
+  "Zanchi_2025_Brugada": {
+    "task_model": "Pulse2Pulse GAN generates 12-lead Brugada-pattern ECGs and expert panel tests real/fake distinguishability (Methods/results).",
+    "data_protocol": "21 Brugada patients; 5-min 1kHz 12-lead real records, synthetic matched format; 1,122 generated segments? The evaluated set comprises 2244 ECG instances, half/half; same patient cohort as 2026 Zanchi validation.",
+    "metrics": "Real/fake accuracy, sensitivity, specificity, F1; Cohen kappa within-rater between rounds; Wilcoxon round comparison (Statistical analysis section).",
+    "losses": "GAN Pulse2Pulse details and objective delegated to prior paper, no coefficients/architecture/training split in article.",
+    "evidence": "7 Brugada specialists (>15y), blind, randomized2244 balanced traces, repeated after ≥2h. Accuracy40% then42%; sensitivity58%, specificity22→26%; kappa−.12 to.80 (Methods/results).",
+    "utility_expert_privacy": "Strong expert-design detail, but same21-patient source and synthetic set as Zanchi2026; not independent replication. No held-out clinical outcome or privacy test.",
+    "reproducibility": "Published full XML read; data governance/consent noted. Model full methods not reported, cite predecessor separately if needed.",
+    "critique": "Chance-level distinction supports perceptual similarity only, not clinical interchangeability; low specificity shows inconsistent labeling."
+  },
+  "Tiwari_2026_Minority": {
+    "task_model": "Class-conditional WGAN-GP generates minority PhysioNet2020 ECG classes for eight-class diagnosis augmentation (Methods §§2–4).",
+    "data_protocol": "PhysioNet2020, eight classes,360Hz single lead,360 samples. Each class360 synthetic examples; fivefold CV reported but patient partition details absent.",
+    "metrics": "Classifier accuracy/precision/recall/F1, DTW and SSIM waveform similarity; definitions and real/synthetic pair protocol unclear (Results tables3–4).",
+    "losses": "cWGAN-GP critic objective includes gradient penalty coefficient10; Eq.1 sign places GP under critic maximization, inconsistent with conventional minimization description. Auxiliary class loss weight unspecified. Diffusion not used.",
+    "evidence": "Noaug macro F1 .78; GAN +ResNet .89; full .94 (Table3). Table4 fivefold scores .932,.945,.938,.941,.944 incompatible with printed SD .012 under common sample SD.",
+    "utility_expert_privacy": "Only TSTR-like classifier augmentation assessment, class balance and grouped patient split unclear; no expert or attack.",
+    "reproducibility": "Full XML; equations and tables have material inconsistencies; code not inspected.",
+    "critique": "Potential record-level leakage with 360Hz chopped segments. DTW/SSIM do not establish diagnostic validity; Table variance is internally inconsistent."
+  },
+  "Zhang_2026_QualityGAN": {
+    "task_model": "Quality-aware GAN augmentation learns soft labels from ECG quality/rhythm signals, generates 12-lead records, evaluates classifier and waveform quality.",
+    "data_protocol": "PhysioNet2017-derived 8,528 records, remove46 poor quality, 80/20 record split then 10-s windows; no patient-level separation specified. AF examples expanded1841→6000.",
+    "metrics": "Classifier accuracy/F1, Kurtosis excess K=E4/var², ECG quality diagnostics; classifier parameter/FLOPs and inference latency refer downstream classifier rather than GAN (Methods/Table10–11).",
+    "losses": "Soft quality targets alpha=.7; generator/discriminator adversarial objective (Eq.10); positive-label loss is −E[y logD] only, not full soft-label BCE. Eq.11 specificity denominator malformed (includes TN twice).",
+    "evidence": "GAN ablation F1 .816 vs noaug .793; full system .880 includes classifier architecture changes, not attributable solely to waveform fidelity (Table10–11).",
+    "utility_expert_privacy": "Augmentation classification benefit only; no blinded reviewers or privacy attacks.",
+    "reproducibility": "Full XML; detailed data and architecture but no patient-stratification protocol or independent test/seed CIs.",
+    "critique": "High kurtosis may also signal sharp artifacts, so quality weighting requires clinical labels and robustness controls; classifier and generator changes are confounded."
+  },
+  "Guan_2026_WearECG": {
+    "task_model": "WearECG VAE reconstructs missing 12 leads from selected observed leads and evaluates reconstruction and physician reading; adjacent lead-translation included because it explicitly scores waveform generation.",
+    "data_protocol": "MIMIC 12-lead records;500Hz Fourier resampling, patient_id grouped split; main input leads II,V1,V5, compare I/II/V3 and single I. Exact record counts/signal length not in inspected sections.",
+    "metrics": "Paired MAE/MSE by lead; ECGFounder feature FID; 3 board-certified cardiologists blind Turing set50 mixed signals (52%,44%,44% correct); MI diagnosis on generated traces,55 cases: sensitivity100%,specificity44.8%,accuracy70.9%,F1 .765 (Results).",
+    "losses": "VAE ELBO Eq.8, MSE reconstruction + beta KL(q(z|x)||N(0,I)), beta=1e-4; latent channels4, AdamW,10epochs (Methods).",
+    "evidence": "Main leads II,V1,V5 overall MSE.00100, MAE.01782,FID12.64. Turing and MI confusion matrix as above.",
+    "utility_expert_privacy": "Three experts assess realism and disease findings; MI assessment generated-only, specificity low; no utility vs paired real ECG or privacy attack.",
+    "reproducibility": "Published XML and PDF; subject split explicit; supplements/checkpoints not inspected.",
+    "critique": "Reconstruction from partial observed leads relies on patient-specific paired signal, not population-level synthesis; near-chance detection does not validate safe diagnosis."
+  },
+  "Neifar_2024_DiffECG": {
+    "task_model": "Conditional DDPM with a task-aware U-Net for heartbeat generation, partial-signal imputation and forecasting; SERA 2024 publication qualifies although arXiv first report in 2023 is outside window.",
+    "data_protocol": "MIT-BIH 48 records/two leads, 360Hz; MLII; annotated N,V,F beats of 270 samples around R peak; random 70/30 signal-wise split, not patient grouped (pp.3–4).",
+    "metrics": "Generation RMSE/MAE, FID, DTW, EMD, MMD per class (Table II); downstream classifier accuracy/precision/recall/F1 after synthetic augmentation (Table I). Feature extractor details for FID are incomplete (pp.4–5).",
+    "losses": "Conditional DDPM noise-prediction MSE Eq.3. Generation task masks all waveform values and conditions on class/task embeddings. Additional waveform MSE Eq.4 applies to imputation/forecasting, not unconditional generation (p.3).",
+    "evidence": "Table II normal class: RMSE1.68e-3, DTW22.10, FID1.29e-2, EMD1.54e-2, MMD.40. One classifier F1 rises .77→.96 with synthetic augmentation (Table I). Other class metrics are mixed versus strongest GAN baselines.",
+    "utility_expert_privacy": "Three classifier baselines evaluated with real-only and synthetic augmentation. No experts/privacy attack. Signal-wise split risks patient leakage; no external data.",
+    "reproducibility": "Full arXiv PDF;1000 diffusion steps, beta .0001–.02, Adam .001. No run intervals. IEEE SERA DOI10.1109/SERA61261.2024.10685651, conference date 2024-05-30.",
+    "critique": "Unified task-aware architecture is useful, but metric implementation is incomplete and record-level splitting may inflate evaluation. Restrict conclusions to reported protocol."
+  }
+}

@@ -1,0 +1,52 @@
+source,query,filters,execution_date,available_results,screened,notes
+Europe PMC REST core search,(TITLE_ABS:ECG OR TITLE_ABS:electrocardiogram OR TITLE_ABS:electrocardiographic) AND (TITLE_ABS:synthetic OR TITLE_ABS:generation OR TITLE_ABS:generative OR TITLE_ABS:synthesis) AND FIRST_PDATE:[2023-10-25 TO 2026-10-25],FIRST_PDATE inclusive; relevance order; pageSize=100,2026-10-25,755,100,Capped at100 of755; broad query.
+Europe PMC REST core search,(TITLE_ABS:ECG OR TITLE_ABS:electrocardiogram OR TITLE_ABS:electrocardiographic) AND (TITLE_ABS:synthetic OR TITLE_ABS:generative OR TITLE_ABS:synthesis) AND FIRST_PDATE:[2023-10-25 TO 2024-12-31],FIRST_PDATE inclusive; relevance order; pageSize=100,2026-10-25,103,100,Date-stratified top-up capped at100.
+Europe PMC REST core search,(TITLE_ABS:ECG OR TITLE_ABS:electrocardiogram) AND (TITLE_ABS:synthetic OR TITLE_ABS:generative) AND (TITLE_ABS:evaluation OR TITLE_ABS:metric OR TITLE_ABS:loss OR TITLE_ABS:privacy OR TITLE_ABS:benchmark) AND FIRST_PDATE:[2023-10-25 TO 2026-10-25],FIRST_PDATE inclusive; all returned,2026-10-25,94,94,Focused metrics/objectives query.
+arXiv API,(ti:ECG OR ti:electrocardiogram) AND (all:generation OR all:synthetic) AND submittedDate:[202310250000 TO 202610252359],Relevance order; max_results=100,2026-10-25,213,100,Capped at100 of213; broad direct API.
+General web search (discovery/access),"ECG synthetic generation diffusion GAN evaluation loss 2024 2025 2026
+---
+electrocardiogram generation evaluation physiological loss benchmark
+---
+ECG generation flow matching autoregressive variational autoencoder 2024 2025 2026
+---
+synthetic ECG generation privacy memorization clinical evaluation",Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,14,14,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),"site:arxiv.org ECG generation diffusion 2024 2025 2026 losses evaluation
+---
+site:arxiv.org electrocardiogram generation flow matching autoregressive
+---
+ECG generation 2024 GAN loss
+---
+ECG evaluation synthetic metrics 2026",Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,13,13,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),site:arxiv.org ECG diffusion generation,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,4,4,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),ECG generation 2024 2025 loss,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,12,12,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),ECG flow matching,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,11,11,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),ECG generation variational 2024 2025,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,14,14,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),electrocardiogram generation autoregressive waveform,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,18,18,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),synthetic ECG perceptual loss,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,9,9,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),DiffuSETS generation -site:github.com -site:researchgate.net,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,12,12,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),SSSD-ECG evaluation privacy,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,15,15,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),"Assessing the robustness ECG pdf Russo
+---
+Exploring latent diffusion models ECG arxiv
+---
+AI modeling photoplethysmography to electrocardiography PMC
+---
+DiffECG publication 2024 2025",Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,6,6,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),Exploring latent diffusion models for ECG generation on the minute scale pdf,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,3,3,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),Assessing the robustness of evaluation metrics filetype:pdf,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,12,12,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),synthetic electrocardiogram spectral loss OR contrastive loss,Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,8,8,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+General web search (discovery/access),"DiffECG A Versatile 2024 DOI
+---
+ECG synthesis via diffusion-based state space augmented transformer publication date
+---
+Conditional Electrocardiogram Generation Using Hierarchical publication
+---
+ODE-Constrained Generative Modeling of Cardiac Dynamics TMLR",Queries issued together in one web-search call; result cards pooled in saved response,2026-10-25,12,12,Individual per-query card counts were not retained. Screened combined result cards only; cards may duplicate across batches.
+OpenAlex works lookup,https://doi.org/10.1016/j.compbiomed.2025.109138,Targeted metadata/reference follow-up,2026-10-25,1,1,Metadata/location check for ECGEN; no alternative full text located.
+OpenAlex works lookup,https://doi.org/10.1016/j.compbiomed.2026.111824,Targeted metadata/reference follow-up,2026-10-25,1,1,Metadata/location check for Russo robustness; no alternative full text located.
+Europe PMC targeted metadata,EXT_ID:41392270,Targeted metadata/reference follow-up,2026-10-25,1,1,Bibliographic/full-text lookup for CardioPPG.
+Europe PMC targeted metadata,EXT_ID:40309320,Targeted metadata/reference follow-up,2026-10-25,1,1,Bibliographic/full-text lookup for Sang personalization.
+Crossref title metadata,DiffECG: A Versatile Probabilistic Diffusion Model for ECG Signals Synthesis,Targeted metadata/reference follow-up,2026-10-25,1,1,Metadata lookup; DOI checked against conference record.
+Web citation-led discovery,"""DiffuSETS"" ""generation"" -site:github.com -site:researchgate.net",Targeted metadata/reference follow-up,2026-10-25,1,1,Backward/reference-led discovery; no exhaustive forward citation graph.
+Web citation-led discovery,"""SSSD-ECG"" ""evaluation"" ""privacy""",Targeted metadata/reference follow-up,2026-10-25,1,1,Backward/reference-led discovery.
+Reference list inspection,"FlowECG, MultiBeat ECG, SE-Diff references",Targeted metadata/reference follow-up,2026-10-25,1,1,Backward search only; no complete citing network.

@@ -1,0 +1,179 @@
+TASK: Systematic literature review — evaluation methods and loss functions for synthetic ECG generation
+
+ROLE AND GOAL
+You are doing a structured scientific literature review of papers that generate synthetic
+ECG signals with machine-learning generative models. The main goal is to catalogue
+(1) the EVALUATION METHODS / METRICS and (2) the LOSS FUNCTIONS / TRAINING OBJECTIVES used
+in these papers. The results will feed into ECGEN-Eval (/work/vajira/DL2026/ECGEN-Eval), a
+Python package of synthetic-ECG evaluation metrics, so it matters which metrics are missing
+from that package.
+
+All output goes in: /work/vajira/DL2026/ECGEN-Eval/literature_review_claude/
+
+------------------------------------------------------------------------------------------
+1. SCOPE
+------------------------------------------------------------------------------------------
+Time window: papers published (or first posted as preprints) from 2023-10-01 to today
+(about the last 3 years). Older papers that are foundational and heavily cited
+(e.g. Pulse2Pulse, DiffuSETS precursors, SSSD-ECG, original ECG-GAN papers) may be listed in a
+separate "Background / seminal works" section, but they do not count toward the core set.
+
+Include papers that:
+  - generate ECG signals (1-lead or multi-lead, raw waveform or beats) with a generative
+    model: GAN, VAE, diffusion / score-based, flow matching / normalizing flows,
+    autoregressive / transformer, state-space models, LLM- or text-conditioned
+    generators, or hybrids;
+  - include conditional generation (on diagnosis labels, text reports, other leads,
+    PPG-to-ECG, ECG imputation/reconstruction of missing leads, super-resolution,
+    denoising IF framed as generation);
+  - OR propose / benchmark an evaluation method or metric for synthetic ECGs or
+    synthetic physiological time series (even without a new generator);
+  - OR are surveys / reviews of ECG generation (record these separately).
+
+Exclude:
+  - ECG classification-only papers that just use off-the-shelf augmentation without
+    describing how the synthetic data was evaluated;
+  - ECG image generation (scanned paper ECG images) unless it also evaluates the signal;
+  - non-ECG physiological signals, unless the paper is a general time-series generation
+    evaluation method that ECG papers clearly use (keep these in a short "related" list).
+
+------------------------------------------------------------------------------------------
+2. STEP 1 — WRITE THE PLAN FIRST
+------------------------------------------------------------------------------------------
+Before searching, write `00_review_plan.md` containing: research questions, sources,
+the exact search queries, inclusion/exclusion criteria, folder layout, the data-extraction
+schema (section 5), and a stopping criterion. Then follow it. If you change the plan along
+the way, append a dated "Plan changes" section instead of silently changing it.
+
+Research questions:
+  RQ1. Which evaluation metrics are used for synthetic ECGs, and how often?
+       (Group them: signal-level fidelity, distribution-level, clinical/physiological,
+       downstream utility, privacy/memorisation, human/expert evaluation.)
+  RQ2. Which loss functions / training objectives are used, per model family?
+  RQ3. Which datasets, sampling rates, lead configurations and signal lengths are used?
+  RQ4. Is there an emerging standard (e.g. FID-like metrics on ECG foundation-model
+       embeddings, TSTR/TRTS protocols), and what are the known pitfalls?
+  RQ5. Which of these metrics are NOT yet in ECGEN-Eval? (Compare with the metric keys in
+       ecgen_eval/metrics/__init__.py: mmd, dtw, prd, psd, fd, fed, psnr, ssim, swd, mae,
+       hrv, pr_dist, sqi, nn_dist, heart_rate, spectral_entropy.)
+
+------------------------------------------------------------------------------------------
+3. STEP 2 — SEARCH
+------------------------------------------------------------------------------------------
+Sources (use what is reachable): arXiv (API), Semantic Scholar (Graph API), PubMed /
+Europe PMC (API, including PMC open-access full text), medRxiv/bioRxiv, OpenReview
+(ICLR/NeurIPS/ICML workshops), Papers with Code, Google Scholar via web search, IEEE Xplore
+/ ACM / MDPI / Springer / Elsevier landing pages via web search.
+
+Starting queries (refine and extend them; log every query, source, date, and hit count in
+`search_log.md`):
+  - "synthetic ECG" generation (GAN OR diffusion OR "flow matching" OR VAE)
+  - "ECG generation" diffusion model
+  - "ECG synthesis" "generative adversarial network"
+  - "12-lead ECG" generation diffusion OR "score-based"
+  - "text-to-ECG" OR "report-to-ECG" OR "text-conditioned ECG generation"
+  - "PPG to ECG" translation generative
+  - "ECG lead reconstruction" OR "missing lead" generative
+  - "flow matching" ECG OR electrocardiogram
+  - "evaluation of synthetic ECG" OR "synthetic ECG quality" metric
+  - "Fréchet" ECG distance OR "FID" electrocardiogram
+  - "synthetic physiological signals" evaluation fidelity privacy utility
+  - "train on synthetic test on real" ECG
+  - "ECG foundation model" generation
+Snowballing: for the 10–15 most relevant papers, check references and citing papers
+(Semantic Scholar) for additional candidates.
+
+Screening: dedupe by DOI / arXiv ID / normalised title. Screen by title + abstract first,
+then full text. Record the include/exclude decision and reason for each candidate in
+`screening.csv`. Aim for roughly 40–80 included papers; stop when new queries and
+snowballing mostly return papers already found (saturation).
+
+------------------------------------------------------------------------------------------
+4. STEP 3 — DOWNLOAD (LEGAL, OPEN ACCESS ONLY)
+------------------------------------------------------------------------------------------
+  - Download only legally open-access PDFs: arXiv, medRxiv/bioRxiv, PMC OA, OpenReview,
+    CVF/PMLR/NeurIPS proceedings, open-access publishers (MDPI, Frontiers, Nature Sci Rep,
+    etc.), and author-hosted copies. Use Unpaywall / Semantic Scholar `openAccessPdf`
+    to find OA versions. Do NOT use Sci-Hub or similar sources, and do not get around paywalls.
+  - Check every download is a real PDF (file type / magic bytes, not an HTML error or
+    captcha page) and delete any that are not.
+  - File naming: `<Year>_<FirstAuthorLastName>_<ShortTitle>.pdf`
+    (ASCII, no spaces, short title of up to 6 words joined by underscores).
+  - Anything you cannot download goes in `to_download.md` as a table:
+    | # | Title | Authors | Year | Venue | DOI / URL | Why it matters | Target folder |
+    so I can fetch it manually and drop it into the right folder.
+
+------------------------------------------------------------------------------------------
+5. STEP 4 — EXTRACT
+------------------------------------------------------------------------------------------
+For every included paper (from full text where available, otherwise abstract, and say
+which), fill in one row of `papers_index.csv` with these columns:
+  id, year, title, authors, venue, doi_or_url, pdf_path (or "not downloaded"),
+  model_family (GAN/VAE/Diffusion/FlowMatching/NF/AR-Transformer/SSM/LLM/Hybrid/EvalOnly/Survey),
+  task (unconditional / class-cond / text-cond / lead-reconstruction / PPG2ECG / imputation / other),
+  datasets, n_leads, fs_hz, signal_length_s,
+  loss_functions (exact names + short form, e.g. "adversarial (WGAN-GP) + L1 + spectral loss"),
+  eval_metrics (the exact metrics as named in the paper),
+  eval_category_tags (fidelity / distribution / clinical / utility-TSTR / privacy / expert),
+  feature_extractor_for_embedding_metrics (e.g. ECGFounder, custom classifier, none),
+  code_available (URL or no),
+  notes (unusual metrics, criticisms of metrics, reported pitfalls).
+Also put a short per-paper note (5–10 lines) in `notes/<same_basename>.md`.
+
+------------------------------------------------------------------------------------------
+6. FOLDER STRUCTURE
+------------------------------------------------------------------------------------------
+literature_review_claude/
+  00_review_plan.md
+  search_log.md
+  screening.csv
+  papers_index.csv
+  to_download.md
+  01_literature_review_report.md
+  papers/
+    01_GAN/
+    02_VAE/
+    03_Diffusion/
+    04_Flow_Matching_and_Normalizing_Flows/
+    05_Autoregressive_Transformer_SSM_LLM/
+    06_Hybrid_and_Other/
+    07_Evaluation_Methods_and_Benchmarks/
+    08_Surveys_and_Reviews/
+    09_Background_Seminal/      (pre-2023-10, optional)
+    (papers/ and all PDFs are git-ignored; see section 8)
+  notes/
+Put each paper in one folder only, by its main contribution. Leave input_prompt.txt and this
+prompt file untouched.
+
+------------------------------------------------------------------------------------------
+7. STEP 5 — SYNTHESIS REPORT (01_literature_review_report.md)
+------------------------------------------------------------------------------------------
+  - Method summary (sources, dates, counts: found → screened → included → downloaded,
+    as a PRISMA-style text flow).
+  - Metric taxonomy table: metric | category | definition (1 line) | # papers using it |
+    example papers | in ECGEN-Eval? (yes/no, with metric key).
+  - Loss-function taxonomy table, per model family: loss | formula/short description |
+    # papers | example papers.
+  - Datasets and experimental-setup summary (PTB-XL, MIMIC-IV-ECG, CPSC, Chapman, etc.).
+  - Discussion: common practice, inconsistencies, metric weaknesses, reproducibility gaps.
+  - Recommendations for ECGEN-Eval: a ranked list of metrics to add, each with the
+    reference paper(s) and implementation notes.
+  - Full reference list (with DOI/URL).
+
+------------------------------------------------------------------------------------------
+8. WORKING RULES
+------------------------------------------------------------------------------------------
+  - Never make up papers, authors, DOIs, metrics or numbers. Every entry must have
+    a URL that you actually found. If a detail is uncertain, write "unverified".
+  - Save progress files incrementally (append to CSVs/logs as you go) so the work can
+    resume if it is interrupted.
+  - Rate-limit API calls and set a descriptive User-Agent; respect robots.txt.
+  - Keep downloaded papers out of git: add `literature_review_claude/papers/` and
+    `literature_review_claude/**/*.pdf` (plus any other downloaded source files, e.g.
+    .zip/.tar.gz/supplementary material) to the repo's `.gitignore`. Check with
+    `git check-ignore -v <file>` on a few downloaded files, and check that `git status` shows
+    no PDFs. The plan, logs, CSVs, notes and report stay tracked. If any downloaded file
+    was already staged or tracked, remove it from the index with `git rm --cached` (never
+    delete the local file). Do not commit unless I ask.
+  - At the end, give me a short summary: counts, top 10 most used metrics, top loss
+    functions, the 5 most important papers, and how many papers are in to_download.md.

@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Literature review: downloaded papers and source files (not tracked)
+literature_review_claude/papers/
+literature_review_claude/**/*.pdf
+literature_review_claude/**/*.zip
+literature_review_claude/**/*.tar.gz
+
+# Codex literature review: original downloaded source material
+/literature_review_codex/papers/

@@ -1,0 +1,9 @@
+# A Diffusion-Based Generative Framework for Synthetic Arrhythmia ECG Signals
+- **ID / Year / Venue:** P001 / 2025 / Journal of Artificial Intelligence for Healthcare Systems
+- **Model & task:** Diffusion (conditional DDPM, 1D U-Net denoiser, class encoder + attention conditioning) — conceptual framework; class-cond (rare arrhythmia augmentation)
+- **Losses:** simplified DDPM noise-prediction MSE; downstream classifier consistency regularization via KL divergence between outputs on real vs synthetic same-class samples
+- **Evaluation:** Fréchet distance on pretrained ECG encoder embeddings; MMD (RBF); SNR (>20 dB criterion); QRS duration, QTc, RR variability, ST deviation distribution matching via KS test (p>0.05); blinded cardiologist Turing test (100 real/100 synthetic, ~50% target); class-conditional controllability audits; AUROC, F1, sensitivity at fixed specificity (TSTR/augmentation); synthetic-vs-real generalization gap (<5 pp); paired bootstrap CIs (10,000); membership inference; nearest-neighbour distance (tags: distribution;fidelity;clinical;expert;utility-TSTR;privacy;efficiency)
+- **Data:** proposed for MIT-BIH, PTB-XL, MIMIC-ECG (no experiments run); leads: 12 (proposed); fs: 500 (proposed example); length: 10 (proposed; 10-30 s discussed)
+- **Notes:** Explicitly 'no experimental results' — a theoretical blueprint. Useful as a checklist mapping validation domains to metrics and success thresholds (Table 2). Claims diffusion inherently resists membership inference (unverified). Notes sampling cost 30-60 s per 10 s 12-lead ECG at T=1000.
+- **Takeaway for ECGEN-Eval:** Its domain->metric->threshold table (FD/MMD, KS on clinical intervals, expert Turing, TSTR gap, MIA/NN privacy) is a good template for ECGEN-Eval report sections.
+- *Extraction source: full-text*
