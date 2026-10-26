@@ -176,8 +176,12 @@
     var facetBox = el("div", { class: "litdb-facets" });
     var summary = el("div", { class: "litdb-summary" });
     var table = el("div", { class: "litdb-table" });
-    [el("div", { class: "litdb-toolbar" }, [search, reset, dl]), count, facetBox, summary, table]
-      .forEach(function (n) { panels.papers.appendChild(n); });
+    // Filters in a left sidebar; results (count, summary charts, table) on the right.
+    panels.papers.appendChild(el("div", { class: "litdb-layout" }, [
+      el("aside", { class: "litdb-sidebar", "aria-label": "Filters" }, [
+        search, el("div", { class: "litdb-toolbar" }, [reset, dl]), facetBox]),
+      el("div", { class: "litdb-main" }, [count, summary, table]),
+    ]));
 
     var catBar = el("div", { class: "litdb-chips litdb-catbar" });
     var catInfo = el("p", { class: "litdb-count" });
