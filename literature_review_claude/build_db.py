@@ -330,6 +330,8 @@ def build(include_all: bool) -> list[dict]:
     structured = load_structured()
     papers = []
     for r in csv.DictReader(INDEX.open(newline="")):
+        if r["notes"].startswith("EXCLUDED"):  # dropped after full-text re-check
+            continue
         downloaded = r["pdf_path"] != "not downloaded"
         if not downloaded and not include_all:
             continue

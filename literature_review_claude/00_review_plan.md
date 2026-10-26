@@ -113,3 +113,6 @@ incrementally. API calls rate-limited with a descriptive User-Agent. No paywall 
   downloaded PDF, and abstract-only extraction is flagged in `papers_index.csv` (`extraction_source`).
 - **2026-10-25** — Deterministic (non-generative) lead-reconstruction / PPG-to-ECG regressors and pure ECG
   denoising papers were excluded unless they used a generative model (GAN/VAE/diffusion/flow).
+- **2026-10-26** — Cross-checked against `literature_review_codex/` (see `03_cross_check_codex.md`).
+  The keyword pre-filter had false negatives; re-scanning its 870 exclusions added P180–P182 and
+  P184–P186, P183 came from the codex list, and P048 was excluded after a full-text re-check.

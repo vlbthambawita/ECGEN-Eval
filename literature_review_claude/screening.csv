@@ -172,7 +172,7 @@ C0169,2024,Development and Validation of a Real-Time Service Model for Noise Rem
 C0170,2024,DH-482888-002 DETECTION OF CARDIAC RHYTHM ABNORMALITIES USING GENERATIVE ADVERSARIAL NETWORK-DRIVEN 12-LEAD ECG RECONSTRUCTIONS FROM A SINGLE SIMULATED IMPLANTABLE LOOP RECORDER SIGNAL,openalex:Q7,title-abstract,exclude,conference abstract only
 C0171,2026,Diff-TGEG: a novel diffusion model for text-guided electrocardiogram generation,openalex:Q2;openalex:Q4;openalex:Q5,title-abstract,include,meets inclusion criteria -> P046
 C0172,2024,DiffECG: A Versatile Probabilistic Diffusion Model for ECG Signals Synthesis,openalex:Q2,title-abstract,include,meets inclusion criteria -> P047
-C0173,2025,DiffECG: Diffusion Model-Powered Label-Efficient and Personalized Arrhythmia Diagnosis,openalex:Q2;openalex:Q4,title-abstract,include,meets inclusion criteria -> P048
+C0173,2025,DiffECG: Diffusion Model-Powered Label-Efficient and Personalized Arrhythmia Diagnosis,openalex:Q2;openalex:Q4,full-text re-check,exclude,P048: diffusion used only for self-supervised representation learning; no synthetic ECGs generated (2026-10-26)
 C0174,2025,DiffuSETS: 12-lead ECG Generation Conditioned on Clinical Text Reports and Patient-Specific Information,arxiv:Q14;arxiv:Q4;arxiv:Q5;epmc:Q1;epmc:Q15;epmc:Q2;epmc:Q3;epmc:Q5;epmc:Q9;openalex:Q1;openalex:Q13;openalex:Q15;openalex:Q2;openalex:Q4;openalex:Q5;openalex:Q7,title-abstract,include,meets inclusion criteria -> P049
 C0175,2025,Diffusion Model-Based Multi-scale Feature and Timing Consistency Enhancement for ECG Signal Generation,openalex:Q2,title-abstract,include,meets inclusion criteria -> P050
 C0176,2024,Diffusion Models and Masked Training Helps Digitization and Classification of Multiple Layout ECG Images,openalex:Q13;openalex:Q2;openalex:Q4,title-abstract,exclude,"out of scope on title/abstract (not ML generation of ECG signals, e.g. classification, denoising, simulation, imaging, other modality, review not on generation)"
@@ -641,7 +641,7 @@ W-P179,2026,"A Comprehensive Evaluation Framework for Synthetic ECG: Assessing F
 ,2024,ECG-Chat: A Large ECG-Language Model for Cardiac Disease Diagnosis,arxiv:Q5;openalex:Q13;openalex:Q5,keyword-prefilter,exclude,no generative term
 ,2024,Zero-Shot ECG Classification with Multimodal Learning and Test-time Clinical Knowledge Enhancement,arxiv:Q5,keyword-prefilter,exclude,no generative term
 ,2026,TEX-MEX: Similarity-Guided Temporal Contrastive Learning for Time Series,arxiv:Q13;arxiv:Q6,keyword-prefilter,exclude,no generative term
-,2026,BeatFlow-ECG: Rectified Flow for ECG Reconstruction from Indirect Wearable Signals,arxiv:Q6;openalex:Q15;openalex:Q2;openalex:Q3;openalex:Q4;openalex:Q5;openalex:Q6;openalex:Q7;openalex:Q8,keyword-prefilter,exclude,no generative term
+,2026,BeatFlow-ECG: Rectified Flow for ECG Reconstruction from Indirect Wearable Signals,arxiv:Q6;openalex:Q15;openalex:Q2;openalex:Q3;openalex:Q4;openalex:Q5;openalex:Q6;openalex:Q7;openalex:Q8,cross-check,include,P182: wrongly dropped by keyword pre-filter; re-included after cross-check with literature_review_codex (2026-10-26)
 ,2026,SimAuthor: Harnessing Foundation Models for Persistent Scientific Simulator Authoring,arxiv:Q13;arxiv:Q6;openalex:Q13;openalex:Q6,keyword-prefilter,exclude,no generative term
 ,2026,Learning Where to Look: A Shared Relative-Alignment Module for Time-Series Forecasting and PPG-to-Vital-Sign Reconstruction,arxiv:Q6;openalex:Q6,keyword-prefilter,exclude,no generative term
 ,2026,A Multidimensional Data-Driven Hybrid Transformer Framework for Non-invasive Continuous Blood Pressure Prediction,arxiv:Q6;openalex:Q6,keyword-prefilter,exclude,no generative term
@@ -719,7 +719,7 @@ W-P179,2026,"A Comprehensive Evaluation Framework for Synthetic ECG: Assessing F
 ,2023,Finding Foundation Models for Time Series Classification with a PreText Task,arxiv:Q13,keyword-prefilter,exclude,no generative term
 ,2026,Chain of Flow: ECG-Conditioned 4D Cardiac Cine Generation from Patient-Specific Anatomical Anchor,arxiv:Q14;openalex:Q13;openalex:Q15;openalex:Q2;openalex:Q4;openalex:Q5;openalex:Q8,keyword-prefilter,exclude,no generative term
 ,2025,ECG-RAMBA: Zero-Shot ECG Generalization by Morphology-Rhythm Disentanglement and Long-Range Modeling,arxiv:Q14,keyword-prefilter,exclude,no generative term
-,2025,CoFE: A Framework Generating Counterfactual ECG for Explainable Cardiac AI-Diagnostics,arxiv:Q14,keyword-prefilter,exclude,no generative term
+,2025,CoFE: A Framework Generating Counterfactual ECG for Explainable Cardiac AI-Diagnostics,arxiv:Q14,cross-check,include,P181: wrongly dropped by keyword pre-filter; re-included after cross-check with literature_review_codex (2026-10-26)
 ,2024,Cech Complex Generation with Homotopy Equivalence Framework for Myocardial Infarction Diagnosis using Electrocardiogram Signals,arxiv:Q14,keyword-prefilter,exclude,no generative term
 ,2024,Personalized Heart Disease Detection via ECG Digital Twin Generation,arxiv:Q14;openalex:Q12;openalex:Q13;openalex:Q15;openalex:Q3;openalex:Q5;openalex:Q7,keyword-prefilter,exclude,no generative term
 ,2023,RawECGNet: Deep Learning Generalization for Atrial Fibrillation Detection from the Raw ECG,arxiv:Q14,keyword-prefilter,exclude,no generative term
@@ -870,8 +870,8 @@ W-P179,2026,"A Comprehensive Evaluation Framework for Synthetic ECG: Assessing F
 ,2025,Deep learning for time series forecasting: a survey,openalex:Q1,keyword-prefilter,exclude,no ECG term
 ,2024,Synthesizing affective neurophysiological signals using generative models: A review paper,openalex:Q1;openalex:Q7,keyword-prefilter,exclude,no ECG term
 ,2026,Contrastive Representation-Guided Genetic Minority Oversampling for Imbalanced Time-Series Classification,openalex:Q1,keyword-prefilter,exclude,no ECG term
-,2025,Diffusion-based high dimensional subspace mapping for ECG generation with structured state space models,openalex:Q2;openalex:Q4,keyword-prefilter,exclude,no generative term
-,2026,P2Es: Physiology-conditioned diffusion for 12-lead ECG generation from PPG,epmc:Q2;epmc:Q6;openalex:Q13;openalex:Q2;openalex:Q4;openalex:Q6;openalex:Q7,keyword-prefilter,exclude,no generative term
+,2025,Diffusion-based high dimensional subspace mapping for ECG generation with structured state space models,openalex:Q2;openalex:Q4,cross-check,include,P184: wrongly dropped by keyword pre-filter; re-included after cross-check with literature_review_codex (2026-10-26)
+,2026,P2Es: Physiology-conditioned diffusion for 12-lead ECG generation from PPG,epmc:Q2;epmc:Q6;openalex:Q13;openalex:Q2;openalex:Q4;openalex:Q6;openalex:Q7,cross-check,include,P180: wrongly dropped by keyword pre-filter; re-included after cross-check with literature_review_codex (2026-10-26)
 ,2026,BioDiff: Spectrally Consistent Diffusion Modeling for High-Fidelity Physiological Signal Generation,openalex:Q2,keyword-prefilter,exclude,no ECG term
 ,2024,ECG Captioning with Prior-Knowledge Transformer and Diffusion Probabilistic Model,openalex:Q2;openalex:Q5,keyword-prefilter,exclude,no generative term
 ,2026,"DiffTS-Med: a diffusion-based framework for multimodal medical time series generation, imputation, and forecasting",openalex:Q2,keyword-prefilter,exclude,no ECG term
@@ -966,7 +966,7 @@ W-P179,2026,"A Comprehensive Evaluation Framework for Synthetic ECG: Assessing F
 ,2024,Prediction of Myocardial Infarction Using a Combined Generative Adversarial Network Model and Feature-Enhanced Loss Function,openalex:Q3,keyword-prefilter,exclude,no ECG term
 ,2025,Generative Adversarial Network Based Improved Transfer Learning Models for Chronic Heart Failure Detection,openalex:Q14;openalex:Q3,keyword-prefilter,exclude,no ECG term
 ,2025,"Evolution of Generative Adversarial Networks (GANs) in Medicine: A Systematic Review of Architectures, Applications, and Implementation Challenges",openalex:Q3,keyword-prefilter,exclude,no ECG term
-,2026,Structure-preserving adversarial multi-segment framework for bidirectional ECG–SCG signal translation,openalex:Q3,keyword-prefilter,exclude,no generative term
+,2026,Structure-preserving adversarial multi-segment framework for bidirectional ECG–SCG signal translation,openalex:Q3,cross-check,include,P186: wrongly dropped by keyword pre-filter; re-included after cross-check with literature_review_codex (2026-10-26)
 ,2024,Paired conditional generative adversarial network for highly accelerated liver 4D MRI,openalex:Q3,keyword-prefilter,exclude,no ECG term
 ,2024,Context-Aware Architecture Fostered Optimized Dual Interactive Wasserstein Generative Adversarial Network and IoT for Healthcare System,openalex:Q3;openalex:Q6,keyword-prefilter,exclude,no ECG term
 ,2025,"From Mode Collapse to Quantum Generation: Architectural Innovations, Evaluation Dilemmas, and Multimodal Fusion Paths for Generative Adversarial Networks (GAN)",openalex:Q3,keyword-prefilter,exclude,no ECG term
@@ -1137,7 +1137,7 @@ W-P179,2026,"A Comprehensive Evaluation Framework for Synthetic ECG: Assessing F
 ,2025,Free-living ECG movement artifact filtering and hyperglycemia detection,openalex:Q12;openalex:Q15;openalex:Q5;openalex:Q6,keyword-prefilter,exclude,no generative term
 ,2026,AutoML-Driven ECG Classification of Cardiac Pathologies with Explainable AI,openalex:Q5;openalex:Q7,keyword-prefilter,exclude,no generative term
 ,2026,Intelligent ECG Classification Based on Improved Swin Transformer Model,openalex:Q13;openalex:Q5,keyword-prefilter,exclude,no generative term
-,2025,Radar2ECG: Multi-Scale Bottleneck Fusion and Cross-modal Semantic Distillation for Conditional Electrocardiogram Generation from Radar Heart Sound,openalex:Q5,keyword-prefilter,exclude,no generative term
+,2025,Radar2ECG: Multi-Scale Bottleneck Fusion and Cross-modal Semantic Distillation for Conditional Electrocardiogram Generation from Radar Heart Sound,openalex:Q5,cross-check,include,P185: wrongly dropped by keyword pre-filter; re-included after cross-check with literature_review_codex (2026-10-26)
 ,2026,Pretraining Strategies and Scaling for ECG Foundation Models: A Systematic Study,openalex:Q13;openalex:Q5,keyword-prefilter,exclude,no generative term
 ,2024,Toward Trustworthiness of Deep Learning Models for 12-Lead ECGs,openalex:Q12;openalex:Q13;openalex:Q5,keyword-prefilter,exclude,no generative term
 ,2025,Enhancing cardiac diagnostics: a deep learning ensemble approach for precise ECG image classification,openalex:Q5,keyword-prefilter,exclude,no generative term
@@ -3046,3 +3046,4 @@ W-P179,2026,"A Comprehensive Evaluation Framework for Synthetic ECG: Assessing F
 ,2024,Human SARS-CoV-2 challenge uncovers local and systemic response dynamics,epmc:Q15,keyword-prefilter,exclude,no ECG term
 ,2025,The International BNA 2025 Festival of Neuroscience,epmc:Q15,keyword-prefilter,exclude,no ECG term
 ,2025,Full GSA 2025 Abstract Book PDF,epmc:Q15,keyword-prefilter,exclude,no ECG term
+,2025,Presentation Attacks on the PCA-Based Biometric System Using cGAN-Generated ECGs,literature_review_codex,cross-check,include,P183: not retrieved by my queries; found via literature_review_codex (2026-10-26)

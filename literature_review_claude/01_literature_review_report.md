@@ -3,6 +3,7 @@
 - **Date:** 2026-10-25
 - **Plan:** `00_review_plan.md` · **Search log:** `search_log.md` · **Screening:** `screening.csv` · **Per-paper data:** `papers_index.csv`, `notes/` · **Missing PDFs:** `to_download.md`
 - Paper IDs (`P001`…`P179`) refer to rows in `papers_index.csv`; the full reference list is in §9.
+- **Update 2026-10-26:** after a cross-check with an independent review (`03_cross_check_codex.md`), P180–P186 were added (not yet reflected in the counts and tables below) and P048 was excluded.
 
 ---
 

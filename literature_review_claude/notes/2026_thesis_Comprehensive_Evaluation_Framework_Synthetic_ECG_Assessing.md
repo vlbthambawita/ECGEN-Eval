@@ -1,9 +1,8 @@
 # A Comprehensive Evaluation Framework for Synthetic ECG: Assessing Fidelity, Utility, and Privacy
-- **ID / Year / Venue:** P179 / 2026 / UWSpace (thesis)
-- **Model & task:** EvalOnly (MSc thesis: evaluation framework); task: evaluation
-- **Losses:** unknown (abstract only)
-- **Evaluation:** unknown (abstract only) — title: fidelity, utility and privacy assessment (tags: fidelity; utility-TSTR; privacy)
-- **Data:** unknown (abstract only); leads: unknown (abstract only); fs: unknown (abstract only) Hz; length: unknown (abstract only) s
-- **Notes:** University of Waterloo MSc thesis (2026); authors unverified; no abstract available. Framework covers fidelity, utility, privacy per title.
-- **Takeaway for ECGEN-Eval:** Obtain full text: directly relevant framework (fidelity/utility/privacy).
-- *Extraction source: abstract-only*
+- **ID / Year / Venue:** P179 / 2026 / UWSpace (MSc thesis, University of Waterloo)
+- **Model & task:** Evaluation framework applied to SSSD-ECG (conditional diffusion model with bidirectional S4 layers, 36 residual layers, 256 channels, 200 diffusion steps, linear beta 1e-4 to 0.02), which generates 8 independent leads conditioned on a 5-dim multi-hot PTB-XL superclass vector (512-d embedding); the 4 limb leads are derived afterwards to give 12 leads. Synthetic cohort is stratified to match the training label distribution.
+- **Losses:** Standard DDPM objective: MSE between true and predicted noise (Adam, lr 2e-4, 2,000 epochs, one H100).
+- **Evaluation:** *Utility*: TSTR vs TRTR with a 1D-ResNet (AUROC, F1, sensitivity, specificity, 1,000-bootstrap 95% CIs, per class) and a lead-aware LSTM one-step-ahead forecaster (RMSE, MAE, Pearson r, per lead). *Fidelity* (overall and per single-label superclass): ACF MAE (lags 0-200, 12 leads), Welch PSD log-MAE (Hann, nperseg 256), FastDTW nearest-neighbour protocol (each real record vs 20 random synthetic and vs 20 random real, minimum kept; DTW ratio = mean RS / mean RR), 4-level db4 DWT normalised band-energy MAE, and NeuroKit2 clinical features (HR, RR, SDNN, RMSSD, QRS count, R-wave amplitude) compared by MAPE. *Privacy*: DCR/NNDR ratios and 7 MIAs: -DCR in Euclidean (12,000-d), DTW (Sakoe-Chiba w=100, subsampled 300/300/2,000, 5 seeds) and 540-d wavelet-statistic spaces; Random Forest classifiers on 102-d, 47-d and 149-d relative features (5-fold CV); and a grey-box denoising-loss attack, all reported as AUC, TPR@1%FPR and TPR@10%FPR. Key results: TSTR AUC 0.828 vs TRTR 0.886; forecasting r 0.918 vs 0.923; ACF MAE 0.0065; PSD log-MAE 0.269; DTW ratio ~1.0; SDNN/RMSSD MAPE ~107-109% (synthetic HRV overestimated in every class); MIA AUC at most 0.539 overall (DTW) and 0.607 per class (HYP, n_test=56).
+- **Data:** PTB-XL, 100 Hz, 10 s (1,000 samples), per-lead z-score normalisation, official folds (1-8 train, 9 validation, 10 test); 17,418 train / 2,198 test / 17,418 synthetic records.
+- **Takeaway for ECGEN-Eval:** Report a real-to-real reference ratio (e.g. DTW RS/RR, DCR train/test) and per-class beat-to-beat HRV checks next to aggregate ACF/PSD/DTW scores, and run privacy attacks in several representation spaces (Euclidean, DTW, wavelet), because aggregate morphology metrics hid a ~100% HRV error and only DTW-based attacks showed a membership signal.
+- *Extraction source: full-text*

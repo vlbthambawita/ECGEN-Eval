@@ -1,0 +1,8 @@
+# Towards High-Fidelity ECG Generation: Evaluation via Quality Metrics and Human Feedback
+- **ID / Year / Venue:** P145 / 2025 / BIOSTEC 2025 (conference paper; extracted from the Dec 2024 NOVA University Lisbon MSc thesis)
+- **Model & task:** SSSD-ECG (conditional diffusion with S4 layers) tuned via hyperparameter search and conditioned on 5 PTB-XL diagnostic superclasses to generate 12-lead ECGs (8 leads generated, 4 derived); a CNN GAN was used only to make low-quality samples for a 4-class quality dataset that trains a 5-CNN ensemble evaluator scoring each synthetic ECG.
+- **Losses:** GAN uses binary cross-entropy for generator and discriminator; SSSD-ECG loss not stated; evaluator uses class-weighted cross-entropy.
+- **Evaluation:** Improved precision, recall, density and coverage (k=5, TSFEL features); best config precision 0.94, density 3.85, coverage 0.89, recall 0.03. RF macro-F1: TRTR 56.58%, TRTS 57.03%, TSTR 40.84%, TSTS 78.00%. By majority vote, 3 clinicians judged 8/10 synthetic tracings real, but assigned diagnoses lacked consensus. The evaluator correlated with precision (r=0.88) and density (r=0.72) and broadly matched the experts on the 20 tracings.
+- **Data:** PTB-XL (PhysioNet/CinC 2021 version), 12-lead, resampled 500->100 Hz, 10 s, z-scored, single-superclass records only (10,599 signals); custom Quality Dataset (10,000 / 8,960 / 176 / 10,599 signals across 4 classes).
+- **Takeaway for ECGEN-Eval:** Include a per-sample learned quality/realism grader alongside distribution-level precision, recall, density and coverage, and report recall and coverage together, because they can disagree sharply (0.03 vs 0.89).
+- *Extraction source: full-text (MSc thesis version)*
