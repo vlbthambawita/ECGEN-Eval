@@ -112,6 +112,6 @@ generate_report(
 ## Next steps
 
 - Learn which metrics to trust for which question: [Metrics Overview](../user-guide/metrics.md)
-- Use deep embeddings: [Fréchet ECG Distance](../user-guide/fed.md)
+- Use deep embeddings: [Fréchet ECG Distance](../metrics/fed.md)
 - Compare clinical intervals: [Clinical Features](../user-guide/features.md)
 - All CLI options: [Command-Line Interface](../user-guide/cli.md)

@@ -19,10 +19,10 @@ https://doi.org/10.1609/aaai.v33i01.3301557
 
 Implementation notes
 --------------------
-R-peaks are detected per lead using scipy.signal.find_peaks with a
-height threshold of mean + 0.5 · std and a minimum inter-peak distance
-corresponding to 40 BPM (1.5 s).  A pure-NumPy fallback (sliding
-maximum) is used when scipy is unavailable.
+R-peaks are detected per lead with a slope-energy QRS detector
+(5–15 Hz band-pass, squared derivative, 120 ms integration, 0.2 s
+refractory period, so up to 300 BPM); see ``_rpeaks.py``.  scipy's
+find_peaks is used when available, with a pure-NumPy fallback.
 
 HRV statistics computed per recording:
   SDNN   = standard deviation of RR intervals (ms)
@@ -41,6 +41,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
+from ecgen_eval.metrics._rpeaks import detect_r_peaks
 from ecgen_eval.metrics.base import BaseMetric, MetricResult
 
 
@@ -172,26 +173,8 @@ class HRVMetric(BaseMetric):
         return (rr_samples / self.fs * 1000.0).astype(np.float32)
 
     def _detect_peaks(self, signal: np.ndarray) -> np.ndarray:
-        """R-peak detection; uses scipy if available, else sliding max."""
-        min_dist = max(1, int(self.fs * 0.5))  # 40 BPM max → 0.5 s gap
-        height = np.mean(signal) + 0.5 * np.std(signal)
-
-        try:
-            from scipy.signal import find_peaks
-            peaks, _ = find_peaks(signal, height=height, distance=min_dist)
-            return peaks
-        except ImportError:
-            pass
-
-        # Pure-NumPy fallback: sliding maximum
-        pad = min_dist // 2
-        peaks = []
-        for i in range(pad, len(signal) - pad):
-            window = signal[max(0, i - pad): i + pad + 1]
-            if signal[i] == window.max() and signal[i] >= height:
-                if not peaks or (i - peaks[-1]) >= min_dist:
-                    peaks.append(i)
-        return np.array(peaks, dtype=np.intp)
+        """R-peak indices (slope-energy QRS detector, see ``_rpeaks.py``)."""
+        return detect_r_peaks(signal, self.fs)
 
     # ------------------------------------------------------------------ #
     # Statistics                                                           #

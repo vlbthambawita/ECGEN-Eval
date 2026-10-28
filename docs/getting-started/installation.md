@@ -55,7 +55,7 @@ computed** and caches them locally. Nothing is downloaded at import time.
 export HF_HOME=/path/to/large/disk/hf-cache   # optional: change cache location
 ```
 
-See [Fréchet ECG Distance](../user-guide/fed.md) for details on each backbone.
+See [Fréchet ECG Distance](../metrics/fed.md#backbones) for details on each backbone.
 
 ## Verify the installation
 

@@ -27,7 +27,8 @@ What to notice:
 
 For each lead:
 
-1. Detect R peaks (as in [Heart rate](heart_rate.md)) and compute the RR intervals.
+1. Detect R peaks with the slope-energy QRS detector described on the
+   [Heart rate](heart_rate.md) page, and compute the RR intervals.
 2. Per recording, compute **SDNN**, **RMSSD** and **pNN50**.
 3. For each statistic, compare the real and synthetic distributions with the Jensen–Shannon
    divergence (50-bin histograms).

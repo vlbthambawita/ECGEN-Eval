@@ -103,6 +103,9 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/vlbthambawita/ECGEN-Eval
 
+not_in_nav: |
+  /user-guide/fed.md
+
 nav:
   - Home: index.md
   - Getting Started:
@@ -112,7 +115,6 @@ nav:
       - Loading Data: user-guide/data-loading.md
       - Metrics Overview: user-guide/metrics.md
       - Metric Reference: user-guide/metric-reference.md
-      - Fréchet ECG Distance (FED): user-guide/fed.md
       - Clinical Features: user-guide/features.md
       - Visualization: user-guide/visualization.md
       - HTML Reports: user-guide/reports.md

@@ -53,7 +53,7 @@ Reference: Heusel et al., *NeurIPS* 2017; applied to ECG in Thambawita et al., *
 ### `fed` — Fréchet ECG Distance { #fed }
 
 Same formula as `fd`, but on whole-recording embeddings from a pre-trained ECG foundation
-model. No per-lead scores. See the dedicated [FED page](fed.md).
+model. No per-lead scores. See the dedicated [FED page](../metrics/fed.md).
 
 | Parameter | Default | Description |
 |---|---|---|
@@ -237,9 +237,10 @@ synthetic entropy distributions (50-bin histograms).
 
 ## Physiological metrics
 
-Both metrics detect R-peaks per lead (SciPy `find_peaks` with an amplitude threshold of
-mean + 0.5·std and a minimum distance, or a NumPy fallback) and compare histogram
-distributions with the Jensen–Shannon divergence.
+Both metrics detect R-peaks per lead with a slope-energy QRS detector in the spirit of
+Pan–Tompkins (5–15 Hz band-pass, squared derivative, 120 ms integration, 0.2 s refractory
+period, so heart rates up to 300 bpm), then compare histogram distributions with the
+Jensen–Shannon divergence. SciPy `find_peaks` is used when available, with a NumPy fallback.
 
 ### `heart_rate` — Heart-rate distribution { #heart_rate }
 

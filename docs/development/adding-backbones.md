@@ -91,5 +91,5 @@ stub whose `encode` returns random embeddings, and check the shape contract and 
 
 ## 4. Document it
 
-Add the backbone to the table in `docs/user-guide/fed.md` and its citation to
+Add the backbone to the table in `docs/metrics/fed.md` and its citation to
 `docs/references.md`.

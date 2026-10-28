@@ -1,7 +1,7 @@
 # Fréchet ECG Distance (FED)
 
 **Key:** `fed` · **Family:** distribution · **Better:** lower ↓ · **Per-lead:** no ·
-**Extras:** `pip install "ecgen-eval[fed]"`
+**Extras:** `pip install "ecgen-eval[fed]"` ([installation](#installation))
 
 FED asks: *if a model that has seen millions of real ECGs describes each recording as a
 vector, do the real and synthetic sets look like the same population?* It is the ECG
@@ -62,14 +62,57 @@ diagonals before taking the matrix square root, for numerical stability.
   sensitive to clinically relevant morphology and may ignore some artefacts.
 - FED summarises whole recordings: there are no per-lead scores.
 
+## Installation
+
+FED needs PyTorch and the Hugging Face libraries, which are optional extras:
+
+```bash
+pip install "ecgen-eval[fed]"   # torch, transformers, huggingface_hub
+```
+
+## Backbones
+
+| `backbone` | Model | Architecture | Pre-training data | Hugging Face repo |
+|---|---|---|---|---|
+| `ecgfounder` *(default)* | ECGFounder | RegNet CNN | 10.7 M ECGs, 150 labels | `PKUDigitalHealth/ECGFounder` |
+| `hubert_ecg` | HuBERT-ECG (base) | Transformer (HuBERT) | 9.1 M ECGs | `Edoardo-BS/hubert-ecg-base` |
+| `ecgfm` | ECG-FM | wav2vec 2.0-style CNN + Transformer | 1.5 M ECGs (MIMIC-IV-ECG) | `bowang-lab/ECG-FM` |
+
+How each adapter turns an `(N, L, T)` array into `(N, D)` embeddings:
+
+- **ECGFounder** expects 12 leads; inputs with fewer leads are padded by repeating the last lead.
+- **HuBERT-ECG** encodes each lead independently, mean-pools the last hidden state over time,
+  then averages the per-lead embeddings.
+- **ECG-FM** expects 12-lead input at 500 Hz and mean-pools the context-encoder output over time.
+
+!!! tip "Match the backbone's expectations"
+    Foundation models are trained on specific sampling rates and lead layouts (typically
+    12-lead, 500 Hz). Resample and order leads accordingly for meaningful embeddings.
+
+To add a new backbone, see [Adding a FED Backbone](../development/adding-backbones.md).
+
+## Weights and caching
+
+Weights are downloaded from the Hugging Face Hub **on the first `compute()` call**, not at
+import or construction time, and cached locally. To control where they go:
+
+```bash
+export HF_HOME=/data/hf-cache
+```
+
+If a model repository is gated, log in first with `huggingface-cli login`.
+
 ## Use it with ECGEN-Eval
+
+FED is not run by default, because it downloads model weights on first use. Request it with
+`-m fed`:
 
 === "CLI"
 
     ```bash
-    pip install "ecgen-eval[fed]"
     ecgen-eval eval --real real.npy --synthetic synth.npy \
-      -m fed --backbone ecgfounder --fed-device cuda --output report.html
+      -m fed --backbone ecgfounder --fed-device cuda --fed-batch-size 64 \
+      --output report.html
     ```
 
 === "Python"
@@ -86,9 +129,28 @@ diagonals before taking the matrix square root, for numerical stability.
     print(result.score, result.extra["backbone"])
     ```
 
-FED is not run by default because it downloads model weights on first use. Backbones,
-caching and input requirements are covered on the [FED user-guide page](../user-guide/fed.md),
-and all parameters are in the [Metric Reference](../user-guide/metric-reference.md#fed).
+Compare all three backbones:
+
+```python
+for bb in ["ecgfounder", "hubert_ecg", "ecgfm"]:
+    r = FEDMetric(backbone=bb, device="cuda").compute(real.data, synth.data)
+    print(f"{bb:>11}: {r.score:.3f}")
+```
+
+All parameters (`backbone`, `device`, `batch_size`, `n_subsample`, `eps`) are in the
+[Metric Reference](../user-guide/metric-reference.md#fed).
+
+## Using the encoders directly
+
+The encoder adapters can be used on their own, for example for t-SNE or UMAP plots of the
+embeddings:
+
+```python
+from ecgen_eval.metrics.encoders import get_encoder
+
+enc = get_encoder("ecgfounder", device="cuda", batch_size=32)
+emb = enc.encode(real.data)   # (N, D)
+```
 
 ## Learn more
 

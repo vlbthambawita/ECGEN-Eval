@@ -128,18 +128,20 @@
     return out;
   }
 
-  // In-place radix-2 FFT; returns the power spectrum of a Hann-windowed segment.
-  function powerSpectrum(seg) {
-    var n = seg.length, re = new Float64Array(n), im = new Float64Array(n), i, j, k;
-    for (i = 0; i < n; i++) re[i] = seg[i] * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1)));
+  // In-place radix-2 complex FFT (n must be a power of two); inverse when inv is true.
+  function fft(re, im, inv) {
+    var n = re.length, i, j, k;
     for (i = 1, j = 0; i < n; i++) {
       var bit = n >> 1;
       for (; j & bit; bit >>= 1) j ^= bit;
       j ^= bit;
-      if (i < j) { var t = re[i]; re[i] = re[j]; re[j] = t; }
+      if (i < j) {
+        var t = re[i]; re[i] = re[j]; re[j] = t;
+        t = im[i]; im[i] = im[j]; im[j] = t;
+      }
     }
     for (var len = 2; len <= n; len <<= 1) {
-      var ang = (-2 * Math.PI) / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      var ang = ((inv ? 2 : -2) * Math.PI) / len, wr = Math.cos(ang), wi = Math.sin(ang);
       for (i = 0; i < n; i += len) {
         var cr = 1, ci = 0;
         for (k = 0; k < len / 2; k++) {
@@ -152,9 +154,60 @@
         }
       }
     }
+    if (inv) for (i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+  }
+
+  // Power spectrum of a Hann-windowed segment.
+  function powerSpectrum(seg) {
+    var n = seg.length, re = new Float64Array(n), im = new Float64Array(n), i;
+    for (i = 0; i < n; i++) re[i] = seg[i] * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1)));
+    fft(re, im, false);
     var out = new Float64Array(n / 2 + 1);
     for (i = 0; i <= n / 2; i++) out[i] = re[i] * re[i] + im[i] * im[i];
     return out;
+  }
+
+  // R-peak detector, a port of ecgen_eval/metrics/_rpeaks.py: 5–15 Hz band-pass, squared
+  // derivative integrated over 120 ms, peaks above 0.2 × the 99th percentile and >= 0.2 s apart,
+  // each moved to the largest |band-passed| sample within ±80 ms.
+  function detectR(x, fs) {
+    var n = x.length, N = 1, i, m = mean(x);
+    while (N < n) N <<= 1;
+    var re = new Float64Array(N), im = new Float64Array(N);
+    for (i = 0; i < n; i++) re[i] = x[i] - m;
+    fft(re, im, false);
+    for (i = 0; i < N; i++) {
+      var f = (Math.min(i, N - i) * fs) / N;
+      var g = Math.min(1, Math.max(0, (f - 3) / 2)) * Math.min(1, Math.max(0, (20 - f) / 5));
+      g = Math.pow(Math.sin(0.5 * Math.PI * g), 2);
+      re[i] *= g; im[i] *= g;
+    }
+    fft(re, im, true);
+    var band = re.subarray(0, n), w = Math.max(1, Math.round(0.12 * fs)), e = new Float64Array(n);
+    for (i = 0; i < n; i++) {
+      var d = i === 0 ? band[1] - band[0] : i === n - 1 ? band[n - 1] - band[n - 2] : (band[i + 1] - band[i - 1]) / 2;
+      e[i] = d * d;
+    }
+    var sm = new Float64Array(n), acc = 0, h = Math.floor(w / 2);
+    for (i = 0; i < n + h; i++) {
+      if (i < n) acc += e[i];
+      if (i - w >= 0) acc -= e[i - w];
+      if (i - h >= 0 && i - h < n) sm[i - h] = acc / w;
+    }
+    var sorted = Array.prototype.slice.call(sm).sort(function (a, b) { return a - b; });
+    var thr = 0.2 * sorted[Math.floor(0.99 * (n - 1))], dist = Math.round(0.2 * fs), cand = [];
+    for (i = 1; i < n - 1; i++) if (sm[i] >= thr && sm[i] >= sm[i - 1] && sm[i] > sm[i + 1]) cand.push(i);
+    cand.sort(function (a, b) { return sm[b] - sm[a]; });
+    var keep = [];
+    cand.forEach(function (c) { if (keep.every(function (k) { return Math.abs(k - c) >= dist; })) keep.push(c); });
+    var half = Math.round(0.08 * fs);
+    return keep.sort(function (a, b) { return a - b; }).map(function (p) {
+      var best = p, bv = -1;
+      for (var j = Math.max(0, p - half); j <= Math.min(n - 1, p + half); j++) {
+        if (Math.abs(band[j]) > bv) { bv = Math.abs(band[j]); best = j; }
+      }
+      return best;
+    });
   }
 
   // Welch PSD with 256-sample Hann segments and 50 % overlap (psd.py uses nperseg=min(256, T)).
@@ -1048,34 +1101,23 @@
   // Heart-rate distributions (heart_rate.py) with R-peak detection on an example strip.
   VIZ.heartRate = function (root) {
     var f = frame(root), N = 300, zr = normals(71, N), zs = normals(72, N), fs = 250;
-    f.slider("mu", "Synthetic mean heart rate", 50, 115, 1, 72, { unit: " bpm", digits: 0 });
+    f.slider("mu", "Synthetic mean heart rate", 40, 200, 1, 72, { unit: " bpm", digits: 0 });
     f.slider("sd", "Synthetic spread (SD)", 1, 25, 0.5, 11, { unit: " bpm", digits: 1 });
     f.presets([
       ["Matched", { mu: 72, sd: 11 }],
       ["Too fast", { mu: 95, sd: 11 }],
+      ["Tachycardia (150 bpm)", { mu: 150, sd: 11 }],
       ["Too uniform", { mu: 72, sd: 2 }],
     ]);
-    function detect(x) {
-      // heart_rate.py: height = mean + 0.5·std, peaks at least 0.5 s apart.
-      var h = mean(x) + 0.5 * std(x), dist = Math.round(0.5 * fs), peaks = [], i;
-      for (i = 1; i < x.length - 1; i++) {
-        if (x[i] >= h && x[i] >= x[i - 1] && x[i] > x[i + 1]) {
-          if (peaks.length && i - peaks[peaks.length - 1] < dist) {
-            if (x[i] > x[peaks[peaks.length - 1]]) peaks[peaks.length - 1] = i;
-          } else peaks.push(i);
-        }
-      }
-      return peaks;
-    }
     f.draw(function () {
       var real = [], syn = [], i;
       for (i = 0; i < N; i++) {
         real.push(Math.min(150, Math.max(40, 72 + 11 * zr[i])));
-        syn.push(Math.min(150, Math.max(40, f.v("mu") + f.v("sd") * zs[i])));
+        syn.push(Math.min(220, Math.max(35, f.v("mu") + f.v("sd") * zs[i])));
       }
       var r = jsSamples(real, syn, 50);
       var ex = strip(fs, 5, rTimes(f.v("mu"), 20, 10, 5, 77), beatOpts(), 0.02, 78);
-      var pk = detect(ex), hr = pk.length > 1 ? (60 * fs) / ((pk[pk.length - 1] - pk[0]) / (pk.length - 1)) : NaN;
+      var pk = detectR(ex, fs), hr = pk.length > 1 ? (60 * fs) / ((pk[pk.length - 1] - pk[0]) / (pk.length - 1)) : NaN;
       var t = plot(640, 140, { l: 44, r: 10, t: 8, b: 30 }, [0, 5], [-0.6, 1.4]);
       axes(t, { xticks: [0, 1, 2, 3, 4, 5], xlabel: "example synthetic strip (s) — dots: detected R peaks" });
       line(t, function (j) { return j / fs; }, ex, "mv-synth mv-line");

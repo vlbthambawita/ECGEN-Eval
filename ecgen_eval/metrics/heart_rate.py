@@ -17,8 +17,8 @@ https://doi.org/10.1609/aaai.v33i01.3301557
 
 Implementation notes
 --------------------
-R-peaks are detected with the same algorithm as the HRVMetric (scipy's
-find_peaks or a NumPy sliding-maximum fallback).  Heart rate is derived as:
+R-peaks are detected with the same slope-energy QRS detector as the
+HRVMetric (``_rpeaks.py``; up to 300 BPM).  Heart rate is derived as:
 
   HR (BPM) = 60 / mean(RR_intervals_in_seconds)
 
@@ -34,6 +34,7 @@ from typing import List, Optional
 
 import numpy as np
 
+from ecgen_eval.metrics._rpeaks import detect_r_peaks
 from ecgen_eval.metrics.base import BaseMetric, MetricResult
 
 
@@ -138,24 +139,8 @@ class HeartRateMetric(BaseMetric):
         return np.array(hr, dtype=np.float32)
 
     def _detect_peaks(self, signal: np.ndarray) -> np.ndarray:
-        min_dist = max(1, int(self.fs * 0.5))  # 40 BPM max
-        height = np.mean(signal) + 0.5 * np.std(signal)
-
-        try:
-            from scipy.signal import find_peaks
-            peaks, _ = find_peaks(signal, height=height, distance=min_dist)
-            return peaks
-        except ImportError:
-            pass
-
-        pad = min_dist // 2
-        peaks = []
-        for i in range(pad, len(signal) - pad):
-            window = signal[max(0, i - pad): i + pad + 1]
-            if signal[i] == window.max() and signal[i] >= height:
-                if not peaks or (i - peaks[-1]) >= min_dist:
-                    peaks.append(i)
-        return np.array(peaks, dtype=np.intp)
+        """R-peak indices (slope-energy QRS detector, see ``_rpeaks.py``)."""
+        return detect_r_peaks(signal, self.fs)
 
     @staticmethod
     def _js_divergence(p_vals: np.ndarray, q_vals: np.ndarray, n_bins: int = 50) -> float:

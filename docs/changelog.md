@@ -22,7 +22,8 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
   visualization (sliders and presets on simulated data, scored with the same formulas as the
   package), a step-by-step description of the implementation, the maths, guidance on reading
   the score, and CLI / Python usage. Built with `docs/javascripts/metric-viz.js`, no extra
-  dependencies.
+  dependencies. The former User Guide FED page (backbones, weight caching, encoders) is
+  merged into the FED page there.
 - Literature Review section in the docs: a summary of how synthetic ECGs are evaluated
   (Oct 2023 – Oct 2026) and an interactive Paper Database with filters for category, year,
   evaluation category, metric, loss function, task, conditioning, data type, data format,
@@ -44,6 +45,12 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ### Fixed
 
+- **`heart_rate` and `hrv` R-peak detection.** The old detector (amplitude threshold of
+  mean + 0.5·std, peaks ≥ 0.5 s apart) could not measure heart rates above 120 bpm and often
+  counted T waves as beats or missed small or inverted QRS complexes. A new slope-energy QRS
+  detector (Pan–Tompkins style, 0.2 s refractory period, up to 300 bpm) is shared by both
+  metrics. On held-out PTB-XL records it matches the GE 12SL heart rate within 5 bpm for 91 %
+  of lead recordings, up from 48 %. Scores of `heart_rate` and `hrv` change accordingly.
 - `--fs` was ignored by `psd`, `spectral_entropy`, `hrv` and `heart_rate`, which always
   assumed 500 Hz.
 - `prd` built an `(N_real, N_synth, L·T)` array and could need ~60 GB at default settings.

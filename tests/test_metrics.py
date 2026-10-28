@@ -186,3 +186,71 @@ def test_lead_names_passed_to_result(real_ecg, synth_ecg):
     m = MMDMetric()
     r = m.compute(r_small, s_small, lead_names=leads)
     assert list(r.per_lead_scores.keys()) == leads
+
+
+# ------------------------------------------------------------------ #
+# R-peak detection (heart_rate, hrv)                                   #
+# ------------------------------------------------------------------ #
+
+def _synthetic_ecg(hr, fs=500, dur=10.0, t_amp=0.32, invert=False, seed=0):
+    """Sum-of-Gaussians ECG (P, Q, R, S, T) with a fixed heart rate."""
+    rng = np.random.default_rng(seed)
+    t = np.arange(int(fs * dur)) / fs
+    rr = 60.0 / hr
+    waves = [(-0.2, 0.15, 0.025), (-0.035, -0.12, 0.01), (0.0, 1.0, 0.011),
+             (0.035, -0.25, 0.011), (0.26 * np.sqrt(rr / 0.85), t_amp, 0.045)]
+    x = np.zeros_like(t)
+    for r in np.arange(rng.uniform(0, rr), dur + 1, rr):
+        for off, amp, width in waves:
+            x += amp * np.exp(-0.5 * ((t - r - off) / width) ** 2)
+    x += 0.02 * rng.standard_normal(len(t))
+    return -x if invert else x
+
+
+@pytest.mark.parametrize("hr", [40, 75, 150, 220])
+@pytest.mark.parametrize("t_amp", [0.32, 0.9])
+def test_r_peaks_heart_rate(hr, t_amp):
+    from ecgen_eval.metrics._rpeaks import detect_r_peaks
+
+    peaks = detect_r_peaks(_synthetic_ecg(hr, t_amp=t_amp), 500.0)
+    est = 60.0 / np.mean(np.diff(peaks) / 500.0)
+    assert abs(est - hr) / hr < 0.03
+
+
+def test_r_peaks_inverted_lead():
+    from ecgen_eval.metrics._rpeaks import detect_r_peaks
+
+    peaks = detect_r_peaks(_synthetic_ecg(90, invert=True), 500.0)
+    assert abs(60.0 / np.mean(np.diff(peaks) / 500.0) - 90) < 3
+
+
+def test_r_peaks_numpy_fallback_matches_scipy(monkeypatch):
+    import builtins
+
+    from ecgen_eval.metrics._rpeaks import detect_r_peaks
+
+    x = _synthetic_ecg(130, fs=250, seed=3)
+    with_scipy = detect_r_peaks(x, 250.0)
+    real_import = builtins.__import__
+
+    def no_scipy(name, *args, **kwargs):
+        if name.startswith("scipy"):
+            raise ImportError(name)
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_scipy)
+    np.testing.assert_array_equal(detect_r_peaks(x, 250.0), with_scipy)
+
+
+def test_r_peaks_flat_signal_returns_empty():
+    from ecgen_eval.metrics._rpeaks import detect_r_peaks
+
+    assert detect_r_peaks(np.zeros(5000), 500.0).size == 0
+
+
+def test_heart_rate_metric_detects_tachycardia():
+    real = np.stack([_synthetic_ecg(70, seed=i)[None] for i in range(6)]).astype(np.float32)
+    synth = np.stack([_synthetic_ecg(160, seed=10 + i)[None] for i in range(6)]).astype(np.float32)
+    r = AVAILABLE_METRICS["heart_rate"](fs=500).compute(real, synth, lead_names=["II"])
+    assert abs(r.extra["II"]["real_hr_mean"] - 70) < 3
+    assert abs(r.extra["II"]["synth_hr_mean"] - 160) < 5
