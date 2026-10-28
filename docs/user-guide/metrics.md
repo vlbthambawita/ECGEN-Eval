@@ -23,22 +23,22 @@ result = metric.compute(real.data, synth.data, lead_names=real.lead_names)
 
 | Key | Name | Better | Family | Per-lead | Extra deps |
 |---|---|:-:|---|:-:|---|
-| `mmd` | Maximum Mean Discrepancy | ↓ | Distribution | ✓ | — |
-| `fd` | Fréchet Distance (handcrafted features) | ↓ | Distribution | ✓ | — |
-| `fed` | Fréchet ECG Distance (foundation model) | ↓ | Distribution | — | `[fed]` |
-| `swd` | Sliced Wasserstein Distance | ↓ | Distribution | ✓ | — |
-| `pr_dist` | Precision & Recall (F-score) | ↑ | Distribution | ✓ | — |
-| `dtw` | Dynamic Time Warping | ↓ | Signal fidelity | ✓ | `dtaidistance` (bundled) |
-| `prd` | Percent RMS Difference | ↓ | Signal fidelity | ✓ | — |
-| `mae` | Mean Absolute Error (NN) | ↓ | Signal fidelity | ✓ | — |
-| `psnr` | Peak Signal-to-Noise Ratio | ↑ | Signal fidelity | ✓ | — |
-| `ssim` | Structural Similarity (1-D) | ↑ | Signal fidelity | ✓ | — |
-| `sqi` | Signal Quality Index (template correlation) | ↑ | Morphology | ✓ | — |
-| `psd` | PSD Jensen–Shannon divergence | ↓ | Spectral | ✓ | `scipy` (optional) |
-| `spectral_entropy` | Spectral Entropy divergence | ↓ | Spectral | ✓ | `scipy` (optional) |
-| `hrv` | HRV statistics divergence | ↓ | Physiological | ✓ | `scipy` (optional) |
-| `heart_rate` | Heart-rate distribution divergence | ↓ | Physiological | ✓ | `scipy` (optional) |
-| `nn_dist` | Nearest-Neighbour Distance (memorisation) | ↓ | Privacy | ✓ | — |
+| [`mmd`](../metrics/mmd.md) | [Maximum Mean Discrepancy](../metrics/mmd.md) | ↓ | Distribution | ✓ | — |
+| [`fd`](../metrics/fd.md) | [Fréchet Distance (handcrafted features)](../metrics/fd.md) | ↓ | Distribution | ✓ | — |
+| [`fed`](../metrics/fed.md) | [Fréchet ECG Distance (foundation model)](../metrics/fed.md) | ↓ | Distribution | — | `[fed]` |
+| [`swd`](../metrics/swd.md) | [Sliced Wasserstein Distance](../metrics/swd.md) | ↓ | Distribution | ✓ | — |
+| [`pr_dist`](../metrics/pr_dist.md) | [Precision & Recall (F-score)](../metrics/pr_dist.md) | ↑ | Distribution | ✓ | — |
+| [`dtw`](../metrics/dtw.md) | [Dynamic Time Warping](../metrics/dtw.md) | ↓ | Signal fidelity | ✓ | `dtaidistance` (bundled) |
+| [`prd`](../metrics/prd.md) | [Percent RMS Difference](../metrics/prd.md) | ↓ | Signal fidelity | ✓ | — |
+| [`mae`](../metrics/mae.md) | [Mean Absolute Error (NN)](../metrics/mae.md) | ↓ | Signal fidelity | ✓ | — |
+| [`psnr`](../metrics/psnr.md) | [Peak Signal-to-Noise Ratio](../metrics/psnr.md) | ↑ | Signal fidelity | ✓ | — |
+| [`ssim`](../metrics/ssim.md) | [Structural Similarity (1-D)](../metrics/ssim.md) | ↑ | Signal fidelity | ✓ | — |
+| [`sqi`](../metrics/sqi.md) | [Signal Quality Index (template correlation)](../metrics/sqi.md) | ↑ | Morphology | ✓ | — |
+| [`psd`](../metrics/psd.md) | [PSD Jensen–Shannon divergence](../metrics/psd.md) | ↓ | Spectral | ✓ | `scipy` (optional) |
+| [`spectral_entropy`](../metrics/spectral_entropy.md) | [Spectral Entropy divergence](../metrics/spectral_entropy.md) | ↓ | Spectral | ✓ | `scipy` (optional) |
+| [`hrv`](../metrics/hrv.md) | [HRV statistics divergence](../metrics/hrv.md) | ↓ | Physiological | ✓ | `scipy` (optional) |
+| [`heart_rate`](../metrics/heart_rate.md) | [Heart-rate distribution divergence](../metrics/heart_rate.md) | ↓ | Physiological | ✓ | `scipy` (optional) |
+| [`nn_dist`](../metrics/nn_dist.md) | [Nearest-Neighbour Distance (memorisation)](../metrics/nn_dist.md) | ↓ | Privacy | ✓ | — |
 
 ↓ lower is better · ↑ higher is better. The direction is also available programmatically as
 `metric.higher_is_better` and `result.higher_is_better`.
@@ -47,35 +47,35 @@ result = metric.compute(real.data, synth.data, lead_names=real.lead_names)
 
 Distribution
 :   *Does the synthetic set cover the same population as the real set?*
-    `mmd`, `fd`, `swd` and `fed` compare whole distributions; `pr_dist` splits the answer into
+    [`mmd`](../metrics/mmd.md), [`fd`](../metrics/fd.md), [`swd`](../metrics/swd.md) and [`fed`](../metrics/fed.md) compare whole distributions; [`pr_dist`](../metrics/pr_dist.md) splits the answer into
     **precision** (are synthetic samples realistic?) and **recall** (is the real diversity covered?).
 
 Signal fidelity
-:   *Does each real ECG have a close synthetic look-alike?* `prd`, `mae`, `psnr`, `ssim`
+:   *Does each real ECG have a close synthetic look-alike?* [`prd`](../metrics/prd.md), [`mae`](../metrics/mae.md), [`psnr`](../metrics/psnr.md), [`ssim`](../metrics/ssim.md)
     match each real recording to its nearest synthetic neighbour and measure the waveform
-    error. `dtw` tolerates small temporal shifts.
+    error. [`dtw`](../metrics/dtw.md) tolerates small temporal shifts.
 
 Morphology
-:   *Do synthetic beats have the right shape?* `sqi` correlates synthetic signals with a
+:   *Do synthetic beats have the right shape?* [`sqi`](../metrics/sqi.md) correlates synthetic signals with a
     template built from the real data.
 
 Spectral
-:   *Is the frequency content right?* `psd` compares mean power spectra; `spectral_entropy`
+:   *Is the frequency content right?* [`psd`](../metrics/psd.md) compares mean power spectra; [`spectral_entropy`](../metrics/spectral_entropy.md)
     compares how spread-out each recording's spectrum is.
 
 Physiological
-:   *Is the cardiac rhythm plausible?* `heart_rate` and `hrv` detect R-peaks and compare the
+:   *Is the cardiac rhythm plausible?* [`heart_rate`](../metrics/heart_rate.md) and [`hrv`](../metrics/hrv.md) detect R-peaks and compare the
     resulting heart-rate and HRV distributions. For a richer, clinically interpretable
     comparison see [Clinical Features](features.md).
 
 Privacy
-:   *Is the model copying training data?* `nn_dist` reports nearest-neighbour distances, plus
+:   *Is the model copying training data?* [`nn_dist`](../metrics/nn_dist.md) reports nearest-neighbour distances, plus
     an **authenticity** score in `extra`. Very low nearest-neighbour distances or low
     authenticity can indicate memorisation.
 
 !!! tip "A practical default set"
     For a quick but balanced picture use
-    `-m fd -m mmd -m pr_dist -m psd -m hrv -m nn_dist`, and add `fed` when a GPU is available.
+    `-m fd -m mmd -m pr_dist -m psd -m hrv -m nn_dist`, and add [`fed`](../metrics/fed.md) when a GPU is available.
 
 ## Reading `MetricResult`
 
