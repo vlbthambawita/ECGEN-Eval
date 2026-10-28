@@ -8,7 +8,7 @@ Standard signal-quality metrics widely used in ECG compression and synthesis:
 Zigel, Y., Cohen, A., & Katz, A. (2000).
 The weighted diagnostic distortion (WDD) measure for ECG signal compression.
 *IEEE Transactions on Biomedical Engineering*, 47(11), 1422–1430.
-https://doi.org/10.1109/10.871206
+https://doi.org/10.1109/TBME.2000.880093
 
 Thambawita, V., et al. (2021).
 DeepFake electrocardiograms using generative adversarial networks are the
@@ -40,7 +40,7 @@ from ecgen_eval.metrics.base import BaseMetric, MetricResult
 _REFERENCE = (
     "Zigel, Y., Cohen, A., & Katz, A. (2000). The weighted diagnostic distortion (WDD) measure "
     "for ECG signal compression. IEEE Transactions on Biomedical Engineering, 47(11), 1422–1430. "
-    "https://doi.org/10.1109/10.871206"
+    "https://doi.org/10.1109/TBME.2000.880093"
 )
 
 _DESCRIPTION = (

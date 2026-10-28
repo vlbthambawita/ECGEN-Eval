@@ -7,19 +7,19 @@ Papers behind the metrics, models and features implemented in ECGEN-Eval.
 | Metric | Reference |
 |---|---|
 | `mmd` | Gretton, A., Borgwardt, K. M., Rasch, M. J., Schölkopf, B., & Smola, A. (2012). A kernel two-sample test. *JMLR*, 13, 723–773. [Link](https://jmlr.org/papers/v13/gretton12a.html) |
-| `dtw` | Berndt, D. J., & Clifford, J. (1994). Using dynamic time warping to find patterns in time series. *KDD Workshop*, 359–370. |
-| `prd`, `mae` | Zigel, Y., Cohen, A., & Katz, A. (2000). The weighted diagnostic distortion (WDD) measure for ECG signal compression. *IEEE TBME*, 47(11), 1422–1430. [doi:10.1109/10.871206](https://doi.org/10.1109/10.871206) |
+| `dtw` | Berndt, D. J., & Clifford, J. (1994). Using dynamic time warping to find patterns in time series. *KDD Workshop*, 359–370. [PDF](https://cdn.aaai.org/Workshops/1994/WS-94-03/WS94-03-031.pdf) |
+| `prd`, `mae` | Zigel, Y., Cohen, A., & Katz, A. (2000). The weighted diagnostic distortion (WDD) measure for ECG signal compression. *IEEE TBME*, 47(11), 1422–1430. [doi:10.1109/TBME.2000.880093](https://doi.org/10.1109/TBME.2000.880093) |
 | `psd` | Welch, P. D. (1967). The use of fast Fourier transform for the estimation of power spectra. *IEEE Trans. Audio Electroacoust.*, 15(2), 70–73. [doi:10.1109/TAU.1967.1161901](https://doi.org/10.1109/TAU.1967.1161901) |
 | `fd`, `fed` | Heusel, M., Ramsauer, H., Unterthiner, T., Nessler, B., & Hochreiter, S. (2017). GANs trained by a two time-scale update rule converge to a local Nash equilibrium. *NeurIPS*, 30. [arXiv:1706.08500](https://arxiv.org/abs/1706.08500) |
-| `fed` | Kilgour, K., Zuluaga, M., Roblek, D., & Sharifi, M. (2019). Fréchet Audio Distance: A reference-free metric for evaluating music enhancement algorithms. *Interspeech*. |
+| `fed` | Kilgour, K., Zuluaga, M., Roblek, D., & Sharifi, M. (2019). Fréchet Audio Distance: A reference-free metric for evaluating music enhancement algorithms. *Interspeech*. [arXiv:1812.08466](https://arxiv.org/abs/1812.08466) |
 | `psnr` | Huynh-Thu, Q., & Ghanbari, M. (2008). Scope of validity of PSNR in image/video quality assessment. *Electronics Letters*, 44(13), 800–801. [doi:10.1049/el:20080522](https://doi.org/10.1049/el:20080522) |
-| `ssim` | Wang, Z., Bovik, A. C., Sheikh, H. R., & Simoncelli, E. P. (2004). Image quality assessment: from error visibility to structural similarity. *IEEE TIP*, 13(4), 600–612. [doi:10.1109/TIP.2003.819861](https://doi.org/10.1109/TIP.2003.819861) |
-| `swd` | Kolouri, S., Nadjahi, K., Simsekli, U., Badeau, R., & Rohde, G. (2019). Generalized sliced Wasserstein distances. *NeurIPS*, 32. |
-| `pr_dist` | Kynkäänniemi, T., Karras, T., Laine, S., Lehtinen, J., & Aila, T. (2019). Improved precision and recall metric for assessing generative models. *NeurIPS*, 32. |
+| `ssim` | Wang, Z., Bovik, A. C., Sheikh, H. R., & Simoncelli, E. P. (2004). Image quality assessment: from error visibility to structural similarity. *IEEE TIP*, 13(4), 600–612. [doi:10.1109/TIP.2003.819861](https://doi.org/10.1109/TIP.2003.819861). Applied to ECG: Shahriari, Y., et al. (2018). Electrocardiogram signal quality assessment based on structural image similarity metric. *IEEE TBME*, 65(4), 745–753. [doi:10.1109/TBME.2017.2717876](https://doi.org/10.1109/TBME.2017.2717876) |
+| `swd` | Kolouri, S., Nadjahi, K., Simsekli, U., Badeau, R., & Rohde, G. (2019). Generalized sliced Wasserstein distances. *NeurIPS*, 32. [arXiv:1902.00434](https://arxiv.org/abs/1902.00434) |
+| `pr_dist` | Kynkäänniemi, T., Karras, T., Laine, S., Lehtinen, J., & Aila, T. (2019). Improved precision and recall metric for assessing generative models. *NeurIPS*, 32. [arXiv:1904.06991](https://arxiv.org/abs/1904.06991) |
 | `hrv` | Task Force of the ESC and NASPE (1996). Heart rate variability: standards of measurement, physiological interpretation, and clinical use. *Circulation*, 93(5), 1043–1065. [doi:10.1161/01.CIR.93.5.1043](https://doi.org/10.1161/01.CIR.93.5.1043) |
 | `heart_rate` | Pan, J., & Tompkins, W. J. (1985). A real-time QRS detection algorithm. *IEEE TBME*, 32(3), 230–236. [doi:10.1109/TBME.1985.325532](https://doi.org/10.1109/TBME.1985.325532) |
 | `sqi` | Clifford, G. D., et al. (2017). AF classification from a short single lead ECG recording: the PhysioNet/Computing in Cardiology Challenge 2017. *CinC*, 44. [doi:10.22489/CinC.2017.065-469](https://doi.org/10.22489/CinC.2017.065-469) |
-| `nn_dist` | Meehan, C., Chaudhuri, K., & Dasgupta, S. (2020). A non-parametric test to detect data-copying in generative models. *AISTATS*. |
+| `nn_dist` | Meehan, C., Chaudhuri, K., & Dasgupta, S. (2020). A non-parametric test to detect data-copying in generative models. *AISTATS*. [arXiv:2004.05675](https://arxiv.org/abs/2004.05675) |
 | `spectral_entropy` | Inouye, T., et al. (1991). Quantification of EEG irregularity by use of the entropy of the power spectrum. *EEG Clin. Neurophysiol.*, 79(3), 204–210. [doi:10.1016/0013-4694(91)90138-T](https://doi.org/10.1016/0013-4694(91)90138-T) |
 
 ## ECG generation and evaluation

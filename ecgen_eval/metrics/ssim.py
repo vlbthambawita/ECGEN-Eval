@@ -9,11 +9,11 @@ Image quality assessment: from error visibility to structural similarity.
 https://doi.org/10.1109/TIP.2003.819861
 
 Applied to ECG quality assessment in:
-Hayn, D., et al. (2018).
+Shahriari, Y., et al. (2018).
 Electrocardiogram signal quality assessment based on structural image
 similarity metric.
-*Physiological Measurement*, 39(1), 014005.
-https://doi.org/10.1088/1361-6579/aa9f5b
+*IEEE Transactions on Biomedical Engineering*, 65(4), 745–753.
+https://doi.org/10.1109/TBME.2017.2717876
 
 Implementation notes
 --------------------

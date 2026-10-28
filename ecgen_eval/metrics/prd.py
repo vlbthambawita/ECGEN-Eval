@@ -6,7 +6,7 @@ Reference
 Zigel, Y., Cohen, A., & Katsevman, A. (2000).
 The weighted diagnostic distortion (WDD) measure for ECG signal compression.
 *IEEE Transactions on Biomedical Engineering*, 47(11), 1422–1430.
-https://doi.org/10.1109/10.871205
+https://doi.org/10.1109/TBME.2000.880093
 
 Also used in:
   Thambawita, V., et al. (2021). DeepFake electrocardiograms using generative
@@ -37,7 +37,7 @@ from ecgen_eval.metrics.base import BaseMetric, MetricResult
 _REFERENCE = (
     "Zigel, Y., Cohen, A., & Katsevman, A. (2000). The weighted diagnostic distortion "
     "measure for ECG signal compression. IEEE Transactions on Biomedical Engineering, "
-    "47(11), 1422–1430. https://doi.org/10.1109/10.871205"
+    "47(11), 1422–1430. https://doi.org/10.1109/TBME.2000.880093"
 )
 
 _DESCRIPTION = (

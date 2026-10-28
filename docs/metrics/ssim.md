@@ -74,4 +74,4 @@ Parameters are in the [Metric Reference](../user-guide/metric-reference.md#ssim)
 
 - Wang et al., *Image Quality Assessment: From Error Visibility to Structural Similarity*,
   IEEE TIP 2004.
-- Hayn et al., applied to ECG in *Physiological Measurement* 2018.
+- Shahriari et al., applied to ECG signal quality in [*IEEE TBME* 2018](https://doi.org/10.1109/TBME.2017.2717876).

@@ -73,7 +73,7 @@ with `.score`, `.per_lead_scores`, and `.extra`.
 |---|---|---|---|
 | `mmd` | Maximum Mean Discrepancy | Lower ↓ | [Gretton et al., JMLR 2012](https://jmlr.org/papers/v13/gretton12a.html) |
 | `dtw` | Dynamic Time Warping | Lower ↓ | [Berndt & Clifford, KDD 1994](https://dl.acm.org/doi/10.5555/3000850.3000887) |
-| `prd` | Percent Root-mean-square Difference | Lower ↓ | [Zigel et al., IEEE TBME 2000](https://doi.org/10.1109/10.871206) |
+| `prd` | Percent Root-mean-square Difference | Lower ↓ | [Zigel et al., IEEE TBME 2000](https://doi.org/10.1109/TBME.2000.880093) |
 | `psd` | PSD Divergence (Jensen-Shannon) | Lower ↓ | [Welch, IEEE Trans Audio 1967](https://doi.org/10.1109/TAU.1967.1161901) · Applied: [Golany & Radinsky, AAAI 2019](https://doi.org/10.1609/aaai.v33i01.3301557) |
 | `fd` | Fréchet Distance | Lower ↓ | [Heusel et al., NeurIPS 2017](https://proceedings.neurips.cc/paper/2017/hash/8a1d694707eb0fefe65871369074926d-Abstract.html) · Applied: [Thambawita et al., Sci Rep 2021](https://doi.org/10.1038/s41598-021-01295-2) |
 
@@ -82,9 +82,9 @@ with `.score`, `.per_lead_scores`, and `.extra`.
 | Key | Name | Lower / Higher | Paper |
 |---|---|---|---|
 | `psnr` | Peak Signal-to-Noise Ratio | Higher ↑ | [Huynh-Thu & Ghanbari, Electron Lett 2008](https://doi.org/10.1049/el:20080522) |
-| `ssim` | Structural Similarity Index (1-D) | Higher ↑ | [Wang et al., IEEE TIP 2004](https://doi.org/10.1109/TIP.2003.819861) · ECG: [Hayn et al., Physiol Meas 2018](https://doi.org/10.1088/1361-6579/aa9f5b) |
+| `ssim` | Structural Similarity Index (1-D) | Higher ↑ | [Wang et al., IEEE TIP 2004](https://doi.org/10.1109/TIP.2003.819861) · ECG: [Shahriari et al., IEEE TBME 2018](https://doi.org/10.1109/TBME.2017.2717876) |
 | `swd` | Sliced Wasserstein Distance | Lower ↓ | [Rabin et al., LNCS 2011](https://doi.org/10.1007/978-3-642-24785-9_37) · [Kolouri et al., NeurIPS 2019](https://proceedings.neurips.cc/paper/2019/hash/f0935e4cd5920aa6c7c996a5ee53a70f-Abstract.html) |
-| `mae` | Mean Absolute Error (nearest-neighbour) | Lower ↓ | [Zigel et al., IEEE TBME 2000](https://doi.org/10.1109/10.871206) |
+| `mae` | Mean Absolute Error (nearest-neighbour) | Lower ↓ | [Zigel et al., IEEE TBME 2000](https://doi.org/10.1109/TBME.2000.880093) |
 | `hrv` | Heart Rate Variability (SDNN/rMSSD/pNN50) | Lower ↓ | [Task Force ESC/NASPE, Circulation 1996](https://doi.org/10.1161/01.CIR.93.5.1043) |
 | `pr_dist` | Distribution Precision & Recall | Higher ↑ | [Kynkäänniemi et al., NeurIPS 2019](https://proceedings.neurips.cc/paper/2019/hash/0234c510bc6d908b28c70ff313743079-Abstract.html) |
 | `sqi` | Signal Quality Index (QRS template) | Higher ↑ | [Clifford et al., CinC 2017](https://doi.org/10.22489/CinC.2017.065-469) |
