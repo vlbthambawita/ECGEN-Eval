@@ -95,6 +95,7 @@ extra_css:
 extra_javascript:
   - javascripts/mathjax.js
   - javascripts/literature-db.js
+  - javascripts/metric-viz.js
   - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
 
 extra:
@@ -116,6 +117,30 @@ nav:
       - Visualization: user-guide/visualization.md
       - HTML Reports: user-guide/reports.md
       - Command-Line Interface: user-guide/cli.md
+  - Metrics Explained:
+      - metrics/index.md
+      - Distribution:
+          - Fréchet ECG Distance (FED): metrics/fed.md
+          - Fréchet Distance (FD): metrics/fd.md
+          - Maximum Mean Discrepancy: metrics/mmd.md
+          - Sliced Wasserstein Distance: metrics/swd.md
+          - Precision & Recall: metrics/pr_dist.md
+      - Signal fidelity:
+          - Dynamic Time Warping: metrics/dtw.md
+          - Percent RMS Difference: metrics/prd.md
+          - Mean Absolute Error: metrics/mae.md
+          - Peak Signal-to-Noise Ratio: metrics/psnr.md
+          - Structural Similarity: metrics/ssim.md
+      - Morphology:
+          - Signal Quality Index: metrics/sqi.md
+      - Spectral:
+          - PSD Divergence: metrics/psd.md
+          - Spectral Entropy: metrics/spectral_entropy.md
+      - Physiological:
+          - Heart Rate: metrics/heart_rate.md
+          - Heart-Rate Variability: metrics/hrv.md
+      - Privacy:
+          - Nearest-Neighbour Distance: metrics/nn_dist.md
   - Background:
       - ECG Feature Review: ecg_features_review.md
       - References: references.md

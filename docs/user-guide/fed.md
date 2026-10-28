@@ -9,7 +9,8 @@ model** and compares the Gaussian statistics of the real and synthetic embedding
 \mathrm{FED} = \lVert \mu_r - \mu_s \rVert^2 + \operatorname{Tr}\!\left(\Sigma_r + \Sigma_s - 2(\Sigma_r\Sigma_s)^{1/2}\right)
 \]
 
-Lower is better; 0 means identical embedding statistics.
+Lower is better; 0 means identical embedding statistics. For an interactive explanation of
+the mean and covariance terms, see [FED in Metrics Explained](../metrics/fed.md).
 
 [![FED pipeline: real and synthetic ECGs are embedded by a foundation model, Gaussians are fitted and compared with the Fréchet distance](../assets/diagrams/fed-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/fed-light.svg "Open full size")
 [![FED pipeline: real and synthetic ECGs are embedded by a foundation model, Gaussians are fitted and compared with the Fréchet distance](../assets/diagrams/fed-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/fed-dark.svg "Open full size")

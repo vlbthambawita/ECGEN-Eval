@@ -12,6 +12,10 @@ metric = AVAILABLE_METRICS["dtw"](n_pairs=500, window=0.05)  # custom parameters
 result = metric.compute(real.data, synth.data, lead_names=real.lead_names)
 ```
 
+!!! tip "Learn how each metric works"
+    [Metrics Explained](../metrics/index.md) has one page per metric with an interactive
+    visualization, the maths, how to read the score, and usage examples.
+
 ## All metrics
 
 [![The 16 metrics grouped into six families; arrows show whether lower or higher is better](../assets/diagrams/metric-families-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/metric-families-light.svg "Open full size")

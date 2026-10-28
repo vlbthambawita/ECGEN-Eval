@@ -18,6 +18,11 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
   dark variants.
 - `docs` optional dependency group: `pip install -e ".[docs]"`.
 - Version badge in the documentation header and footer.
+- "Metrics Explained" docs section: one page per metric (all 16) with an interactive
+  visualization (sliders and presets on simulated data, scored with the same formulas as the
+  package), a step-by-step description of the implementation, the maths, guidance on reading
+  the score, and CLI / Python usage. Built with `docs/javascripts/metric-viz.js`, no extra
+  dependencies.
 - Literature Review section in the docs: a summary of how synthetic ECGs are evaluated
   (Oct 2023 – Oct 2026) and an interactive Paper Database with filters for category, year,
   evaluation category, metric, loss function, task, conditioning, data type, data format,

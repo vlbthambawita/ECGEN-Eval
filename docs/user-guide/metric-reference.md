@@ -3,6 +3,7 @@
 Definitions, constructor parameters and `extra` contents for every metric. Notation:
 \(X^{r}\) is the set of real recordings, \(X^{s}\) the synthetic set, and all per-lead scores
 are averaged to give the overall `score` unless stated otherwise.
+For intuition and interactive demos, see [Metrics Explained](../metrics/index.md).
 
 Several metrics share a compact **7-feature signal descriptor** computed per lead and per
 recording: mean, standard deviation, RMS, maximum absolute amplitude, energy
