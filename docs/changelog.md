@@ -10,6 +10,11 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-10-29
+
+Same code as 0.7.1, released under a minor version because 0.7.1 added new features
+(selectable clinical features and extraction backends, see below). Prefer 0.8.0 over 0.7.1.
+
 ## [0.7.1] — 2026-10-29
 
 ### Added
@@ -207,7 +212,8 @@ Initial release.
 - Interactive Plotly visualizations on ECG graph paper and a self-contained HTML report.
 - `ecgen-eval` CLI with `eval`, `visualize` and `list-metrics`.
 
-[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.5.0...v0.6.0
