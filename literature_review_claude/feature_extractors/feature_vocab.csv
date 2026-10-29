@@ -1,0 +1,95 @@
+id,group,name,unit,ecgen_eval_column,description
+r_peak,fiducial,R peak,sample,,Location of the R wave peak (QRS detection)
+p_onset,fiducial,P onset,sample,,Start of the P wave
+p_peak,fiducial,P peak,sample,,P wave peak
+p_offset,fiducial,P offset,sample,,End of the P wave
+qrs_onset,fiducial,QRS onset,sample,,Start of the QRS complex (Q onset / R onset)
+q_peak,fiducial,Q peak,sample,,Q wave nadir
+s_peak,fiducial,S peak,sample,,S wave nadir
+qrs_offset,fiducial,QRS offset (J point),sample,,End of the QRS complex
+t_onset,fiducial,T onset,sample,,Start of the T wave
+t_peak,fiducial,T peak,sample,,T wave peak
+t_offset,fiducial,T offset,sample,,End of the T wave
+wave_segmentation,fiducial,Per-sample P/QRS/T labels,label,,Each sample labelled as P / QRS / T / none (segmentation mask)
+rr_interval,rate,RR interval,ms,rr_mean_ms,Time between consecutive R peaks (mean or series)
+rr_std,rate,RR interval standard deviation,ms,rr_std_ms,Spread of RR intervals within a recording
+heart_rate,rate,Heart rate,bpm,hr_bpm,Beats per minute (instantaneous or mean)
+atrial_rate,rate,Atrial rate,bpm,,P-wave rate
+pr_interval,interval,PR interval,ms,pr_interval_ms,P onset to QRS onset
+pq_interval,interval,PQ interval,ms,,P onset to Q onset (PR synonym in some tools)
+pr_segment,interval,PR segment,ms,,P offset to QRS onset
+p_duration,interval,P-wave duration,ms,p_wave_duration_ms,P onset to P offset
+qrs_duration,interval,QRS duration,ms,qrs_duration_ms,QRS onset to QRS offset
+qt_interval,interval,QT interval,ms,qt_interval_ms,QRS onset to T offset
+qtc_bazett,interval,QTc (Bazett),ms,qtc_bazett_ms,QT / sqrt(RR)
+qtc_fridericia,interval,QTc (Fridericia),ms,,QT / cbrt(RR)
+qtc_framingham,interval,QTc (Framingham),ms,,QT + 0.154 (1 - RR)
+qtc_hodges,interval,QTc (Hodges),ms,,QT + 1.75 (HR - 60)
+qtc_other,interval,QTc (other / unspecified correction),ms,,Corrected QT with another or unstated formula
+st_segment,interval,ST segment duration,ms,,QRS offset to T onset
+t_duration,interval,T-wave duration,ms,,T onset to T offset
+tp_interval,interval,TP interval,ms,,T offset to next P onset
+jt_interval,interval,JT interval,ms,,QRS offset to T offset
+qt_dispersion,interval,QT dispersion,ms,,Max minus min QT across leads
+wave_subdurations,interval,Q / R / S / R' / S' wave durations,ms,,Durations of the individual QRS deflections
+p_amplitude,amplitude,P-wave amplitude,mV,,
+q_amplitude,amplitude,Q-wave amplitude,mV,,
+r_amplitude,amplitude,R-wave amplitude,mV,,
+s_amplitude,amplitude,S-wave amplitude,mV,,
+t_amplitude,amplitude,T-wave amplitude,mV,t_amplitude_mv,
+st_level,amplitude,ST level / deviation,mV,st_deviation_mv,ST amplitude at J or J+x ms relative to baseline
+st_slope,amplitude,ST slope,mV/s,,
+qrs_peak_to_peak,amplitude,QRS peak-to-peak amplitude,mV,,
+wave_areas,morphology,Wave areas (P / QRS / T),mV·ms,,Signed area under each wave
+wave_morphology,morphology,Wave morphology descriptors,,,"Polarity / biphasic / notching / R', S' presence / symmetry / peak time"
+intrinsicoid_deflection,morphology,R peak time (intrinsicoid deflection),ms,,QRS onset to R peak
+p_axis,axis_vector,P axis (frontal),deg,,
+qrs_axis,axis_vector,QRS axis (frontal),deg,,
+t_axis,axis_vector,T axis (frontal),deg,,
+qrs_t_angle,axis_vector,QRS-T angle / vectorcardiographic features,deg,,Spatial or frontal QRS-T angle and other VCG measures
+average_beat,beat_template,Average / median beat template,mV,,Representative beat per lead
+beat_segments,beat_template,Segmented heartbeats,mV,,Epochs around each R peak
+beat_class,classification,Beat / rhythm classification,label,,Normal / ectopic / arrhythmia labels
+hrv_meannn,hrv_time,Mean NN,ms,,
+hrv_sdnn,hrv_time,SDNN,ms,hrv_sdnn_ms,
+hrv_rmssd,hrv_time,RMSSD,ms,hrv_rmssd_ms,
+hrv_sdsd,hrv_time,SDSD,ms,,
+hrv_pnn50,hrv_time,pNN50,%,hrv_pnn50,
+hrv_pnn20,hrv_time,pNN20,%,,
+hrv_nn50,hrv_time,NN50,count,,
+hrv_cvnn,hrv_time,CVNN / CVSD,ratio,,
+hrv_sdann,hrv_time,SDANN / SDNN index,ms,,Long-term (5-min segment) indices
+hrv_hr_stats,hrv_time,HR statistics (mean / min / max / SD),bpm,,
+hrv_median_iqr,hrv_time,Median / IQR / range of NN,ms,,
+hrv_geometric,hrv_time,Geometric indices (HTI / TINN),,,Triangular index and TINN
+hrv_vlf,hrv_frequency,VLF power,ms²,,
+hrv_lf,hrv_frequency,LF power,ms²,,
+hrv_hf,hrv_frequency,HF power,ms²,,
+hrv_lf_hf,hrv_frequency,LF/HF ratio,ratio,,
+hrv_lfnu_hfnu,hrv_frequency,LF / HF normalised units,nu,,
+hrv_total_power,hrv_frequency,Total power,ms²,,
+hrv_peak_freq,hrv_frequency,Band peak frequencies,Hz,,
+hrv_ulf_vhf,hrv_frequency,ULF / VHF power,ms²,,
+hrv_poincare,hrv_nonlinear,Poincaré SD1 / SD2,ms,,
+hrv_csi_cvi,hrv_nonlinear,CSI / CVI,,,Cardiac sympathetic / vagal index
+hrv_sampen,hrv_nonlinear,Sample entropy (RR),,,
+hrv_apen,hrv_nonlinear,Approximate entropy (RR),,,
+hrv_dfa,hrv_nonlinear,DFA α1 / α2,,,
+hrv_other_entropy,hrv_nonlinear,Other entropy / fractal / complexity of RR,,,"Multiscale, fuzzy, Shannon entropy, Higuchi, correlation dimension, etc."
+hrv_asymmetry,hrv_nonlinear,Heart-rate asymmetry / fragmentation,,,"GI, SI, AI, PI, PIP, IALS, PSS, PAS"
+hrv_rqa,hrv_nonlinear,Recurrence quantification of RR,,,
+sqi_template_corr,sqi,Template / average-beat correlation SQI,,,
+sqi_kurtosis,sqi,Kurtosis SQI (kSQI),,,
+sqi_skewness,sqi,Skewness SQI (sSQI),,,
+sqi_power_ratio,sqi,Spectral power-ratio SQI (pSQI / basSQI),,,
+sqi_detector_agreement,sqi,Detector-agreement SQI (bSQI),,,
+sqi_flatline_clipping,sqi,Flat-line / clipping / saturation SQI,,,
+sqi_other,sqi,Other signal-quality indices,,,
+sqi_classification,sqi,Quality class (acceptable / unacceptable),label,,
+edr,respiration,ECG-derived respiration,,,
+resp_rate,respiration,Respiratory rate,breaths/min,,
+generic_statistical,generic,Statistical descriptors,,,"Mean, variance, skewness, kurtosis, percentiles, etc."
+generic_temporal,generic,Temporal descriptors,,,"Zero crossings, autocorrelation, slopes, peaks, etc."
+generic_spectral,generic,Spectral descriptors,,,"Spectral centroid, entropy, band power, wavelet energy, etc."
+generic_entropy,generic,Entropy measures of the signal,,,
+generic_fractal,generic,Fractal / nonlinear dynamics of the signal,,,"DFA, Hurst, Lyapunov, Higuchi, Katz, Petrosian, etc."

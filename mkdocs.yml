@@ -96,6 +96,7 @@ extra_javascript:
   - javascripts/mathjax.js
   - javascripts/literature-db.js
   - javascripts/metric-viz.js
+  - javascripts/clinical-viz.js
   - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
 
 extra:
@@ -143,6 +144,16 @@ nav:
           - Heart-Rate Variability: metrics/hrv.md
       - Privacy:
           - Nearest-Neighbour Distance: metrics/nn_dist.md
+  - Clinical Features Explained:
+      - clinical/index.md
+      - Heart Rate & RR Interval: clinical/heart-rate.md
+      - P-Wave Duration: clinical/p-wave.md
+      - PR Interval: clinical/pr-interval.md
+      - QRS Duration: clinical/qrs-duration.md
+      - QT Interval & QTc: clinical/qt-qtc.md
+      - ST Deviation: clinical/st-deviation.md
+      - T-Wave Amplitude: clinical/t-wave.md
+      - Heart-Rate Variability: clinical/hrv.md
   - Background:
       - ECG Feature Review: ecg_features_review.md
       - References: references.md

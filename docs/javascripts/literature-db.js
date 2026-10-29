@@ -1,13 +1,15 @@
 /* Literature database explorer for docs/literature/database.md.
  *
  * Opens ecgen_literature.sqlite (built by literature_review_claude/build_db.py) in the
- * browser with sql.js and renders three views:
+ * browser with sql.js and renders four views:
  *   - Papers: facet filters (built from the `facets` table), summary bars and an expandable
  *     paper table;
  *   - Metrics: metrics grouped by evaluation category (Fidelity, Utility, Privacy, Fairness,
  *     Robustness, ...) with the papers that use each one;
+ *   - Feature extractors: open-source ECG feature tools, filterable by category, licence,
+ *     input and the features they provide, with inputs, sampling rates and native names;
  *   - SQL: a read-only SQL console.
- * The URL hash deep-links to a view, e.g. #metrics/Privacy or #papers/P049.
+ * The URL hash deep-links to a view, e.g. #metrics/Privacy, #papers/P049 or #extractors/X001.
  * Activates only on pages that contain <div id="litdb" data-src="..." data-sqljs="...">.
  */
 (function () {
@@ -38,6 +40,16 @@
       "SELECT c.term AS category, l.term AS loss, COUNT(*) AS n_papers\n" +
       "FROM paper_facets c JOIN paper_facets l ON l.paper_id = c.paper_id\n" +
       "WHERE c.facet = 'category' AND l.facet = 'loss'\nGROUP BY 1, 2 ORDER BY 1, 3 DESC;"],
+    ["Feature extractors providing ECGEN-Eval's clinical features",
+      "SELECT ecgen_eval_column, extractor, license_class, input_kinds, fs_supported, native, api\n" +
+      "FROM ecgen_feature_support;"],
+    ["Feature coverage across extractors", "SELECT * FROM feature_coverage;"],
+    ["Permissive tools that delineate P/QRS/T on raw ECG",
+      "SELECT x.name, x.license, i.multilead, i.fs_param, i.fs_supported\n" +
+      "FROM extractors x JOIN extractor_inputs i ON i.extractor_id = x.id\n" +
+      "WHERE x.license_class = 'permissive'\n" +
+      "  AND x.id IN (SELECT extractor_id FROM extractor_features WHERE feature_id = 'qrs_onset')\n" +
+      "  AND x.id IN (SELECT extractor_id FROM extractor_features WHERE feature_id = 't_offset');"],
     ["Schema", "SELECT type, name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%';"],
   ];
 
@@ -158,7 +170,10 @@
     var tabs = {};
     var tabBar = el("div", { class: "litdb-tabs", role: "tablist" });
     var panels = {};
-    [["papers", "Papers"], ["metrics", "Metrics by evaluation category"], ["sql", "SQL console"]]
+    var xview = extractorView(db);
+    [["papers", "Papers"], ["metrics", "Metrics by evaluation category"],
+      ["extractors", "Feature extractors"], ["sql", "SQL console"]]
+      .filter(function (t) { return t[0] !== "extractors" || xview; })
       .forEach(function (t) {
         var b = el("button", { type: "button", role: "tab", class: "litdb-tab", text: t[1] });
         b.addEventListener("click", function () { showTab(t[0]); });
@@ -189,6 +204,7 @@
     var metricTable = el("div", { class: "litdb-table" });
     [catInfo, catBar, analyses, metricTable].forEach(function (n) { panels.metrics.appendChild(n); });
 
+    if (xview) panels.extractors.appendChild(xview.node);
     panels.sql.appendChild(sqlConsole(db));
     Object.keys(panels).forEach(function (k) { root.appendChild(panels[k]); });
 
@@ -204,7 +220,9 @@
     }
 
     function setHash() {
-      var h = state.tab === "metrics" ? "#metrics/" + encodeURIComponent(state.cat) : "#" + state.tab;
+      var h = state.tab === "metrics" ? "#metrics/" + encodeURIComponent(state.cat)
+        : state.tab === "extractors" && xview && xview.current() ? "#extractors/" + xview.current()
+        : "#" + state.tab;
       if (window.history && history.replaceState) history.replaceState(null, "", h);
     }
 
@@ -624,6 +642,9 @@
         if (e) root.scrollIntoView({ block: "start" });
       } else if (h[0] === "papers" && h[1] && model.byId[h[1]]) {
         openPaper(h[1]);
+      } else if (h[0] === "extractors" && xview) {
+        showTab("extractors", true);
+        if (h[1]) xview.open(h[1]);
       } else if (h[0] === "sql" || h[0] === "papers") {
         showTab(h[0], true);
       } else if (!state.routed) {
@@ -635,6 +656,329 @@
     update();
     route();
     window.addEventListener("hashchange", route);
+  }
+
+  // ------------------------------------------------------------------ feature extractors
+  var X_CATEGORIES = {
+    delineation: "P/QRS/T delineation & clinical features",
+    dl_delineation: "Deep-learning delineation",
+    rpeak: "R-peak detection & heart rate",
+    hrv: "Heart-rate variability",
+    sqi: "Signal quality",
+    ml_table: "ML feature tables",
+    generic_ts: "Generic time-series features",
+    non_python: "Non-Python reference tools",
+    reference_measurements: "Reference measurements (PTB-XL+)",
+  };
+  var X_GROUPS = {
+    fiducial: "Fiducial points", rate: "Rate & RR", interval: "Intervals & durations",
+    amplitude: "Amplitudes & ST", morphology: "Morphology", axis_vector: "Axes & vectors",
+    beat_template: "Beat templates", classification: "Classification",
+    hrv_time: "HRV: time domain", hrv_frequency: "HRV: frequency domain",
+    hrv_nonlinear: "HRV: nonlinear", sqi: "Signal quality", respiration: "Respiration",
+    generic: "Generic signal descriptors",
+  };
+
+  // Returns {node, open(id), current()} or null when the database has no extractor tables.
+  function extractorView(db) {
+    var tools, feats, vocab, evidence;
+    try {
+      tools = rows(db, "SELECT x.*, i.* FROM extractors x " +
+        "JOIN extractor_inputs i ON i.extractor_id = x.id ORDER BY x.id");
+      feats = rows(db, "SELECT * FROM extractor_feature_details");
+      vocab = rows(db, "SELECT * FROM feature_vocab ORDER BY sort_order");
+      evidence = rows(db, "SELECT * FROM extractor_evidence");
+    } catch (err) {
+      return null;
+    }
+    if (!tools.length) return null;
+    var byId = {};
+    tools.forEach(function (t) {
+      t.feats = [];
+      t.fset = {};
+      t.evidence = [];
+      t.kinds = (t.input_kinds || "").split("; ").filter(Boolean);
+      byId[t.id] = t;
+    });
+    feats.forEach(function (f) {
+      var t = byId[f.extractor_id];
+      t.feats.push(f);
+      t.fset[f.feature_id] = true;
+    });
+    evidence.forEach(function (e) { byId[e.extractor_id].evidence.push(e.source); });
+    var vocabById = {};
+    vocab.forEach(function (v) { vocabById[v.id] = v; });
+
+    var DIMS = [
+      ["category", "Category", function (t) { return [X_CATEGORIES[t.category] || t.category]; }],
+      ["license", "Licence", function (t) { return [t.license_class || "unknown"]; }],
+      ["input", "Input", function (t) { return t.kinds; }],
+      ["multilead", "Leads", function (t) { return [t.multilead || "not stated"]; }],
+    ];
+    var st = { q: "", sel: {}, need: new Set(), open: {} };
+    DIMS.forEach(function (d) { st.sel[d[0]] = new Set(); });
+
+    var search = el("input", { type: "search", class: "litdb-search",
+      placeholder: "Search tool, method, native feature name…", "aria-label": "Search feature extractors" });
+    var reset = el("button", { class: "md-button litdb-reset", type: "button", text: "Reset filters" });
+    var dl = el("button", { class: "md-button litdb-reset", type: "button", text: "Download CSV (filtered)" });
+    var filters = el("div", { class: "litdb-facets" });
+    var count = el("p", { class: "litdb-count" });
+    var table = el("div", { class: "litdb-table" });
+    var node = el("div", {}, [
+      el("p", { text: "Open-source ECG feature extractors usable from Python (or published as " +
+        "reference measurements), with what each one accepts and which features it returns. " +
+        "Pick features under “Provides features” to list only the tools that return all of " +
+        "them; click a tool for its inputs, sampling-rate handling and native output names." }),
+      el("div", { class: "litdb-layout" }, [
+        el("aside", { class: "litdb-sidebar", "aria-label": "Extractor filters" }, [
+          search, el("div", { class: "litdb-toolbar" }, [reset, dl]), filters]),
+        el("div", { class: "litdb-main" }, [count, table]),
+      ]),
+    ]);
+
+    function match(t, skip) {
+      if (st.q) {
+        var hay = [t.id, t.name, t.method, t.notes, t.license, t.input_kinds, t.signal_types,
+          t.other_outputs].concat(t.feats.map(function (f) { return f.native + " " + f.feature; }))
+          .join(" ").toLowerCase();
+        var words = st.q.toLowerCase().split(/\s+/).filter(Boolean);
+        for (var i = 0; i < words.length; i++) if (hay.indexOf(words[i]) < 0) return false;
+      }
+      for (var j = 0; j < DIMS.length; j++) {
+        var d = DIMS[j];
+        if (d[0] === skip || !st.sel[d[0]].size) continue;
+        if (!d[2](t).some(function (v) { return st.sel[d[0]].has(v); })) return false;
+      }
+      if (skip !== "need") {
+        var ok = true;
+        st.need.forEach(function (id) { if (!t.fset[id]) ok = false; });
+        if (!ok) return false;
+      }
+      return true;
+    }
+
+    function chip(label, n, active, onClick, title) {
+      var b = el("button", { type: "button", title: title || "",
+        class: "litdb-chip" + (active ? " is-active" : "") + (n ? "" : " is-empty"),
+        "aria-pressed": active ? "true" : "false" },
+        [el("span", { text: label }), el("span", { class: "litdb-chip-n", text: String(n) })]);
+      b.addEventListener("click", onClick);
+      return b;
+    }
+
+    function group(label, chips, key, open, nSel) {
+      var head = el("div", { class: "litdb-facet-head" }, [el("strong", { text: label })]);
+      if (nSel) head.appendChild(el("span", { class: "litdb-chip-n", text: nSel + " selected" }));
+      var d = el("details", { class: "litdb-facet", "data-facet": key }, [
+        el("summary", {}, [head]), el("div", { class: "litdb-chips" }, chips)]);
+      d.open = open;
+      return d;
+    }
+
+    function renderFilters() {
+      var wasOpen = {};
+      Array.prototype.forEach.call(filters.querySelectorAll("details"), function (d) {
+        wasOpen[d.dataset.facet] = d.open;
+      });
+      filters.textContent = "";
+      DIMS.forEach(function (d) {
+        var counts = {}, all = {};
+        tools.forEach(function (t) {
+          var m = match(t, d[0]);
+          d[2](t).forEach(function (v) { all[v] = true; if (m) counts[v] = (counts[v] || 0) + 1; });
+        });
+        var keys = Object.keys(all).sort(function (a, b) {
+          return (counts[b] || 0) - (counts[a] || 0) || a.localeCompare(b);
+        });
+        var chips = keys.map(function (v) {
+          var on = st.sel[d[0]].has(v);
+          return chip(v, counts[v] || 0, on, function () {
+            if (on) st.sel[d[0]].delete(v); else st.sel[d[0]].add(v);
+            update();
+          });
+        });
+        var key = "dim-" + d[0];
+        filters.appendChild(group(d[1], chips, key,
+          key in wasOpen ? wasOpen[key] : d[0] === "category", st.sel[d[0]].size));
+      });
+      filters.appendChild(el("p", { class: "litdb-count", text: "Provides features (match ALL):" }));
+      var base = tools.filter(function (t) { return match(t, "need"); });
+      Object.keys(X_GROUPS).forEach(function (g) {
+        var items = vocab.filter(function (v) { return v.feature_group === g; });
+        if (!items.length) return;
+        var nSel = 0;
+        var chips = items.map(function (v) {
+          var on = st.need.has(v.id);
+          if (on) nSel++;
+          var n = base.filter(function (t) { return t.fset[v.id]; }).length;
+          return chip(v.name, n, on, function () {
+            if (on) st.need.delete(v.id); else st.need.add(v.id);
+            update();
+          }, (v.description || "") + (v.ecgen_eval_column ? " → ECGEN-Eval " + v.ecgen_eval_column : ""));
+        });
+        var key = "grp-" + g;
+        filters.appendChild(group(X_GROUPS[g], chips, key, key in wasOpen ? wasOpen[key] : nSel > 0, nSel));
+      });
+    }
+
+    function fsText(t) {
+      var parts = [];
+      if (t.fs_param) parts.push(t.fs_param + (t.fs_default !== null ? " = " + t.fs_default : ""));
+      if (t.fs_supported) parts.push(t.fs_supported);
+      return parts.join(" · ") || "not stated";
+    }
+
+    function detail(t) {
+      var dl = el("dl");
+      function add(k, v) {
+        if (v === null || v === undefined || v === "") return;
+        dl.appendChild(el("dt", { text: k }));
+        dl.appendChild(el("dd", {}, [typeof v === "string" ? v : v]));
+      }
+      add("Link", t.url ? el("a", { href: t.url, target: "_blank", rel: "noopener", text: t.url }) : "");
+      add("Install", t.install ? el("code", { text: t.install }) : "");
+      add("Version", [t.version, t.release_date].filter(Boolean).join(" (") + (t.release_date ? ")" : ""));
+      add("Licence", t.license);
+      add("Language / runtime", [t.language, t.python_requires, t.runtime_deps].filter(Boolean).join(" · "));
+      add("Paper", t.paper_doi ? el("span", {}, [(t.paper_citation || "") + " ",
+        el("a", { href: "https://doi.org/" + t.paper_doi, target: "_blank", rel: "noopener", text: t.paper_doi })])
+        : t.paper_citation);
+      add("Method", t.method);
+      add("Signals", t.signal_types);
+      add("Input", [t.input_kinds, t.shape].filter(Boolean).join(" — "));
+      add("Leads", t.multilead);
+      add("Sampling rate", fsText(t) + (t.fs_min_recommended ? " · recommended ≥ " +
+        t.fs_min_recommended + " Hz" : "") + (t.fs_notes ? ". " + t.fs_notes : ""));
+      add("Duration", [t.min_duration_s !== null ? "min " + t.min_duration_s + " s" : "", t.duration_notes]
+        .filter(Boolean).join(". "));
+      add("Amplitude units", t.amplitude_units);
+      add("Preprocessing", t.preprocessing);
+      add("Output", [t.output_format, t.output_levels ? "levels: " + t.output_levels : "", t.batch]
+        .filter(Boolean).join(" · "));
+      add("Other outputs", t.other_outputs);
+      add("Notes", t.notes);
+      add("Verified from", t.verified);
+      var rowsF = t.feats.slice().sort(function (a, b) {
+        return vocabById[a.feature_id].sort_order - vocabById[b.feature_id].sort_order;
+      });
+      var ft = el("table", { class: "litdb-evals" }, [
+        el("thead", {}, [el("tr", {}, ["Feature", "Native name(s)", "API", "Level", "Notes"]
+          .map(function (h) { return el("th", { text: h }); }))]),
+        el("tbody", {}, rowsF.map(function (f) {
+          var v = vocabById[f.feature_id];
+          return el("tr", { class: st.need.has(f.feature_id) ? "is-open" : "" }, [
+            el("td", {}, [el("span", { text: v.name }), el("span", { class: "litdb-sub",
+              text: (X_GROUPS[v.feature_group] || v.feature_group) +
+                (v.ecgen_eval_column ? " · ECGEN-Eval " + v.ecgen_eval_column : "") })]),
+            el("td", {}, [el("code", { text: f.native || "" })]),
+            el("td", {}, [el("code", { text: f.api || "" })]),
+            el("td", { text: f.level || "" }),
+            el("td", { text: f.notes || "" }),
+          ]);
+        })),
+      ]);
+      var ev = t.evidence.length ? el("details", { class: "litdb-facet" }, [
+        el("summary", {}, [el("strong", { text: "Sources read (" + t.evidence.length + ")" })]),
+        el("ul", {}, t.evidence.map(function (src) {
+          return el("li", {}, [/^https?:/.test(src)
+            ? el("a", { href: src, target: "_blank", rel: "noopener", text: src }) : el("code", { text: src })]);
+        })),
+      ]) : null;
+      return el("td", { colspan: "5" }, [dl, ft, ev]);
+    }
+
+    function renderTable(list) {
+      table.textContent = "";
+      var body = el("tbody");
+      list.forEach(function (t) {
+        var groups = {};
+        t.feats.forEach(function (f) { groups[X_GROUPS[f.feature_group] || f.feature_group] = true; });
+        var tr = el("tr", { class: "litdb-row", tabindex: "0", "aria-expanded": "false", id: "litdb-x-" + t.id }, [
+          el("td", {}, [el("span", { class: "litdb-title", text: t.name }),
+            el("span", { class: "litdb-sub", text: t.id + " · " + (X_CATEGORIES[t.category] || t.category) })]),
+          el("td", {}, [el("span", { text: t.license || "" }),
+            el("span", { class: "litdb-sub", text: t.license_class || "" })]),
+          el("td", {}, [el("span", { text: (t.kinds.join(", ") || "not stated") }),
+            el("span", { class: "litdb-sub", text: t.multilead || "" })]),
+          el("td", { text: fsText(t) }),
+          el("td", {}, [el("span", { class: "litdb-num", text: String(Object.keys(t.fset).length) }),
+            el("div", { class: "litdb-tags" }, Object.keys(groups).map(function (g) {
+              return el("span", { class: "litdb-tag", text: g });
+            }))]),
+        ]);
+        var det = el("tr", { class: "litdb-detail" });
+        det.hidden = !st.open[t.id];
+        if (!det.hidden) { det.appendChild(detail(t)); tr.classList.add("is-open"); }
+        function toggle() {
+          det.hidden = !det.hidden;
+          st.open[t.id] = !det.hidden;
+          if (!det.hidden && !det.firstChild) det.appendChild(detail(t));
+          tr.classList.toggle("is-open", !det.hidden);
+          tr.setAttribute("aria-expanded", det.hidden ? "false" : "true");
+          current = det.hidden ? "" : t.id;
+          if (window.history && history.replaceState) {
+            history.replaceState(null, "", "#extractors" + (current ? "/" + current : ""));
+          }
+        }
+        tr._toggle = toggle;
+        tr.addEventListener("click", toggle);
+        tr.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+        });
+        body.appendChild(tr);
+        body.appendChild(det);
+      });
+      table.appendChild(el("table", {}, [
+        el("thead", {}, [el("tr", {}, ["Tool", "Licence", "Input", "Sampling rate", "Vocabulary features"]
+          .map(function (h) { return el("th", { scope: "col", text: h }); }))]),
+        body,
+      ]));
+    }
+
+    var current = "";
+    function filteredTools() { return tools.filter(function (t) { return match(t, null); }); }
+    function update() {
+      var list = filteredTools();
+      count.textContent = list.length + " of " + tools.length + " extractors" +
+        (st.need.size ? " providing all " + st.need.size + " selected feature(s)" : "");
+      renderFilters();
+      renderTable(list);
+    }
+
+    search.addEventListener("input", function () { st.q = search.value.trim(); update(); });
+    reset.addEventListener("click", function () {
+      st.q = "";
+      search.value = "";
+      DIMS.forEach(function (d) { st.sel[d[0]].clear(); });
+      st.need.clear();
+      update();
+    });
+    dl.addEventListener("click", function () {
+      var cols = ["id", "name", "category", "url", "install", "license", "license_class", "version",
+        "signal_types", "input_kinds", "shape", "multilead", "fs_param", "fs_default", "fs_supported",
+        "fs_min_recommended", "fs_notes", "min_duration_s", "amplitude_units", "output_format"];
+      var lines = [cols.concat(["features"]).join(",")].concat(filteredTools().map(function (t) {
+        return cols.map(function (k) { return csvCell(t[k]); })
+          .concat([csvCell(Object.keys(t.fset))]).join(",");
+      }));
+      download(lines.join("\n"), "ecg-feature-extractors-filtered.csv");
+    });
+    update();
+
+    return {
+      node: node,
+      current: function () { return current; },
+      open: function (id) {
+        if (!byId[id]) return;
+        st.q = id;
+        search.value = id;
+        update();
+        var tr = document.getElementById("litdb-x-" + id);
+        if (tr && !st.open[id]) tr._toggle();
+        if (tr) tr.scrollIntoView({ block: "center" });
+      },
+    };
   }
 
   function csvCell(v) {
@@ -697,8 +1041,9 @@
     exec();
     return el("div", {}, [
       el("p", { text: "Query the SQLite database directly (tables: papers, evaluations, " +
-        "evaluation_categories, facets, terms, paper_terms, authors; views: paper_facets, " +
-        "evaluation_details, metric_usage). Pick an example or write a read-only query; " +
+        "evaluation_categories, facets, terms, paper_terms, authors, extractors, extractor_inputs, " +
+        "extractor_features, feature_vocab; views: paper_facets, evaluation_details, metric_usage, " +
+        "extractor_feature_details, feature_coverage, ecgen_feature_support). Pick an example or write a read-only query; " +
         "Ctrl/Cmd + Enter runs it." }),
       el("div", { class: "litdb-toolbar" }, [pick, run, save]),
       area, msg, out,

@@ -19,6 +19,12 @@ paper uses) + ``evaluation_categories``; and a generic facet model (``facets`` -
 -> ``paper_terms``) so new filter dimensions or values are added as rows, not tables. Views
 ``paper_facets``, ``evaluation_details`` and ``metric_usage`` simplify queries.
 
+A second, independent part catalogues open-source ECG feature extractors (source data in
+``feature_extractors/``: ``feature_vocab.csv`` + ``tools.jsonl``): tables ``extractors``,
+``extractor_inputs``, ``extractor_input_kinds``, ``extractor_signal_types``,
+``feature_vocab``, ``extractor_features`` and ``extractor_evidence``, with views
+``extractor_feature_details``, ``feature_coverage`` and ``ecgen_feature_support``.
+
 Only papers whose PDF has been downloaded are included by default; pass ``--all`` to also
 include abstract-only entries.
 
@@ -45,6 +51,7 @@ STRUCTURED = HERE / "structured_extraction.jsonl"
 NOTES = HERE / "notes"
 OUT_DIR = ROOT / "docs" / "literature"
 DB_PATH = OUT_DIR / "ecgen_literature.sqlite"
+EXTRACTORS = HERE / "feature_extractors"
 
 MODEL_CATEGORIES = {
     "01_GAN": "GAN",
@@ -507,12 +514,193 @@ JOIN terms fam  ON fam.id = e.family_id
 JOIN evaluation_categories ec ON ec.evaluation_id = e.id
 JOIN terms cat  ON cat.id = ec.category_id;
 
+-- ECG feature-extractor catalogue (independent of the papers tables).
+CREATE TABLE extractors (
+    id                  TEXT PRIMARY KEY,   -- X001 ...
+    name                TEXT NOT NULL,
+    category            TEXT NOT NULL,      -- delineation | dl_delineation | rpeak | hrv | sqi |
+                                            -- ml_table | generic_ts | non_python |
+                                            -- reference_measurements
+    url                 TEXT,
+    pypi                TEXT,
+    install             TEXT,
+    license             TEXT,
+    license_class       TEXT,               -- permissive | copyleft | none | noncommercial |
+                                            -- proprietary
+    version             TEXT,
+    release_date        TEXT,
+    maintained          TEXT,               -- yes | stale | unknown
+    language            TEXT,
+    python_requires     TEXT,
+    runtime_deps        TEXT,
+    paper_citation      TEXT,
+    paper_doi           TEXT,
+    method              TEXT,
+    n_features_reported INTEGER,            -- as stated by the tool / paper
+    other_outputs       TEXT,               -- outputs without a feature_vocab id
+    verified            TEXT,               -- source | docs | paper | readme
+    notes               TEXT
+);
+
+-- What each extractor accepts and returns (one row per extractor).
+CREATE TABLE extractor_inputs (
+    extractor_id       TEXT PRIMARY KEY REFERENCES extractors(id),
+    signal_types       TEXT,                -- e.g. "ECG; PPG"
+    input_kinds        TEXT,                -- e.g. "raw_1d; wfdb_record"
+    shape              TEXT,
+    multilead          TEXT,                -- native | per-lead | single-lead
+    fs_param           TEXT,                -- sampling-rate argument name
+    fs_default         REAL,
+    fs_supported       TEXT,
+    fs_min_recommended REAL,
+    fs_notes           TEXT,
+    min_duration_s     REAL,
+    duration_notes     TEXT,
+    amplitude_units    TEXT,
+    preprocessing      TEXT,
+    batch              TEXT,
+    output_format      TEXT,
+    output_levels      TEXT                 -- e.g. "beat; record"
+);
+
+CREATE TABLE extractor_input_kinds (
+    extractor_id TEXT NOT NULL REFERENCES extractors(id),
+    kind         TEXT NOT NULL,             -- raw_1d | raw_multilead | wfdb_record | csv | edf |
+                                            -- mat | rpeaks | rr_intervals | image
+    PRIMARY KEY (extractor_id, kind)
+);
+
+CREATE TABLE extractor_signal_types (
+    extractor_id TEXT NOT NULL REFERENCES extractors(id),
+    signal_type  TEXT NOT NULL,             -- ECG | PPG | EDA | ...
+    PRIMARY KEY (extractor_id, signal_type)
+);
+
+-- Canonical feature vocabulary; ecgen_eval_column links to ECGEN-Eval's summary_df.
+CREATE TABLE feature_vocab (
+    id                TEXT PRIMARY KEY,
+    feature_group     TEXT NOT NULL,        -- fiducial | rate | interval | amplitude | ...
+    name              TEXT NOT NULL,
+    unit              TEXT,
+    ecgen_eval_column TEXT,
+    description       TEXT,
+    sort_order        INTEGER NOT NULL
+);
+
+-- One row per (extractor, canonical feature, API): the native name(s) and where they come from.
+CREATE TABLE extractor_features (
+    id           INTEGER PRIMARY KEY,
+    extractor_id TEXT NOT NULL REFERENCES extractors(id),
+    feature_id   TEXT NOT NULL REFERENCES feature_vocab(id),
+    native       TEXT,                      -- output key(s) / column name(s) in the tool
+    api          TEXT,                      -- function or class that produces it
+    level        TEXT,                      -- beat | lead | record | window | sample
+    notes        TEXT
+);
+CREATE INDEX idx_extractor_features_feature ON extractor_features(feature_id);
+
+CREATE TABLE extractor_evidence (
+    extractor_id TEXT NOT NULL REFERENCES extractors(id),
+    source       TEXT NOT NULL              -- URL or file that was read to verify the entry
+);
+
+CREATE VIEW extractor_feature_details AS
+SELECT x.id AS extractor_id, x.name AS extractor, x.category, x.license, x.license_class,
+       v.feature_group, v.id AS feature_id, v.name AS feature, v.unit, v.ecgen_eval_column,
+       f.native, f.api, f.level, f.notes
+FROM extractor_features f
+JOIN extractors x    ON x.id = f.extractor_id
+JOIN feature_vocab v ON v.id = f.feature_id;
+
+CREATE VIEW feature_coverage AS
+SELECT v.feature_group, v.id AS feature_id, v.name AS feature, v.ecgen_eval_column,
+       COUNT(DISTINCT f.extractor_id) AS n_extractors,
+       (SELECT group_concat(name, '; ') FROM (
+            SELECT DISTINCT x.name FROM extractor_features f2
+            JOIN extractors x ON x.id = f2.extractor_id
+            WHERE f2.feature_id = v.id ORDER BY x.name)) AS extractors
+FROM feature_vocab v
+LEFT JOIN extractor_features f ON f.feature_id = v.id
+GROUP BY v.id
+ORDER BY v.sort_order;
+
+-- For every ECGEN-Eval summary_df column: which extractors can provide it, and how.
+CREATE VIEW ecgen_feature_support AS
+SELECT v.ecgen_eval_column, v.name AS feature, x.name AS extractor, x.license_class,
+       i.input_kinds, i.multilead, i.fs_supported, f.native, f.api
+FROM feature_vocab v
+JOIN extractor_features f ON f.feature_id = v.id
+JOIN extractors x         ON x.id = f.extractor_id
+JOIN extractor_inputs i   ON i.extractor_id = x.id
+WHERE v.ecgen_eval_column IS NOT NULL
+ORDER BY v.sort_order, x.name;
+
 CREATE VIEW metric_usage AS
 SELECT category, family AS metric, ecgen_eval, COUNT(DISTINCT paper_id) AS n_papers
 FROM evaluation_details
 GROUP BY category, family
 ORDER BY category, n_papers DESC;
 """
+
+
+def load_extractors() -> tuple[list[dict], list[dict]]:
+    """Read the feature vocabulary and the extractor catalogue; check feature ids."""
+    vocab_path, tools_path = EXTRACTORS / "feature_vocab.csv", EXTRACTORS / "tools.jsonl"
+    if not (vocab_path.exists() and tools_path.exists()):
+        return [], []
+    vocab = list(csv.DictReader(vocab_path.open(newline="", encoding="utf-8-sig")))
+    known = {v["id"] for v in vocab}
+    tools = [json.loads(line) for line in tools_path.read_text().splitlines() if line.strip()]
+    for t in tools:
+        bad = sorted({f["feature"] for f in t.get("features", [])} - known)
+        if bad:
+            raise ValueError(f"{t['id']} {t['name']}: unknown feature ids {bad}")
+    return vocab, tools
+
+
+def joined(value) -> str:
+    return "; ".join(map(str, value)) if isinstance(value, list) else (value or "")
+
+
+def write_extractors(con: sqlite3.Connection, vocab: list[dict], tools: list[dict]) -> None:
+    for i, v in enumerate(vocab):
+        con.execute("INSERT INTO feature_vocab VALUES (?,?,?,?,?,?,?)",
+                    (v["id"], v["group"], v["name"], v["unit"] or None,
+                     v["ecgen_eval_column"] or None, v["description"] or None, i))
+    for t in tools:
+        inp, out = t.get("input", {}), t.get("output", {})
+        con.execute(
+            "INSERT INTO extractors VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (t["id"], t["name"], t["category"], t.get("url"), t.get("pypi"), t.get("install"),
+             t.get("license"), t.get("license_class"), t.get("version"), t.get("release_date"),
+             t.get("maintained"), t.get("language"), t.get("python_requires"),
+             t.get("runtime_deps"), t.get("paper_citation"), t.get("paper_doi"),
+             t.get("method"), t.get("n_features_reported"), joined(t.get("other_outputs")),
+             t.get("verified"), t.get("notes")))
+        con.execute(
+            "INSERT INTO extractor_inputs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (t["id"], joined(inp.get("signal_types")), joined(inp.get("input_kinds")),
+             inp.get("shape"), inp.get("multilead"), inp.get("fs_param"),
+             number(inp.get("fs_default")) if inp.get("fs_default") is not None else None,
+             inp.get("fs_supported"),
+             number(inp.get("fs_min_recommended"))
+             if inp.get("fs_min_recommended") is not None else None,
+             inp.get("fs_notes"),
+             number(inp.get("min_duration_s")) if inp.get("min_duration_s") is not None else None,
+             inp.get("duration_notes"), inp.get("amplitude_units"), inp.get("preprocessing"),
+             inp.get("batch"), out.get("format"), joined(out.get("levels"))))
+        for k in dict.fromkeys(inp.get("input_kinds") or []):
+            con.execute("INSERT INTO extractor_input_kinds VALUES (?,?)", (t["id"], k))
+        for k in dict.fromkeys(inp.get("signal_types") or []):
+            con.execute("INSERT INTO extractor_signal_types VALUES (?,?)", (t["id"], k))
+        for f in t.get("features", []):
+            con.execute(
+                "INSERT INTO extractor_features (extractor_id, feature_id, native, api, level, "
+                "notes) VALUES (?,?,?,?,?,?)",
+                (t["id"], f["feature"], f.get("native"), f.get("api"), f.get("level"),
+                 f.get("notes") or None))
+        for src in t.get("evidence", []):
+            con.execute("INSERT INTO extractor_evidence VALUES (?,?)", (t["id"], src))
 
 
 def write_sqlite(papers: list[dict], meta: dict, path: Path) -> None:
@@ -581,6 +769,7 @@ def write_sqlite(papers: list[dict], meta: dict, path: Path) -> None:
                 if v not in (None, ""):
                     con.execute("INSERT OR IGNORE INTO paper_terms VALUES (?,?)",
                                 (p["id"], term(facet, str(v))))
+    write_extractors(con, *load_extractors())
     con.commit()
     con.execute("VACUUM")
     con.close()
@@ -592,12 +781,16 @@ def main() -> None:
     args = ap.parse_args()
 
     papers = build(args.all)
+    vocab, tools = load_extractors()
     meta = {
         "generated": date.today().isoformat(),
         "n_papers": str(len(papers)),
         "scope": "all indexed papers" if args.all else "papers with downloaded full text",
         "review_window": "2023-10-01 to 2026-10-25",
         "source": "literature_review_claude/papers_index.csv + structured_extraction.jsonl",
+        "n_extractors": str(len(tools)),
+        "n_feature_vocab": str(len(vocab)),
+        "extractors_source": "literature_review_claude/feature_extractors/tools.jsonl",
     }
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     write_sqlite(papers, meta, DB_PATH)
@@ -615,6 +808,34 @@ def main() -> None:
             w.writerow(["; ".join(map(str, p[k])) if isinstance(p[k], list) else p[k]
                         for k in flat])
     print(f"wrote {len(papers)} papers to {DB_PATH} and {OUT_DIR / 'papers.csv'}")
+    if tools:
+        write_extractor_csv(vocab, tools)
+        print(f"wrote {len(tools)} feature extractors ({len(vocab)} vocabulary features)")
+
+
+def write_extractor_csv(vocab: list[dict], tools: list[dict]) -> None:
+    """Flat tool list and a feature x tool support matrix, for spreadsheets."""
+    cols = ["id", "name", "category", "url", "install", "license", "license_class", "version",
+            "release_date", "maintained", "language", "runtime_deps", "paper_doi", "method"]
+    icols = ["signal_types", "input_kinds", "shape", "multilead", "fs_param", "fs_default",
+             "fs_supported", "fs_min_recommended", "fs_notes", "min_duration_s",
+             "amplitude_units", "preprocessing"]
+    with (OUT_DIR / "feature_extractors.csv").open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(cols + icols + ["output_format", "n_vocab_features", "features"])
+        for t in tools:
+            inp = t.get("input", {})
+            feats = sorted({x["feature"] for x in t.get("features", [])})
+            w.writerow([joined(t.get(k)) for k in cols] + [joined(inp.get(k)) for k in icols]
+                       + [t.get("output", {}).get("format", ""), len(feats), "; ".join(feats)])
+    with (OUT_DIR / "feature_support_matrix.csv").open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["feature_group", "feature_id", "feature", "ecgen_eval_column"]
+                   + [t["name"] for t in tools])
+        have = [{x["feature"] for x in t.get("features", [])} for t in tools]
+        for v in vocab:
+            w.writerow([v["group"], v["id"], v["name"], v["ecgen_eval_column"]]
+                       + ["x" if v["id"] in h else "" for h in have])
 
 
 if __name__ == "__main__":

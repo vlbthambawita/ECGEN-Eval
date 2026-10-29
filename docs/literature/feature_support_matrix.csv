@@ -1,0 +1,95 @@
+feature_group,feature_id,feature,ecgen_eval_column,NeuroKit2,BioSPPy,prominence-delineator,PQRSTann,pecg (PhysioZoo ECG),FeatureDB (PKU Digital Health),pyECGdeli,ecg_processing (Dieterich lab),ecg-records (ecgfeat),ECG-featurizer,pyheartlib,ECGomics,torch_ecg,ecg-segmentation (Joung et al.),DelineatorSwitchAndCompose,HeartKit,PhysioKit,wfdb-python,py-ecg-detectors,SleepECG,MNE-Python (find_ecg_events / create_ecg_epochs),Systole,hrv-analysis,pyHRV,HeartPy,BioPsyKit,physio,FLIRT,biopeaks,vital_sqi,ecg_qc,TSFEL,tsfresh,pycatch22,AntroPy,nolds,EntropyHub,ECGdeli,ECG-kit,PhysioNet Cardiovascular Signal Toolbox,ECGPUWAVE,GE 12SL (via PTB-XL+),Philips Uni-G (via PTB-XL+)
+fiducial,r_peak,R peak,,x,x,x,x,x,x,x,x,x,x,x,,x,,,x,x,x,x,x,x,x,,,x,x,x,,x,x,,,,,,,,x,x,x,x,,
+fiducial,p_onset,P onset,,x,x,x,x,x,x,,x,x,,,,x,,x,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,x,x
+fiducial,p_peak,P peak,,x,x,x,x,x,x,,x,x,x,x,,,,,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,,
+fiducial,p_offset,P offset,,x,x,x,x,x,x,,x,x,,,,x,,x,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,x,x
+fiducial,qrs_onset,QRS onset,,x,x,x,x,x,x,x,x,x,,,,x,,x,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,x,x
+fiducial,q_peak,Q peak,,x,x,x,,,x,x,x,,x,x,,,,,,,,,,,,,,,x,,,,,,,,,,,,x,x,,,,
+fiducial,s_peak,S peak,,x,x,x,,,x,x,x,,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,,,
+fiducial,qrs_offset,QRS offset (J point),,x,x,x,x,x,x,x,x,x,,,,x,,x,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,x,x
+fiducial,t_onset,T onset,,x,x,x,x,x,x,,x,x,,,,x,,x,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,x,x
+fiducial,t_peak,T peak,,x,x,x,x,x,x,,x,x,x,,,,,,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,,
+fiducial,t_offset,T offset,,x,x,x,x,x,x,,x,x,,,,x,,x,,x,,,,,,,,,,,,,,,,,,,,,x,x,,x,x,x
+fiducial,wave_segmentation,Per-sample P/QRS/T labels,,,,,,,,,,,,,,x,x,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,
+rate,rr_interval,RR interval,rr_mean_ms,,,,,x,,,x,x,x,x,,,,,,x,x,,,,x,,x,x,x,,,x,,,,,,,,,x,,,,x,x
+rate,rr_std,RR interval standard deviation,rr_std_ms,,,,,,x,,,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x
+rate,heart_rate,Heart rate,hr_bpm,x,x,,x,,x,,x,x,,x,x,,,,x,x,x,x,,x,x,,x,x,x,x,,x,,,,,,,,,,,,,x,x
+rate,atrial_rate,Atrial rate,,,,,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,
+interval,pr_interval,PR interval,pr_interval_ms,,,,,x,x,,,x,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+interval,pq_interval,PQ interval,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,,
+interval,pr_segment,PR segment,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+interval,p_duration,P-wave duration,p_wave_duration_ms,,,,,x,x,,x,x,,,x,x,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+interval,qrs_duration,QRS duration,qrs_duration_ms,,,,,x,x,,x,x,x,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+interval,qt_interval,QT interval,qt_interval_ms,,,,,x,,,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+interval,qtc_bazett,QTc (Bazett),qtc_bazett_ms,,,,,x,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+interval,qtc_fridericia,QTc (Fridericia),,,,,,x,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+interval,qtc_framingham,QTc (Framingham),,,,,,x,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+interval,qtc_hodges,QTc (Hodges),,,,,,x,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x
+interval,qtc_other,QTc (other / unspecified correction),,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+interval,st_segment,ST segment duration,,,,,,,x,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x
+interval,t_duration,T-wave duration,,,,,,x,x,,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+interval,tp_interval,TP interval,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+interval,jt_interval,JT interval,,,,,,,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+interval,qt_dispersion,QT dispersion,,,,,,,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x
+interval,wave_subdurations,Q / R / S / R' / S' wave durations,,,,,,,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+amplitude,p_amplitude,P-wave amplitude,,,,,,x,x,,x,x,x,,x,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+amplitude,q_amplitude,Q-wave amplitude,,,,,,,x,,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+amplitude,r_amplitude,R-wave amplitude,,,,,,x,x,,,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+amplitude,s_amplitude,S-wave amplitude,,,,,,,x,,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+amplitude,t_amplitude,T-wave amplitude,t_amplitude_mv,,,,,x,x,,x,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+amplitude,st_level,ST level / deviation,st_deviation_mv,,,,,x,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+amplitude,st_slope,ST slope,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x
+amplitude,qrs_peak_to_peak,QRS peak-to-peak amplitude,,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+morphology,wave_areas,Wave areas (P / QRS / T),,,,,,x,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+morphology,wave_morphology,Wave morphology descriptors,,,,,,,x,,,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,x,x,x
+morphology,intrinsicoid_deflection,R peak time (intrinsicoid deflection),,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+axis_vector,p_axis,P axis (frontal),,,,,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+axis_vector,qrs_axis,QRS axis (frontal),,,,,,,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,x
+axis_vector,t_axis,T axis (frontal),,,,,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x
+axis_vector,qrs_t_angle,QRS-T angle / vectorcardiographic features,,,,,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x
+beat_template,average_beat,Average / median beat template,,,,,,,x,,,,,,,,,,,,x,,,,,,,,,,,,,,,,,,,,,,,,x,x
+beat_template,beat_segments,Segmented heartbeats,,x,x,,,,,,,,,x,,,,,,,,,,x,,,,,x,,,,,,,,,,,,,,,,,
+classification,beat_class,Beat / rhythm classification,,,,,,,,,,,,x,,,,,,,,,,,x,,,,,,,,,,,,,,,,,x,x,,,
+hrv_time,hrv_meannn,Mean NN,,x,x,,,,x,,,,,x,,,,,,x,,,x,,x,x,x,x,x,x,x,,x,,,,,,,,,,x,,,
+hrv_time,hrv_sdnn,SDNN,hrv_sdnn_ms,x,x,,,,x,,,,,x,,,,,,x,,x,x,,x,x,x,x,x,x,x,,x,,,,,,,,,,x,,,
+hrv_time,hrv_rmssd,RMSSD,hrv_rmssd_ms,x,x,,,,x,,,x,,x,,,,,,x,,x,x,,x,x,x,x,x,x,x,,x,,,,,,,,,,x,,,
+hrv_time,hrv_sdsd,SDSD,,x,,,,,x,,,,,x,,,,,,x,,x,x,,x,x,x,x,x,,x,,x,,,,,,,,,,,,,
+hrv_time,hrv_pnn50,pNN50,hrv_pnn50,x,x,,,,x,,,x,,x,,,,,,x,,x,x,,x,x,x,x,x,,x,,x,,,,,,,,,,x,,,
+hrv_time,hrv_pnn20,pNN20,,x,,,,,x,,,,,,,,,,,x,,x,x,,,x,x,x,x,,x,,,,,,,,,,,,,,,
+hrv_time,hrv_nn50,NN50,,,x,,,,,,,,,,,,,,,x,,x,x,,x,x,x,,,,x,,,,,,,,,,,,,,,
+hrv_time,hrv_cvnn,CVNN / CVSD,,x,,,,,x,,,x,,x,,,,,,x,,,x,,,x,,,x,x,x,,x,,,,,,,,,,,,,
+hrv_time,hrv_sdann,SDANN / SDNN index,,x,,,,,x,,,,,,,,,,,,,x,,,,,x,,x,,,,,,,,,,,,,,x,,,
+hrv_time,hrv_hr_stats,HR statistics (mean / min / max / SD),,x,x,,,,,,,x,,,,,,,,,,,x,,x,x,x,,,,x,,x,,,,,,,,,,,,,
+hrv_time,hrv_median_iqr,Median / IQR / range of NN,,x,x,,,,x,,,,,x,,,,,,x,,,x,,x,x,x,,x,x,x,,x,,,,,,,,,,x,,,
+hrv_time,hrv_geometric,Geometric indices (HTI / TINN),,x,x,,,,x,,,,,,,,,,,,,,,,,x,x,,x,,,,,,,,,,,,,,,,,
+hrv_frequency,hrv_vlf,VLF power,,x,x,,,,x,,,,,,,,,,,,,,x,,x,x,x,x,x,,x,,,,,,,,,,,,x,,,
+hrv_frequency,hrv_lf,LF power,,x,x,,,,x,,,,,,,,,,,x,,,x,,x,x,x,x,x,x,x,,x,,,,,,,,,,x,,,
+hrv_frequency,hrv_hf,HF power,,x,x,,,,x,,,,,,,,,,,x,,,x,,x,x,x,x,x,x,x,,,,,,,,,,,,x,,,
+hrv_frequency,hrv_lf_hf,LF/HF ratio,,x,x,,,,x,,,,,,,,,,,,,x,x,,x,x,x,x,x,,x,,x,,,,,,,,,,x,,,
+hrv_frequency,hrv_lfnu_hfnu,LF / HF normalised units,,x,x,,,,x,,,,,,,,,,,,,,x,,x,x,x,x,x,,x,,x,,,,,,,,,,,,,
+hrv_frequency,hrv_total_power,Total power,,x,,,,,x,,,,,,,,,,,x,,,x,,x,x,x,x,x,,x,,,,,,,,,,,,x,,,
+hrv_frequency,hrv_peak_freq,Band peak frequencies,,,x,,,,,,,,,,,,,,,x,,,,,x,,x,,,,,,x,,,,,,,,,,,,,
+hrv_frequency,hrv_ulf_vhf,ULF / VHF power,,x,x,,,,x,,,,,,,,,,,,,,,,,,x,,x,,,,,,,,,,,,,,x,,,
+hrv_nonlinear,hrv_poincare,Poincaré SD1 / SD2,,x,x,,,,x,,,,,,,,,,,,,,x,,x,x,x,x,x,,x,,x,,,,,,,,,,x,,,
+hrv_nonlinear,hrv_csi_cvi,CSI / CVI,,x,,,,,x,,,,,,,,,,,,,,x,,,x,,,x,,x,,x,,,,,,,,,,,,,
+hrv_nonlinear,hrv_sampen,Sample entropy (RR),,x,x,,,,x,,,,,,,,,,,,,,,,,x,x,,x,,,,,,,,,,,,,,x,,,
+hrv_nonlinear,hrv_apen,Approximate entropy (RR),,x,x,,,,x,,,,,,,,,,,,,,,,,,,,x,,,,,,,,,,,,,,x,,,
+hrv_nonlinear,hrv_dfa,DFA α1 / α2,,x,,,,,x,,,,,,,,,,,,,,,,,,x,,x,,,,,,,,,,,,,,x,,,
+hrv_nonlinear,hrv_other_entropy,Other entropy / fractal / complexity of RR,,x,,,,,x,,,,,,,,,,,,,,,,,,x,,x,,x,,,,,,,,,,,,x,,,
+hrv_nonlinear,hrv_asymmetry,Heart-rate asymmetry / fragmentation,,x,,,,,x,,,,,,,,,,,,,,,,,,,,x,,,,,,,,,,,,,,,,,
+hrv_nonlinear,hrv_rqa,Recurrence quantification of RR,,x,,,,,,,,,,,,,,,,,,,,,x,,,,,,,,,,,,,,,,,,,,,
+sqi,sqi_template_corr,Template / average-beat correlation SQI,,x,,,,,,,,,,,,,,,,,,,,,,,,,x,,,,x,,,,,,,,,,,,,
+sqi,sqi_kurtosis,Kurtosis SQI (kSQI),,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,,,,,,,,,,,
+sqi,sqi_skewness,Skewness SQI (sSQI),,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,,,,,,,,,,,
+sqi,sqi_power_ratio,Spectral power-ratio SQI (pSQI / basSQI),,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,,,,,,,,,,,
+sqi,sqi_detector_agreement,Detector-agreement SQI (bSQI),,,x,,,x,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,,,,,,,,x,,,
+sqi,sqi_flatline_clipping,Flat-line / clipping / saturation SQI,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+sqi,sqi_other,Other signal-quality indices,,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,,,,,,,,,,,
+sqi,sqi_classification,Quality class (acceptable / unacceptable),,x,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,,,,,,,,,,,,
+respiration,edr,ECG-derived respiration,,x,,,,,,,,,,,,x,,,,,,,,,,,,,x,,,,,,,,,,,,,,,,,
+respiration,resp_rate,Respiratory rate,,,,,,,,,,,,,,,,,,x,,,,,,,,x,,,,,,,,,,,,,,,,,,
+generic,generic_statistical,Statistical descriptors,,,x,,,,,,,,,x,,,,,,,,,,,,,,,,,x,,,,x,x,x,,,,,,,,,
+generic,generic_temporal,Temporal descriptors,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,x,x,,,,,,,,
+generic,generic_spectral,Spectral descriptors,,,x,,,,x,,,,,x,x,,,,,,,,,,,,,,,,,,,,x,x,x,,,x,,,,,,
+generic,generic_entropy,Entropy measures of the signal,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,x,x,x,x,,,,,,
+generic,generic_fractal,Fractal / nonlinear dynamics of the signal,,,x,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,x,x,x,x,x,,,,,,,

@@ -1215,6 +1215,13 @@
       }
     });
   }
+  // Shared toolkit for other widget files (clinical-viz.js); register() adds a widget and boots it.
+  window.ECGViz = {
+    el: el, sv: sv, fmt: fmt, mean: mean, std: std, normals: normals, mulberry32: mulberry32,
+    plot: plot, line: line, dot: dot, text: text, axes: axes, legend: legend, frame: frame,
+    register: function (name, fn) { VIZ[name] = fn; boot(); },
+  };
+
   if (typeof document$ !== "undefined" && document$.subscribe) document$.subscribe(boot);
   else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

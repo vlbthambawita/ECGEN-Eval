@@ -7,6 +7,11 @@ intervals in the right range, is the heart rate distribution right, is there rea
 The `ecgen_eval.features` subpackage extracts these features per recording so that
 real and synthetic distributions can be compared numerically and visually.
 
+!!! tip "New to ECGs?"
+    [Clinical Features Explained](../clinical/index.md) explains every feature in plain language,
+    with interactive heartbeats. It also lists the
+    [known limitations](../clinical/index.md#known-limitations) of the current extractor.
+
 ## Installation
 
 ```bash

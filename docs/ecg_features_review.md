@@ -2,6 +2,8 @@
 
 **Purpose:** Justify and document the clinical ECG features implemented in `ecgen_eval/features/` for evaluating the quality of synthetically generated ECG signals.
 
+For a plain-language, interactive introduction, see [Clinical Features Explained](clinical/index.md).
+
 ---
 
 ## Selected Features
