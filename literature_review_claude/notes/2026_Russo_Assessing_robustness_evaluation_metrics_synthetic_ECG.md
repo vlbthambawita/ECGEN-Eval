@@ -1,8 +1,9 @@
 # Assessing the robustness of evaluation metrics for synthetic ECG signal quality
 - **ID / Year / Venue:** P020 / 2026 / Computers in Biology and Medicine
-- **Model & task:** Evaluation study of five ECG generators (SSSD-ECG, WaveGAN*, Pulse2Pulse, cNVAE-ECG, YData)
-- **Losses:** n/a
-- **Evaluation:** Fidelity/diversity/privacy/utility metrics stress-tested with controlled perturbations; density and coverage most robust
-- **Data:** Not stated in abstract
-- **Takeaway for ECGEN-Eval:** Add density/coverage and a perturbation-based sanity test suite to validate ECGEN-Eval metrics themselves.
-- *Extraction source: abstract-only*
+- **Model & task:** EvalOnly (benchmarks SSSD-ECG, conditional WaveGAN*, Pulse2Pulse, cNVAE-ECG, YData proprietary synthesizer); evaluation of metric robustness under controlled perturbations of class-conditional synthetic 12-lead ECGs
+- **Losses:** not applicable (XResNet1d50 utility classifier trained with BCE)
+- **Evaluation:** KS test; Range Coverage; Improved Precision; Density; Improved Recall; Coverage; DCR; Authenticity; TSTR macro-AUROC (XResNet1d50, 71 labels); class-wise AUROC; UMAP; robustness curves under magnitude warp, amplitude scaling, time warp, Gaussian noise, band-stop attenuation (10 levels, 5 seeds), all on TSFEL per-lead features [fidelity, distribution, diversity, privacy, utility-TSTR, robustness]
+- **Data:** PTB-XL (folds 1-8 train, 9 val, 10 test; generation conditioned on test labels); leads: 12 (8 generated + 4 derived); fs: 100 Hz; length: 10 s
+- **Notes:** SSSD-ECG best (KS 0.812, density 0.992, coverage 0.718, TSTR AUROC 0.835 vs TRTR 0.919); GANs/cNVAE show mode collapse (coverage 0.001-0.022). Density and coverage were the only metrics that degraded progressively with morphological perturbations (density 0.98->0.48 when QRS band removed; coverage 0.69->0.14 at 50% noise); KS and range coverage were insensitive, Improved Recall rose artificially, privacy metrics trivially improved with distortion, and macro-AUROC stayed flat until severe corruption. TSFEL features were blind to time warping.
+- **Takeaway for ECGEN-Eval:** Report density and coverage alongside pr_dist (precision/recall), add a built-in perturbation-sanity test (magnitude/time warp, noise mixing, band-stop) to verify each metric responds monotonically, and caveat that nn_dist/privacy scores improve with any degradation and must be read jointly with fidelity.
+- *Extraction source: full-text*

@@ -1,9 +1,9 @@
 # Advancing electrocardiogram synthesis: Analyzing key metrics for enhanced evaluation
 - **ID / Year / Venue:** P012 / 2025 / Computers in Biology and Medicine
-- **Model & task:** Survey/EvalOnly (review + experimental analysis of ECG synthesis metrics); task: evaluation
-- **Losses:** unknown (abstract only)
-- **Evaluation:** unknown (abstract only) — reviews metrics used in ECG-synthesis literature (calculation, frequency of use, effectiveness) and proposes a standardized quality-assessment framework (tags: fidelity; distribution; utility-TSTR)
-- **Data:** unknown (abstract only); leads: unknown (abstract only); fs: unknown (abstract only) Hz; length: unknown (abstract only) s
-- **Notes:** Systematic review of ECG synthesis evaluation metrics with experimental analysis of strengths/weaknesses and contextual applicability; proposes a comprehensive standardized framework. Specific metrics not listed in abstract. High priority to obtain full text.
-- **Takeaway for ECGEN-Eval:** Obtain full text: directly targets metric selection/standardization, likely the closest prior art to ECGEN-Eval.
-- *Extraction source: abstract-only*
+- **Model & task:** Survey/EvalOnly (review of 2019-2024 deep ECG-synthesis metrics + experimental comparison of 16 similarity metrics and TSTR/TRTS classification on WaveGAN*, Pulse2Pulse, SSSD-ECG); evaluation
+- **Losses:** not applicable (evaluation study; uses published WaveGAN*/Pulse2Pulse/SSSD-ECG training)
+- **Evaluation:** MAE; MSE; RMSE; PRD; Euclidean distance; DTW; soft-DTW; TWED; MMD; KL divergence; FID; Fréchet distance (curve); Pearson correlation; cross-correlation; amplitude difference coefficient; cosine similarity; XResNet1d50 multi-label AUROC/accuracy/precision/recall/F1/sensitivity/specificity under TRTR/TRTS/TSTR/TSTS; confusion matrices; reviews t-SNE, expert evaluation, membership inference [fidelity, distribution, utility-TSTR, expert, privacy]
+- **Data:** PTB-XL (experiments); reviewed studies use MIT-BIH, PTB, PTB-XL, CPSC2018, Tianchi, CCDD, MUSE, etc.; leads: 12 (8 generated + 4 derived; metrics on lead I only); fs: 100 Hz; length: 10 s generated, metrics on R-peak-aligned 100-sample single beats s
+- **Notes:** Real-vs-real reference: RMSE 0.1743, DTW 10.79, MMD 0.0141; SSSD 0.1748/10.77/0.0150 vs WaveGAN 0.1952/11.78/0.0272 and P2P 0.2009/12.75/0.0301. FID, CC, ADC and cosine similarity rank models inconsistently; curve FD barely separates models. Recommends a core set RMSE + DTW + MMD + Pearson after R-peak alignment, fixed-length single-beat segmentation and [0,1] normalization, plus TSTR/TRTS AUROC with ROC/PRC curves and confusion matrices (TSTR AUROC SSSD 0.86-0.89 vs GANs 0.51-0.58, TRTR 0.9096). Caveats: unpaired random pairs of 500 lead-I beats, FID backbone unspecified, TRTS/TSTR labels swapped between text and Table 3, single dataset.
+- **Takeaway for ECGEN-Eval:** Adopt the paper's real-vs-real (Test-Test) reference row and its preprocessing protocol (R-peak-aligned, fixed-length, normalized beats) as an optional mode so ECGEN-Eval's rmse/dtw/mmd/pearson scores are reported alongside a real-real baseline and are comparable across studies.
+- *Extraction source: full-text*

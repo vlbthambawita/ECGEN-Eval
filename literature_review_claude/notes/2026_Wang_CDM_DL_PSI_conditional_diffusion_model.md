@@ -1,8 +1,9 @@
 # CDM-DL-PSI: A conditional diffusion model for 12-Lead ECG generation using disease labels and patient-specific information
 - **ID / Year / Venue:** P029 / 2026 / Biomedical Signal Processing and Control
-- **Model & task:** Conditional diffusion model for 12-lead ECG from disease labels and patient info
-- **Losses:** unknown
-- **Evaluation:** unknown
-- **Data:** unknown
-- **Takeaway for ECGEN-Eval:** Patient-attribute conditioning motivates conditional-consistency metrics (e.g. predicted age/sex vs condition).
-- *Extraction source: abstract-only*
+- **Model & task:** Latent diffusion (conv/self-attention autoencoder + S4 noise predictor with adaLN-Zero timestep modulation and the MCFARN multi-condition modulation module); 12-lead ECG generation conditioned on multi-label disease, age (Gray code) and sex. Generates I, aVF, V1-V6 and derives II, III, aVR, aVL linearly.
+- **Losses:** AE: MSE reconstruction; diffusion: epsilon-MSE + 0.1 x frequency (Fourier) loss on latent z0
+- **Evaluation:** RMSE; DTW; spectral coherence; coverage score; distribution recall; TRTS ('fidelity') and TSTR ('diversity') Acc/F1/AUC with XResNet1d50, InceptionTime, MVMS-Net, MRTNet; 10-cardiologist Turing test; age-MAE / sex-accuracy attribute consistency; memory/training/inference time; condition-perturbation robustness; Chapman transfer [fidelity, distribution, utility-TSTR, expert, efficiency, diversity, robustness, conditional]
+- **Data:** PTB-XL (21,506), CPSC2018 (6,868), Chapman (transfer); leads: 12 (8 generated); fs: 100 Hz; length: 10 s
+- **Notes:** PTB-XL RMSE 0.2531, DTW 92.84, CS 1.00; TRTS F1 70.20 (real 72.77), TSTR F1 66.40 / AUC 85.59, beating SSSD-ECG, DSAT-ECG, FlowECG, WaveGAN, Pulse2Pulse. Turing test accuracy 62.3% (lower = more realistic). Age MAE 7.70 vs 7.31 on real; sex Acc 82.7 vs 83.7. DR = 1.00 for every model (saturated by design) and SC is ~0.17 for all models (~0.20 even between two real ECGs), so these metrics carry little information. Data are said to be 'confidential' despite using public datasets; no code.
+- **Takeaway for ECGEN-Eval:** Add an attribute-consistency check (age-regressor MAE / sex-classifier accuracy on generated vs real ECG) for patient-conditioned generators, and flag saturated or non-discriminative metrics (e.g. recall = 1.0 for all models, coherence near the real-vs-real floor) by always reporting a real-vs-real reference value alongside each score.
+- *Extraction source: full-text*

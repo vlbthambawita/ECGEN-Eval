@@ -1,9 +1,9 @@
 # One model, dual tasks: a novel distributionally adaptive learning framework for ECG classification and generation addressing intra- and inter-patient variability
 - **ID / Year / Venue:** P109 / 2025 / Expert Systems with Applications
-- **Model & task:** GAN (transformer generator + CNN discriminator, joint classifier, test-time adaptation); class-cond / augmentation
-- **Losses:** adversarial + classification (details unknown, abstract only)
-- **Evaluation:** classification performance under intra- and inter-patient paradigms (specific metrics unknown) [utility-TSTR]
-- **Data:** MIT-BIH Arrhythmia; MIT-BIH Supraventricular; INCART; leads: unknown (abstract only); fs: unknown (abstract only) Hz; length: single heartbeat s
-- **Notes:** Generation evaluated only through downstream inter-patient classification, per abstract.
-- **Takeaway for ECGEN-Eval:** Inter-patient split matters for utility evaluation; ECGEN-Eval utility tests should respect patient-wise splits.
-- *Extraction source: abstract-only*
+- **Model & task:** GAN (AC-WGAN-GP: 7-block transformer generator conditioned on class label + 1D-CNN discriminator/classifier with L-Softmax; single-heartbeat test-time adaptation with entropy minimisation + minimum class confusion); class-cond (beat augmentation for inter-patient arrhythmia classification)
+- **Losses:** Wasserstein adversarial loss + gradient penalty (lambda 9) + auxiliary cross-entropy classification loss + large-margin softmax (L-Softmax, m=4); TTA: entropy minimisation + minimum class confusion
+- **Evaluation:** visual comparison of synthetic vs real beats per class; classification accuracy, per-class recall, precision, F1, AUROC, AUPRC, confusion matrices with/without synthetic augmentation + TTA on MITDB-DS2, SVDB, INCART; 10-run mean ± SD; inference time per heartbeat [utility-TSTR, robustness, efficiency]
+- **Data:** MIT-BIH Arrhythmia (intra-patient 80/20 and de Chazal DS1/DS2 inter-patient split); MIT-BIH Supraventricular (SVDB); St Petersburg INCART; leads: 1 (not explicitly stated); fs: not reported (beats resampled to 256 samples; sources 360/128/257 Hz) Hz; length: variable (half pre-RR to half post-RR around R peak, aligned to 500 then resampled to 256 samples) s
+- **Notes:** Reports 99.86% intra-patient and 99.99% inter-patient accuracy (F1 ~0.9999 for all classes on DS2, SVDB, INCART), far above every prior inter-patient result, which is implausible. Synthetic beats from the generator are added to the external test sets during TTA (Fig. 5c: e.g. 3,008 N, 2,050 S, 388 F synthetic beats), so test metrics are computed partly on synthetic data - a likely leakage/inflation; synthetic-signal quality is assessed only by visual inspection, with no fidelity, distribution or diversity metric.
+- **Takeaway for ECGEN-Eval:** A cautionary example: ECGEN-Eval documentation should require that utility tests keep synthetic samples strictly out of the real test set and report direct fidelity/diversity metrics (mmd, pr_dist, nn_dist) rather than inferring generator quality from near-perfect downstream accuracy.
+- *Extraction source: full-text*

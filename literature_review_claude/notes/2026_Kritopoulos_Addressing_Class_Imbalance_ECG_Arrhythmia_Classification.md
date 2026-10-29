@@ -1,9 +1,9 @@
 # Addressing Class Imbalance in ECG Arrhythmia Classification Using Latent Diffusion and Quantum-Enhanced Generative Modeling
 - **ID / Year / Venue:** P011 / 2026 / AI in Medicine
-- **Model & task:** Hybrid (spectral-guided cVAE + class-conditional latent DDPM + parameterized quantum circuit Quantum Latent Refinement); class-cond / augmentation
-- **Losses:** unknown (abstract only); QLR module uses MMD minimization to align synthetic latents with real class-specific latent banks
-- **Evaluation:** downstream 1D MobileNetV2 classification performance over 10 seeds and 4 augmentation ratios (specific metrics unknown) [utility-TSTR]
-- **Data:** MIT-BIH Arrhythmia; leads: unknown (abstract only); fs: unknown (abstract only) Hz; length: unknown (abstract only; beat-level) s
-- **Notes:** MMD used as a training objective in latent space rather than as eval metric. Quantum refiner comparable to classical latent diffusion. Multi-seed (10) evaluation of augmentation utility is good practice.
-- **Takeaway for ECGEN-Eval:** Report augmentation utility across multiple seeds and augmentation ratios; latent MMD to class banks is a possible class-conditional fidelity check.
-- *Extraction source: abstract-only*
+- **Model & task:** Hybrid latent diffusion (spectral-guided cVAE 32-d latent + class-conditional latent DDPM with AdaLN-Zero residual MLP and CFG + 8-qubit parameterized-quantum-circuit Quantum Latent Refinement, simulated); class-conditional minority-beat (S, V, F) augmentation
+- **Losses:** cVAE MSE + L1 DFT-magnitude spectral loss + annealed beta-KL; DDPM noise-prediction MSE (CFG s=2.0); QLR stay loss + multi-bandwidth RBF MMD^2 to real class latent bank
+- **Evaluation:** class-mean RMSD, max |delta|, cosine similarity; diversity (pairwise Euclidean); novelty (nearest-real cosine distance); latent MMD^2 drift; PCA/KDE latent plots; MobileNetV2 Macro F1, per-class PPV/SEN, confusion matrices over 10 seeds x 4 ratios with paired t-tests, CIs, Cohen's d; training time [fidelity, distribution, diversity, privacy, utility-TSTR, efficiency, conditional]
+- **Data:** MIT-BIH Arrhythmia (44 records, intra-patient temporal split); leads: 1 (single-channel beats); fs: 360 Hz; length: ~1.08 s (389-sample beat)
+- **Notes:** Macro F1 baseline 0.804 -> cVAE 0.832, DDPM 0.826, DDPM+QLR 0.828, SMOTE 0.807 (n.s.); QLR not significantly better than DDPM; 10-model ensemble 0.853. Class-mean RMSD 0.047-0.14, CosSim >=0.98; latent MMD drift 0.06/0.12/0.19 (S/V/F). Signal-space fidelity only compares class means; MMD is computed in the generator's own latent space.
+- **Takeaway for ECGEN-Eval:** Add per-class (label-stratified) reporting plus diversity (intra-set pairwise distance) and nn_dist-style novelty, and warn that class-mean RMSD/cosine and generator-latent MMD can look near-perfect while hiding per-sample and distributional differences.
+- *Extraction source: full-text*

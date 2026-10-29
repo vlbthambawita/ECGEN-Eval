@@ -1,8 +1,9 @@
 # Physiology-Aware Benchmarking of Deep Generative Models for Fetal ECG Synthesis
-- **ID / Year / Venue:** P116 / 2026 / Lecture notes in computer science
-- **Model & task:** EvalOnly (benchmark of deep generative models for fetal ECG); evaluation
-- **Losses:** unknown (abstract only)
-- **Evaluation:** unknown (abstract only); title indicates physiology-aware benchmarking
-- **Data:** unknown (abstract only); fetal ECG; leads: unknown (abstract only); fs: unknown (abstract only); length: unknown (abstract only)
-- **Takeaway for ECGEN-Eval:** Physiology-aware metrics (e.g., fetal HR ranges, interval plausibility) as a benchmark axis; adapt for non-adult ECG.
-- *Extraction source: abstract-only*
+- **ID / Year / Venue:** P116 / 2026 / Lecture notes in computer science (ICIC 2026, LNCS 16656)
+- **Model & task:** EvalOnly (benchmark of TimeVAE, TimeGAN, Diffusion-TS and n-t-diffusion for unconditional fetal ECG generation, with a Signal-Distribution-Physiology evaluation framework); evaluation (benchmark of unconditional fetal ECG generation)
+- **Losses:** not applicable (models trained with their native objectives: ELBO, adversarial/supervised, diffusion denoising)
+- **Evaluation:** qualitative single-cycle QRS-T waveforms; t-SNE manifold overlap; Welch PSD plots; PCA-based FID; MSE; Wasserstein-1 (POT); histogram JS divergence; PSD KL divergence (0.5-40 Hz); real-vs-synthetic classifier AUC and Discrepancy score (1-accuracy); QRS duration via Pan-Tompkins + Daubechies-4 wavelet modulus maxima (constraint 30-80 ms); QRS waveform consistency (Pearson correlation to real QRS template); preprocessing sensitivity (min-max vs raw) [fidelity, distribution, clinical, diversity, robustness]
+- **Data:** ADDB (Abdominal and Direct Fetal ECG Database, 5 labour recordings, 1 kHz); BDDB (12 labour recordings, abdominal + direct FECG with reference annotations); leads: 1 (single-channel segments; which abdominal/direct channel is used is not stated); fs: 200 (downsampled from 1000) Hz; length: 1 (200-sample windows, 50% overlap) s
+- **Notes:** ADDB: n-t-diffusion FID 0.016, classifier AUC 0.679 (Dis 0.50), QRS 30.7 ms, QRS consistency 0.607 vs TimeVAE FID 0.064 with QRS 23.3 ms and TimeGAN FID 1.25/AUC 1.00 (mode collapse); BDDB: n-t-diffusion FID 0.0035, QRS 32.0 ms was the only value inside 30-80 ms. Shows a 'statistical-physiological gap' (low MSE/FID with implausible QRS width), but QRS compliance is judged on the mean duration rather than a per-sample compliance rate, MSE is computed on unpaired samples, FID uses PCA features, raw-signal FID varies by 4 orders of magnitude, and there is no downstream utility test.
+- **Takeaway for ECGEN-Eval:** Strong support for ECGEN-Eval's clinical feature extractor: report per-sample physiological-range compliance rates (e.g. % of beats with QRS in range) next to distribution metrics, and caveat that PCA-FID/MSE are scale-dependent and can favour over-smoothed generators.
+- *Extraction source: full-text*

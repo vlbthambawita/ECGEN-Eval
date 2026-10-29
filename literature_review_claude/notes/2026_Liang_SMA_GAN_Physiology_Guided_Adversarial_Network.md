@@ -1,8 +1,9 @@
 # SMA-GAN: A Physiology-Guided Adversarial Network with Attention and Spectral Constraints for Imbalanced ECG Synthesis
-- **ID / Year / Venue:** P132 / 2026 / IEEE International Conference on Acoustics Speech and Signal Processing
-- **Model & task:** GAN (SMA-GAN: Physiology-Guided Modulation Attention on QRS + spectral constraint); augmentation (minority-class heartbeat synthesis)
-- **Losses:** adversarial loss + Spectral Consistency Constraint (frequency-domain regularization)
-- **Evaluation:** multiple generation-quality metrics (unspecified in abstract); classifier F1-score (esp. fusion beats)
-- **Data:** MIT-BIH Arrhythmia; leads: unknown (abstract only); fs: unknown (abstract only); length: heartbeat segments
-- **Takeaway for ECGEN-Eval:** Spectral consistency as a loss mirrors PSD-based evaluation; avoid using the same spectral term as both loss and sole metric.
-- *Extraction source: abstract-only*
+- **ID / Year / Venue:** P132 / 2026 / IEEE International Conference on Acoustics Speech and Signal Processing (ICASSP 2026)
+- **Model & task:** GAN (WGAN-GP, 1D transposed-conv generator with Physiology-Guided Modulation Attention on QRS + FFT spectral consistency loss; conv critic); class-cond / augmentation (minority F-class heartbeat synthesis, one model per class)
+- **Losses:** WGAN-GP critic/generator loss (lambda_gp=10); spectral consistency L1 loss on FFT magnitude between real and generated beats (lambda_spec=1.0)
+- **Evaluation:** MSE; PRD; DTW; SSIM; FD-SIM (Fréchet-distance-based similarity); downstream 1D-CNN classification on MIT-BIH with 3000/5000 synthetic F beats added: F1 of F class, balanced accuracy, G-mean, macro F1; ablation (PGMA, spectral loss) [fidelity, distribution, utility-TSTR]
+- **Data:** MIT-BIH Arrhythmia (AAMI 5 classes, patient-independent split: 87,550 train / 21,888 test beats; 642 F beats); leads: 1; fs: 360 Hz; length: 1 s (360-sample beats)
+- **Notes:** SMA-GAN (5000 synth F beats): MSE 0.003, PRD 10.5%, DTW 0.034, SSIM 0.632, FD-SIM 0.999; F1-F 0.498 (no augmentation) -> 0.863, macro F1 0.837 -> 0.954 vs WGAN-GP 0.828/0.943. Pairing of synthetic vs real beats for MSE/PRD/DTW/SSIM is not described, FD-SIM's feature space is undefined and saturates (0.93-0.999 for every method), and results are single runs without variance; patient-independent split is a plus.
+- **Takeaway for ECGEN-Eval:** Typical beat-level paper reporting paired-style MSE/PRD/DTW/SSIM with no stated pairing and a saturated Fréchet "similarity" — ECGEN-Eval's nearest-neighbour prd/mae/ssim plus a non-saturating fd/fed and a per-class augmentation-gain report would make such comparisons interpretable.
+- *Extraction source: full-text*

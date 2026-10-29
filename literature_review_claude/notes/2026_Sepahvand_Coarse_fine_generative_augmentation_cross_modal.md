@@ -1,8 +1,9 @@
 # Coarse-to-fine generative augmentation and cross-modal physiological fusion for imbalanced ECG arrhythmia detection
 - **ID / Year / Venue:** P158 / 2026 / Intelligence-Based Medicine
-- **Model & task:** unknown (coarse-to-fine generative augmentation); augmentation (imbalanced arrhythmia detection with cross-modal physiological fusion)
-- **Losses:** unknown (abstract only)
-- **Evaluation:** unknown (abstract only)
-- **Data:** unknown (abstract only); leads: unknown (abstract only); fs: unknown (abstract only); length: unknown (abstract only)
-- **Takeaway for ECGEN-Eval:** None extractable; title only.
-- *Extraction source: abstract-only*
+- **Model & task:** 4-stage coarse-to-fine GAN cascade (deformable-conv generators, spectrally normalised discriminators, warm-started first stage) for class-conditional minority beat synthesis, followed by a Phy-SE-ResNet classifier fusing HRV tokens via bidirectional cross-attention
+- **Losses:** hinge adversarial + L1 inter-stage consistency + energy consistency + discriminator agreement; classifier CE + 0.2 x rhythm-regularity MSE
+- **Evaluation:** downstream Acc/macro-F1/AUPRC; minority recall; augmentation-strategy comparison; per-stage DTW and PCC on DTW-matched pairs; QRS-duration/P-wave/R-amplitude landmark agreement; NN-DTW train vs held-out memorisation check; cross-dataset transfer; 5-seed CI [utility-TSTR, fidelity, clinical, privacy, robustness]
+- **Data:** MIT-BIH, PTB-XL, Chapman-Shaoxing, simulated Fetal ECG; leads: native (2/12/12/4); fs: 250 Hz; length: 0.6 s beats
+- **Notes:** Final-stage DTW 4.4, PCC 0.95; QRS deviation 6.2 ms; P-wave preserved 94.1%; NN-DTW 9.8 (train) vs 10.3 (held-out); mean Acc 95.7 vs 89.4 without augmentation. The authors describe all results as preliminary, illustrating the intended protocol, with 'full empirical validation on real training runs' left for future work; configuration details are internally inconsistent. Treat numbers as unvalidated. Category: a GAN cascade, better filed under 01_GAN.
+- **Takeaway for ECGEN-Eval:** The protocol is a good template even if the numbers are unvalidated: ECGEN-Eval's nn_dist should report the train-vs-held-out nearest-neighbour distance gap explicitly, and the clinical feature extractor should report per-feature deviations (QRS duration ms, P-wave presence rate, R-amplitude %) between real and synthetic sets.
+- *Extraction source: full-text*

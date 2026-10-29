@@ -1,8 +1,9 @@
 # MAGIC: Multi-Grained Conditional Diffusion for High-Fidelity PPG-to-ECG Translation
 - **ID / Year / Venue:** P101 / 2026 / IEEE journal of biomedical and health informatics
-- **Model & task:** Diffusion (Diffusion Transformer with multi-grained conditioning: AdaLN global + gated cross-attention local; pre-trained conditional encoder); PPG2ECG
-- **Losses:** diffusion denoising objective; encoder pre-training with ROI-weighted reconstruction + contrastive loss + latent alignment
-- **Evaluation:** FD (Frechet distance); four downstream proxy tasks (task-level utility); sampling steps comparison
-- **Data:** four public datasets incl. MIMIC-AFib (others unknown (abstract only)); leads: 1 (implied, PPG->ECG); fs: unknown (abstract only); length: unknown (abstract only)
-- **Takeaway for ECGEN-Eval:** FD plus steps-vs-quality efficiency curves; downstream proxy tasks as utility for translation models.
-- *Extraction source: abstract-only*
+- **Model & task:** Diffusion (1D Diffusion Transformer, v-prediction, cosine schedule T=500, classifier-free guidance w=3.5; PPG Transformer encoder with 4 global tokens via AdaLN + token-wise gated cross-attention; encoder pre-trained against paired ECG teacher); PPG→ECG translation
+- **Losses:** diffusion v-prediction MSE; encoder pre-training: ROI-weighted (R-peak +-32 samples) ECG reconstruction MSE + InfoNCE contrastive PPG-ECG loss + stop-gradient latent alignment loss
+- **Evaluation:** FD (Fréchet distance in learned feature space, RDDM protocol); RMSE (paired); HR MAE via Hamilton detector; AFib accuracy/F1 (VGG-13 on STFT spectrograms, pretrained on real MIMIC-AFib ECG); diabetes detection accuracy/F1 (VGG-11, PPG-BP); SBP/DBP MAE (1D-UNet on PPG + generated ECG); inference time vs steps; prediction-type and component ablations; qualitative visualisation [fidelity, distribution, clinical, utility-TSTR, efficiency, conditional]
+- **Data:** WESAD; DaLiA; BIDMC; MIMIC-AFib (118 subjects total); downstream: PPG-BP (diabetes), Cuffless-BP (blood pressure); leads: 1 (lead II for BIDMC; single-lead ECG); fs: 128 (resampled from 700/125 Hz) Hz; length: 4 (512-sample windows; 8-s windows for HR, 2-s for diabetes, 10-s for BP) s
+- **Notes:** FD at T=500: MAGIC vs RDDM 2.88 vs 8.80 (WESAD), 0.52 vs 2.93 (DaLiA), 2.02 vs 6.54 (BIDMC), 0.69 vs 6.42 (MIMIC-AFib); RMSE mixed (0.16-0.27, RDDM better on several settings); HR MAE 3.28 / 4.74 bpm (WESAD/DaLiA); AFib acc 0.661 vs real ECG 0.706 (F1 0.675 vs RDDM 0.681); DBP MAE 1.34 vs 1.55 mmHg. Authors candidly note no significance testing, no multi-seed analysis, no cardiologist review, ROI mask needs ground-truth ECG, and that the FD feature extractor follows RDDM without specification; train/test subject split not described, so subject leakage cannot be ruled out.
+- **Takeaway for ECGEN-Eval:** ECGEN-Eval's fed/fd should always state the embedding network explicitly (this paper's FD feature space is unspecified), and for paired translation tasks report FD alongside paired RMSE and an R-peak/HR consistency metric, since FD and RMSE rank models differently here.
+- *Extraction source: full-text*

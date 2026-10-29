@@ -1,9 +1,9 @@
 # Hybrid Quantum-Classical Generative Adversarial Network for Synthetic 12-Lead Electrocardiogram Signal Generation
-- **ID / Year / Venue:** P090 / 2026 / n/a
-- **Model & task:** GAN (hybrid quantum-classical: PennyLane parameterised quantum circuit generator + 1-D CNN discriminator); task: unconditional
-- **Losses:** adversarial GAN loss (parameter-shift rule gradients); details unknown
-- **Evaluation:** Fréchet Distance (FD); visual check of P/QRS/T and inter-lead relationships (tags: distribution)
-- **Data:** MIT-BIH Arrhythmia; leads: 12 (claimed); fs: unknown (abstract only) Hz; length: unknown (abstract only) s
-- **Notes:** QGAN FD 12.3±2.1 vs classical CNN 15.8±3.2 and LSTM 18.4±4.1. Note: claims 12-lead generation from MIT-BIH, which has only 2 leads — internally questionable.
-- **Takeaway for ECGEN-Eval:** Shows FD alone used for claims; sanity-check dataset/lead consistency.
-- *Extraction source: abstract-only*
+- **ID / Year / Venue:** P090 / 2026 / International Conference on Recent Advancement in Electrical, Computer and Communication Technologies (IECCT)
+- **Model & task:** GAN (4-qubit 4-layer PennyLane PQC generator + 1D-CNN discriminator, simulated); unconditional '12-lead' generation
+- **Losses:** standard non-saturating GAN BCE losses
+- **Evaluation:** Fréchet distance (unspecified features); SNR; loss-curve stability; qualitative morphology/inter-lead checks; latent traversal; SVM PVC F1 with augmentation [fidelity, distribution, diversity, utility-TSTR]
+- **Data:** MIT-BIH Arrhythmia; leads: 12 (derived from 2 channels); fs: 360 Hz; length: 0.69 s (250 samples)
+- **Notes:** FD 12.3±2.1 vs CNN 15.8 and LSTM 18.4; SNR 28.6 dB; +4.2% PVC F1. Methodologically weak: 12-lead signals cannot be reconstructed from MIT-BIH's two channels, FD features and SNR reference are undefined, clinical similarity claims lack numbers, and references look partly incorrect.
+- **Takeaway for ECGEN-Eval:** Report cards should state the FD/FED feature space and reject SNR on unpaired samples; an inter-lead consistency check (Einthoven/Goldberger) would expose 'derived' 12-lead outputs whose precordial leads are not physically recoverable.
+- *Extraction source: full-text*

@@ -1,9 +1,9 @@
 # Applying Generative Models and Transfer Learning to Physiological Data Classification
 - **ID / Year / Venue:** P018 / 2023 / Frontiers in artificial intelligence and applications
-- **Model & task:** Multiple generative models (unspecified in abstract; GAN/diffusion-type); augmentation
-- **Losses:** unknown (abstract only)
-- **Evaluation:** classifier performance change with synthetic augmentation; transfer learning (pretrain on synthetic, fine-tune with increasing real data) (tags: utility-TSTR)
-- **Data:** open physiological datasets (unspecified in abstract); leads: unknown (abstract only); fs: unknown (abstract only); length: unknown (abstract only)
-- **Notes:** Evaluates generative models purely through downstream utility: augmentation gain and synthetic-pretraining transfer to a different classification task. Precursor of P139 (same group).
-- **Takeaway for ECGEN-Eval:** Add a 'synthetic pretraining + real fine-tuning' utility protocol alongside TSTR/TRTS.
-- *Extraction source: abstract-only*
+- **Model & task:** GAN + Diffusion (class-conditional 1D-CNN GAN with patch discriminator; TTS-CGAN transformer GAN; DiffWave-based diffusion with cross-attention label conditioning); class-cond (beat augmentation and synthetic pretraining / transfer learning)
+- **Losses:** adversarial GAN loss + auxiliary classification output in discriminator (AC-GAN style); DiffWave denoising objective
+- **Evaluation:** t-SNE plots; LLE plots; TSTR; TRTS; TRTR; TSTS; TRSTR (accuracy, precision, recall); synthetic pretraining + fine-tuning with 20-100% real data; cross-task transfer (MIT-BIH synthetic -> PTB MI); training time [distribution, utility-TSTR, efficiency]
+- **Data:** MIT-BIH Arrhythmia (5 AAMI classes); PTB Diagnostic ECG (MI vs healthy); Kachuee et al. preprocessed beat segments; leads: 1; fs: 125 (Kachuee preprocessing; not stated explicitly in paper) Hz; length: ~1.5 (187-sample beat segments) s
+- **Notes:** TSTR accuracy only 0.551 (MIT) / 0.660 (PTB) vs TRTR 0.980 / 0.914 while TSTS ~1.0, i.e. synthetic classes are over-separated 'simplified' beats; synthetic-MIT pretraining then PTB fine-tuning raises accuracy 0.890 -> 0.964. DiffWave best covers the real distribution in t-SNE, TTS-CGAN best for pretraining; authors conclude t-SNE/LLE and classifier scores are insufficient and call for better time-series evaluation metrics.
+- **Takeaway for ECGEN-Eval:** Report TSTS alongside TSTR as a cheap 'over-separation' diagnostic (TSTS ~1.0 with low TSTR flags simplified class-prototype samples) and complement ECGEN-Eval's pr_dist/nn_dist with an embedding plot, since this paper shows visual t-SNE and utility alone are insufficient.
+- *Extraction source: full-text*

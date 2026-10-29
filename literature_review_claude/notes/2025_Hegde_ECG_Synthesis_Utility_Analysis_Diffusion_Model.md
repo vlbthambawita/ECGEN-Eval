@@ -1,8 +1,9 @@
 # ECG Synthesis and Utility Analysis - A Diffusion Model Based Approach
-- **ID / Year / Venue:** P060 / 2025 / Studies in health technology and informatics
-- **Model & task:** Diffusion (SSSD-ECG adaptation); class-cond (Normal sinus rhythm vs AF)
-- **Losses:** unknown (abstract only)
-- **Evaluation:** TSTR F1 (train synthetic features, test real: 0.80); TRTS F1 (0.91); blinded physician Turing-style tests at two university hospitals
-- **Data:** MIMIC-IV-ECG; leads: 12; fs: unknown (abstract only); length: 10
-- **Takeaway for ECGEN-Eval:** Report TSTR and TRTS together; multi-site blinded clinician test as gold-standard realism check.
-- *Extraction source: abstract-only*
+- **ID / Year / Venue:** P060 / 2025 / Studies in health technology and informatics (GMDS 2025)
+- **Model & task:** Diffusion (SSSD-ECG: DDPM with structured state-space S4 layers, label embedding reduced 71->20; pretrained on sinus rhythm then fine-tuned on balanced SR/AF); class-cond (Sinus rhythm/normal vs AF)
+- **Losses:** DDPM noise-prediction MSE (T=200, beta 1e-4..0.02)
+- **Evaluation:** visual inspection; real-vs-synthetic feature classifier (logistic regression, random forest) F1 with/without P/T features; TSTR / TRTS / TRTR / TSTS F1 (random forest on 9 NeuroKit2 lead-II features: HR, RRI, P amp, QRS dur, T amp, PR, QT, ST deviation, SDRR); physician blind real-vs-synthetic test (2 cardiologists, 30 ECGs per class); external blind test at TUM [fidelity, clinical, utility-TSTR, expert, robustness]
+- **Data:** MIMIC-IV-ECG (20,230 cleaned SR ECGs, 14,161 train; balanced 11,552 SR+AF fine-tune set); private TUM clinical dataset (6,254 ECGs, 136 AF) for external fine-tune and blind test; leads: 12; fs: 100 (downsampled from 500) Hz; length: 10 s
+- **Notes:** Real-vs-synthetic RF F1 0.94 (SR) / 0.92 (AF) with P/T features, 0.78/0.88 without - i.e. synthetic ECGs are easily separable, mainly via P/T amplitudes; TSTR F1 0.80, TRTS 0.91, TRTR 0.89, TSTS 0.97. Physician real/synthetic accuracy 56.7-76.7% on only 30 ECGs per class (one table value 16/30 reported as 56.3%); TUM clinicians identified all real ECGs and all but one synthetic ECG. Model selected by visual quality; no distributional metrics (FID/MMD/precision-recall) or privacy test despite privacy motivation.
+- **Takeaway for ECGEN-Eval:** Adopt a feature-space classifier two-sample test on ECGEN-Eval's clinical feature extractor output (with ablation of P/T-wave features) to localise which waveform components betray synthetic ECGs, and report it next to TSTR/TRTS; caveat that 30-ECG physician Turing tests are underpowered.
+- *Extraction source: full-text*

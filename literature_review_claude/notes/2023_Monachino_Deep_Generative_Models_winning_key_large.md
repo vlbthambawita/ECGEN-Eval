@@ -1,8 +1,9 @@
 # Deep Generative Models: The winning key for large and easily accessible ECG datasets?
 - **ID / Year / Venue:** P043 / 2023 / Computers in Biology and Medicine
-- **Model & task:** Survey (deep generative models for ECG); survey
-- **Losses:** unknown (abstract only)
-- **Evaluation:** unknown (abstract only); highlights need for standardized synthetic-data quality evaluation and privacy/anonymization
-- **Data:** unknown (abstract only); leads: unknown (abstract only); fs: unknown (abstract only); length: unknown (abstract only)
-- **Takeaway for ECGEN-Eval:** Motivates ECGEN-Eval directly: a standardized evaluation suite including privacy.
-- *Extraction source: abstract-only*
+- **Model & task:** Survey/EvalOnly: narrative review of VAE, GAN (VGAN, RGAN, DCGAN, CGAN/ACGAN), diffusion and hybrid/physiology-constrained DGMs for ECG augmentation and anonymisation
+- **Losses:** not applicable
+- **Evaluation:** Catalogues visual inspection; cardiologist real-vs-fake test; external real-vs-fake classifier; distribution metrics (MMD, relative entropy, EMD, ECG feature statistics, t-SNE); pairwise metrics (ED, MAE, SSIM, MSE, DTW, Fréchet, Chamfer, template comparison); downstream classifier gain; membership inference; identity verificator [fidelity, distribution, clinical, expert, utility-TSTR, privacy]
+- **Data:** reviewed MIT-BIH, PTB, CinC2017, VFDB, CUDB, etc.; leads: mostly single-lead in reviewed works (some 2/3/8/12); fs: not applicable Hz; length: single beats to ~1 min s
+- **Notes:** Three evaluation aims: fidelity, classification effectiveness, anonymisation. Concludes there is no consensus metric set, implementations differ between papers, no reference thresholds for 'realistic enough', utility depends on task/classifier/baseline, and privacy is rarely evaluated (3 works). Recommends a standardised multi-perspective metric set (morphology, rhythm, noise) mimicking clinician 360-degree inspection, and a cardiologist Turing-test protocol (hidden proportion, random order, no feedback, several experts).
+- **Takeaway for ECGEN-Eval:** Use its distribution-level vs pairwise split to organise the report, add a Chamfer distance and real-template comparison, and always print real-vs-real reference values so that users have the 'realistic enough' thresholds the review says are missing.
+- *Extraction source: full-text*

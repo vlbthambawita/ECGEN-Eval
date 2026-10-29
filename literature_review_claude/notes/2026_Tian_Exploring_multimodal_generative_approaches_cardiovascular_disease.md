@@ -1,8 +1,9 @@
 # Exploring multimodal generative approaches in cardiovascular disease: A five-year systematic literature review
 - **ID / Year / Venue:** P075 / 2026 / Array
-- **Model & task:** Systematic review of multimodal generative models in CVD
-- **Losses:** unknown
-- **Evaluation:** Discusses evaluation metrics; notes computational vs clinical validation gap
-- **Data:** 46 studies; MRI, CT, ECG, notes
-- **Takeaway for ECGEN-Eval:** Supports including clinical/expert validation dimensions alongside computational metrics.
-- *Extraction source: abstract-only*
+- **Model & task:** Survey/EvalOnly (PRISMA systematic review of GAN, VAE, Transformer/LLM-VLM and diffusion methods for multimodal CVD data); survey
+- **Losses:** not applicable
+- **Evaluation:** Reviewed: PSNR, SSIM, Dice, Hausdorff (image synthesis/segmentation); accuracy, AUC, F1, precision, recall (prediction); SNR, MSE, RMSE, PRD, FD, MAE, DTW and downstream arrhythmia accuracy (signal generation); FID/FVD; KS and TVD for synthetic EHR; radiologist reader studies; custom 5-item PROBAST/QUADAS-2-inspired quality checklist [fidelity, utility-TSTR, clinical, expert, privacy, robustness]
+- **Data:** review of 46 empirical studies 2021-2025 (11 core multimodal-generative, 16 single-modality generative, 12 multimodal non-generative, 7 interpretation/reporting) + 39 background sources; modalities MRI, CT, PET, ECG, PPG, PCG, EHR/tabular, clinical text; leads: not applicable; fs: not applicable Hz; length: not applicable s
+- **Notes:** PRISMA review of 9 databases (701 records, 531 screened, 46 included); GANs used in 16/46 studies, Transformers/LLMs 11, VAEs 4, diffusion only 1. ECG-generation content is thin (CardioGAN, MC-WGAN of Cretu et al., quantum cGAN, cGAN denoising, PPG->ECG of Ding et al.); signal generation is judged 'proof-of-concept' evaluated mainly by SNR/MSE and downstream accuracy, with pathological-feature retention and diagnostic equivalence untested; no study had prospective clinical validation and heterogeneous metrics precluded meta-analysis, so the authors call for standardised benchmarks and evaluation protocols.
+- **Takeaway for ECGEN-Eval:** Supports ECGEN-Eval's aim of a standardised protocol: signal-generation papers still rely on SNR/MSE plus downstream accuracy, so ECGEN-Eval reports should foreground clinical-feature retention (its feature extractor) and physiological-validity checks that this review identifies as missing.
+- *Extraction source: full-text*

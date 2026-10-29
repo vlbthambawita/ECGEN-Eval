@@ -1,9 +1,9 @@
 # Conditional generative adversarial network driven variable-duration single-lead to 12-lead electrocardiogram reconstruction
 - **ID / Year / Venue:** P039 / 2024 / Biomedical Signal Processing and Control
-- **Model & task:** GAN (conditional GAN); task: lead-reconstruction
-- **Losses:** unknown (abstract only)
-- **Evaluation:** unknown (abstract only) (tags: n/a)
-- **Data:** unknown (abstract only); leads: 1 -> 12; fs: unknown (abstract only) Hz; length: variable duration s
-- **Notes:** No abstract available; only title: conditional GAN reconstructing 12-lead ECG from single-lead with variable-duration input.
-- **Takeaway for ECGEN-Eval:** None extractable; variable-duration input implies evaluation metrics must be length-agnostic.
-- *Extraction source: abstract-only*
+- **Model & task:** GAN (conditional LSGAN-style: ResNet 1D generator lead I -> 11 leads, small CNN discriminator; R-peak-aligned beat-wise generation stitched to variable length); lead reconstruction (I→12)
+- **Losses:** least-squares adversarial loss + lambda-weighted MSE reconstruction loss (generator); least-squares discriminator loss
+- **Evaluation:** Pearson correlation coefficient per lead and per class at beat level (mean 0.744) and segment level (mean 0.744; aVR 0.91, III 0.50); 9-class arrhythmia accuracy and macro-F1 with single-lead vs generated 12-lead vs real 12-lead (SENet classifier); per-class F1; confusion matrices; per-input-lead CC sweep; replicated baselines (LSTM&CNN, GAN of Seo et al., VAE-CNN) compared by CC; model parameters and runtime [fidelity, clinical, utility-TSTR, efficiency]
+- **Data:** CPSC2018 (6,877 12-lead recordings, 9 classes, 6-60 s; 80/20 patient-level split); ChinaDB / Chapman-Shaoxing (10,646 10-s 12-lead recordings) for validation; leads: 12 (lead I input + 11 generated); fs: 500 Hz; length: ~2.05 per beat window (1024 samples around R peak); stitched to variable duration (6-60 s); classifier uses 10240 samples (20.48 s) s
+- **Notes:** Accuracy/macro-F1: lead I 0.71/0.66, generated 12-lead 0.74/0.70, real 12-lead 0.81/0.77; CC vs baselines 0.74 (CPSC) / 0.72 (ChinaDB) vs Seo GAN 0.73/0.72, VAE-CNN 0.60/0.64. Only paired CC is used for fidelity (no amplitude error, no Einthoven/Goldberger consistency check even though limb leads are linearly determined by two leads); the 'generated 12-lead' classifier takes the max over separate lead-I, limb, chest and 12-lead classifiers, so part of the gain may come from ensembling.
+- **Takeaway for ECGEN-Eval:** For lead-reconstruction tasks ECGEN-Eval should report paired per-lead correlation and amplitude error together with an inter-lead (Einthoven/Goldberger) consistency check and a classifier-based diagnostic-gap metric (single-lead vs generated vs real 12-lead), keeping the classifier fixed to avoid ensemble confounds.
+- *Extraction source: full-text*

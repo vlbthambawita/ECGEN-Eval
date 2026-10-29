@@ -1,9 +1,9 @@
 # ECG-QRFGAN: A Quantum Residual Forest Generative Adversarial Network for Electrocardiogram Synthesis
 - **ID / Year / Venue:** P064 / 2026 / International Conference on Biomedicine and Bioinformatics Engineering (ICBBE)
-- **Model & task:** GAN (quantum: QResRNN generator + quantum random forest CNN discriminator, MPS/TTN circuits); class-cond / augmentation
-- **Losses:** adversarial (details unknown, abstract only)
-- **Evaluation:** Pearson correlation coefficient; PRD; RMSE; downstream classification accuracy; training convergence; robustness to quantum noise [fidelity; utility-TSTR; efficiency]
-- **Data:** four public ECG repositories (unnamed in abstract); leads: unknown (abstract only); fs: unknown (abstract only) Hz; length: unknown (abstract only) s
-- **Notes:** Uses paired-style metrics (PCC, PRD, RMSE) for unconditional-ish generation; unclear pairing protocol. Baselines BiGRU-CNN, ECG-QGAN, DCGAN.
-- **Takeaway for ECGEN-Eval:** Classic PCC/PRD/RMSE triad persists; ECGEN-Eval should document nearest-neighbour pairing to make them meaningful for unpaired generation.
-- *Extraction source: abstract-only*
+- **Model & task:** GAN (hybrid quantum-classical WGAN: QBiGRU generator with MPS variational circuits + quantum random-forest ensemble; TTN-based QCNN discriminator; quantum dropout; simulated in PennyLane, 4 qubits); class-wise beat synthesis (5 AAMI classes N/S/V/F/Q, augmentation)
+- **Losses:** Wasserstein GAN loss (critic without stated Lipschitz constraint); compared against JS/KL-based losses via loss curves
+- **Evaluation:** PCC, PRD, RMSE per class vs DCGAN, QPatch-GAN, QCGAN-ECG, BiGRU-CNN GAN, BiLSTM-CNN GAN; classification accuracy of synthetic beats by Inception V3 pretrained on real beats (per class); generator/discriminator loss curves (convergence); robustness to simulated quantum noise channels (bit-flip, phase-flip, amplitude damping, depolarizing); visual inspection [fidelity, utility-TSTR, efficiency, robustness]
+- **Data:** MIT-BIH Arrhythmia; MIT-BIH ST Change; European ST-T; Sudden Cardiac Death Holter (500 beats per class, 2,500 total); leads: 1 (not explicitly stated; single beat vectors); fs: not reported (beats resampled to 256 samples; source 360/250 Hz, listed as 350/240 in paper) Hz; length: 0.9 (0.4 s before to 0.5 s after R peak, resampled to 256 points) s
+- **Notes:** QRFGAN PCC only 0.05-0.61 per class (e.g. N 0.219 vs best baseline 0.174), PRD 0.75-1.08, RMSE 0.15-0.72; synthetic beats classified at 82.6% by real-trained Inception V3 vs 85.2% real baseline (QCGAN-ECG 79.8%, BiGRU-CNN 78.1%). Pairing protocol for PCC/PRD/RMSE on unconditional samples is undefined and the very low PCC suggests unpaired comparison; the utility section is described inconsistently as both train-on-synthetic and real-trained classifier applied to synthetic data (TRTS); no distribution/diversity metrics; 'no privacy risk' asserted without testing.
+- **Takeaway for ECGEN-Eval:** Shows why paired PCC/PRD/RMSE on unconditional samples is uninformative (PCC ~0.2 reported as state of the art); ECGEN-Eval should only compute such metrics with explicit nearest-neighbour pairing (as its prd/mae do), document the PRD scale (fraction vs %), and add a label-adherence score from a fixed real-trained classifier.
+- *Extraction source: full-text*

@@ -1,9 +1,9 @@
 # Diff-TTE: A Novel Diffusion Model for Text-to-Electrocardiogram
 - **ID / Year / Venue:** P156 / 2025 / International Conference on Electronic Information Engineering and Computer Technology (EIECT)
-- **Model & task:** Diffusion (text-to-ECG); task: text-cond
-- **Losses:** unknown (abstract only)
-- **Evaluation:** unknown (abstract only) (tags: n/a)
-- **Data:** unknown (abstract only); leads: unknown (abstract only); fs: unknown (abstract only) Hz; length: unknown (abstract only) s
-- **Notes:** No abstract available; text-to-ECG diffusion model.
-- **Takeaway for ECGEN-Eval:** None extractable.
-- *Extraction source: abstract-only*
+- **Model & task:** Diffusion (latent DDPM: 1D conv autoencoder with self-attention + S4 state-space residual noise predictor with AdaLN conditioning on Bio_ClinicalBERT text embeddings; REPA-style representation alignment to a pretrained MRTNet ECG classifier); text-conditional (clinical report → 12-lead ECG)
+- **Losses:** latent noise-prediction MSE + frequency-domain (Fourier) loss on denoised latent + representation-alignment loss (negative cosine similarity to MRTNet teacher features)
+- **Evaluation:** FID (CLIP-pretrained InceptionTime features); improved precision; recall; F1 of precision/recall; baselines SSSD-ECG and DSAT-ECG re-conditioned on text; loss-component ablation [fidelity, distribution, diversity]
+- **Data:** PTB-XL (21,799 ECGs, 8:1:1 split; manually standardised English reports); leads: 12 (8 generated: I, aVF, V1-V6; remaining 4 limb leads derived); fs: 100 Hz; length: 10 s
+- **Notes:** FID 0.861 vs SSSD-ECG 1.426 and DSAT-ECG 1.555; precision 100% for every model and recall 98.8-99.8%, so P/R are saturated and non-discriminative; ablation FID 1.591 (base) -> 1.356 (+freq) -> 0.961 (+REPA) -> 0.861. Despite text conditioning, no text-ECG alignment / condition-adherence metric, no clinical or expert evaluation; the REPA teacher (MRTNet) was trained on PTB-XL, so optimising toward its features may favour the embedding-based FID.
+- **Takeaway for ECGEN-Eval:** Saturated precision/recall (100%/99%) shows k-NN P/R can be uninformative in a strong embedding; ECGEN-Eval's pr_dist should also report density/coverage and sensitivity to k, and text-conditional evaluation needs a condition-adherence metric beyond unconditional FID.
+- *Extraction source: full-text*
