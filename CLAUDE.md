@@ -61,7 +61,11 @@ Optional subpackage (requires `neurokit2`; falls back to scipy/NumPy). Extracts 
 | `interval_features.py` | RR, HR, PR, QRS, QT, QTc (Bazett), P-wave duration — per beat from fiducials, median over beats; NaN when points are missing (no placeholders) |
 | `amplitude_features.py` | ST (J+80 ms) and signed T amplitude per lead vs. PR-segment baseline (averaged across leads in summary) |
 | `hrv_features.py` | SDNN, RMSSD, pNN50 from RR series |
-| `extractor.py` | `FeatureExtractor` class: takes `ECGDataset`, returns `(beat_df, summary_df)` |
+| `backends.py` | Delineation backends (`hybrid` default, `neurokit2`, `scipy`): recording → `(rpeaks, waves)`; registry `AVAILABLE_BACKENDS` + `register_backend` |
+| `groups.py` | Feature groups (`rhythm`, `intervals`, `hrv`, `amplitude`) computed from a `RecordingContext`; registry `AVAILABLE_FEATURE_GROUPS` + `register_feature_group` / `@feature_group`; `resolve_features` handles group/column/callable selection |
+| `extractor.py` | `FeatureExtractor(features=..., backend=...)`: takes `ECGDataset`, returns `(beat_df, summary_df)` |
+
+Two independent choices: `features=` (what to compute) and `backend=` (which library delineates). The default (`hybrid`, all groups) reproduces the pre-backend output exactly.
 
 `beat_df` has one row per (recording, beat, lead). `summary_df` has one row per recording with aggregated feature values — used directly in 2D/3D distribution plots.
 
@@ -114,11 +118,12 @@ CLI `eval` runs every metric except `fed` by default (`DEFAULT_METRICS` in `cli.
 New optional parameters: `feature_df_real`, `feature_dfs_synth`, `feature_plots_2d`, `feature_plots_3d` — when provided, add a Clinical Feature Summary table and 2D/3D distribution plot sections to the report.
 
 ### CLI (`ecgen_eval/cli.py`)
-Click-based entry point `ecgen-eval`. Four commands:
+Click-based entry point `ecgen-eval`. Five commands:
 - `eval` — run metrics + generate report; `--feature-plots` triggers feature extraction and adds plot sections.
 - `features` — extract clinical features only and save a summary CSV.
 - `visualize` — ECG waveform comparison plots, no metrics.
 - `list-metrics` — print available metric registry.
+- `list-features` — print feature groups and extraction backends.
 
 `--synthetic` is repeatable in `eval` and `features` to compare multiple models in one run.
 

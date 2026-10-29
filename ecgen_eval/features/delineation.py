@@ -204,6 +204,7 @@ def delineate_recording(
     rpeaks: np.ndarray,
     fs: float,
     method: str = "prominence",
+    pt_waves: bool = True,
 ) -> Optional[Dict[str, np.ndarray]]:
     """
     Delineate every beat of a recording.
@@ -215,6 +216,9 @@ def delineate_recording(
     fs : float
     method : str
         NeuroKit2 ``ecg_delineate`` method for the P and T waves (default ``"prominence"``).
+    pt_waves : bool
+        Delineate the P and T waves with NeuroKit2. When False only the QRS boundaries
+        are returned (no NeuroKit2 needed).
 
     Returns
     -------
@@ -227,6 +231,8 @@ def delineate_recording(
     if len(rpeaks) < 2:
         return None
     fid = qrs_boundaries(rec, rpeaks, fs)
+    if not pt_waves:
+        return fid
 
     try:
         import neurokit2  # noqa: F401

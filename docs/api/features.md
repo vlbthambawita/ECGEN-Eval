@@ -6,6 +6,14 @@
 
 ::: ecgen_eval.features.extractor.extract_features
 
+## Feature groups
+
+::: ecgen_eval.features.groups
+
+## Backends
+
+::: ecgen_eval.features.backends
+
 ## R-peak detection and delineation
 
 ::: ecgen_eval.features.qrs_detection

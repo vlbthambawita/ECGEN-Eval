@@ -342,3 +342,118 @@ class TestDelineation:
         peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
         result = extract_interval_features(simple_ecg_signal, fs=500.0, rpeaks=peaks[:1])
         assert all(np.isnan(result[k]) for k in ("pr_interval_ms", "qt_interval_ms"))
+
+
+# ------------------------------------------------------------------ #
+# Feature selection and backends                                       #
+# ------------------------------------------------------------------ #
+
+class TestFeatureSelection:
+    def test_select_group(self, tiny_dataset):
+        beat_df, s = extract_features(tiny_dataset, features="hrv")
+        assert list(s.columns) == ["sample_idx", "hrv_sdnn_ms", "hrv_rmssd_ms", "hrv_pnn50"]
+        assert "qrs_duration_ms" not in beat_df.columns
+
+    def test_select_columns_and_groups(self, tiny_dataset):
+        fe = FeatureExtractor(features=["qtc_bazett_ms", "rhythm", "hr_bpm"])
+        _, s = fe.extract(tiny_dataset)
+        assert list(s.columns) == ["sample_idx", "qtc_bazett_ms", "rr_mean_ms", "rr_std_ms",
+                                   "hr_bpm"]
+        assert fe.columns == list(s.columns[1:])
+
+    def test_per_lead_columns_follow_selection(self, tiny_dataset):
+        beat_df, _ = extract_features(tiny_dataset, features=["t_amplitude_mv"])
+        if not beat_df.empty:
+            assert "t_amplitude_mv" in beat_df.columns
+            assert "st_deviation_mv" not in beat_df.columns
+
+    def test_unknown_feature_raises(self):
+        with pytest.raises(ValueError, match="Unknown feature"):
+            FeatureExtractor(features=["not_a_feature"])
+
+    def test_callable_feature(self, tiny_dataset):
+        def n_beats(ctx):
+            return {"n_beats": ctx.n_beats}
+
+        _, s = extract_features(tiny_dataset, features=["hr_bpm", n_beats])
+        assert list(s.columns) == ["sample_idx", "hr_bpm", "n_beats"]
+        assert (s["n_beats"] >= 5).all()
+
+    def test_registered_group(self, tiny_dataset):
+        from ecgen_eval.features import AVAILABLE_FEATURE_GROUPS, feature_group
+
+        @feature_group("test_energy", columns=["test_energy"])
+        def _energy(ctx):
+            return {"test_energy": float(np.sum(ctx.primary_signal ** 2))}
+
+        try:
+            _, s = extract_features(tiny_dataset, features="test_energy")
+            assert list(s.columns) == ["sample_idx", "test_energy"]
+            with pytest.raises(ValueError, match="already registered"):
+                feature_group("test_energy")(_energy)
+        finally:
+            AVAILABLE_FEATURE_GROUPS.pop("test_energy")
+
+    def test_failing_group_gives_nan(self, tiny_dataset):
+        from ecgen_eval.features import FunctionFeatureGroup
+
+        def broken(ctx):
+            raise RuntimeError("boom")
+
+        group = FunctionFeatureGroup("broken", broken, columns=["x"])
+        with pytest.warns(RuntimeWarning, match="broken"):
+            _, s = extract_features(tiny_dataset, features=[group, "hr_bpm"])
+        assert s["x"].isna().all() and s["hr_bpm"].notna().all()
+
+
+class TestBackends:
+    def test_unknown_backend_raises(self):
+        with pytest.raises(ValueError, match="Unknown feature backend"):
+            FeatureExtractor(backend="nope")
+
+    def test_scipy_backend_has_no_pt_waves(self):
+        data = _synthetic_ecg()
+        ds = ECGDataset(data=data[None].astype(np.float32), lead_names=LEADS_12, fs=500.0,
+                        source_path="/tmp/test", label="synthetic")
+        _, s = extract_features(ds, backend="scipy")
+        row = s.iloc[0]
+        assert 70 <= row["hr_bpm"] <= 80
+        assert 70 <= row["qrs_duration_ms"] <= 110
+        assert np.isnan(row["pr_interval_ms"]) and np.isnan(row["qt_interval_ms"])
+
+    @pytest.mark.parametrize("method", ["dwt", "prominence"])
+    def test_neurokit_backend(self, method):
+        pytest.importorskip("neurokit2")
+        data = _synthetic_ecg()
+        ds = ECGDataset(data=data[None].astype(np.float32), lead_names=LEADS_12, fs=500.0,
+                        source_path="/tmp/test", label="synthetic")
+        fe = FeatureExtractor(backend="neurokit2", delineation_method=method)
+        _, s = fe.extract(ds)
+        assert 70 <= s.iloc[0]["hr_bpm"] <= 80
+        assert np.isfinite(s.iloc[0]["qrs_duration_ms"])
+
+    def test_custom_backend_instance(self, tiny_dataset):
+        from ecgen_eval.features import DelineationBackend
+
+        class FixedBeats(DelineationBackend):
+            name = "fixed"
+
+            def delineate(self, recording, fs, primary_lead_idx):
+                return np.arange(250, recording.shape[1], 500), None
+
+        _, s = extract_features(tiny_dataset, backend=FixedBeats(),
+                                features=["rhythm", "intervals"])
+        assert np.allclose(s["hr_bpm"], 60.0)
+        assert s["qrs_duration_ms"].isna().all()
+
+    def test_register_backend(self):
+        from ecgen_eval.features import AVAILABLE_BACKENDS, ScipyBackend, register_backend
+
+        class Mine(ScipyBackend):
+            name = "test_mine"
+
+        register_backend(Mine)
+        try:
+            assert isinstance(FeatureExtractor(backend="test_mine").backend, Mine)
+        finally:
+            AVAILABLE_BACKENDS.pop("test_mine")

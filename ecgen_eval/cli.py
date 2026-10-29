@@ -37,6 +37,55 @@ def main():
     pass
 
 
+
+# ------------------------------------------------------------------ #
+# Shared feature-extraction options                                    #
+# ------------------------------------------------------------------ #
+
+def _feature_options(func):
+    """Options choosing which clinical features to compute and with which library."""
+    from ecgen_eval.features.backends import AVAILABLE_BACKENDS, DEFAULT_BACKEND
+
+    options = [
+        click.option("--feature", "-F", "feature_select", multiple=True,
+                     help="Feature group (rhythm, intervals, amplitude, hrv) or column "
+                          "(e.g. qtc_bazett_ms) to extract. Repeatable. Default: all. "
+                          "See `ecgen-eval list-features`."),
+        click.option("--feature-backend", default=DEFAULT_BACKEND, show_default=True,
+                     type=click.Choice(sorted(AVAILABLE_BACKENDS), case_sensitive=False),
+                     help="Library that detects beats and delineates P/QRS/T waves."),
+        click.option("--rpeak-method", default=None,
+                     help="R-peak detector: a neurokit2 ecg_peaks method (e.g. neurokit, "
+                          "pantompkins1985, hamilton2002) or 'scipy'. Default: backend's own."),
+        click.option("--delineation-method", default=None,
+                     type=click.Choice(["prominence", "dwt", "cwt", "peak"]),
+                     help="neurokit2 ecg_delineate method (hybrid default: prominence, "
+                          "neurokit2 default: dwt)."),
+    ]
+    for option in reversed(options):
+        func = option(func)
+    return func
+
+
+def _build_extractor(feature_select, feature_backend, rpeak_method, delineation_method,
+                     lead="II"):
+    from ecgen_eval.features import FeatureExtractor
+
+    if feature_backend == "scipy" and delineation_method:
+        raise click.BadParameter("the scipy backend does not delineate P/T waves.",
+                                 param_hint="--delineation-method")
+    try:
+        return FeatureExtractor(
+            lead_for_intervals=lead,
+            features=list(feature_select) or None,
+            backend=feature_backend,
+            rpeak_method=rpeak_method,
+            delineation_method=delineation_method,
+        )
+    except ValueError as exc:
+        raise click.BadParameter(str(exc), param_hint="--feature") from exc
+
+
 # ------------------------------------------------------------------ #
 # eval command                                                         #
 # ------------------------------------------------------------------ #
@@ -121,6 +170,7 @@ def main():
     default=False,
     help="Extract clinical features and add 2D/3D distribution plots to report.",
 )
+@_feature_options
 @click.option(
     "--backbone",
     default="ecgfounder",
@@ -155,6 +205,10 @@ def eval(
     real_label,
     synth_labels,
     feature_plots,
+    feature_select,
+    feature_backend,
+    rpeak_method,
+    delineation_method,
     backbone,
     fed_device,
     fed_batch_size,
@@ -170,6 +224,10 @@ def eval(
         [s.strip() for s in synth_labels.split(",")] if synth_labels else []
     )
     leads_list = [l.strip() for l in leads.split(",")] if leads else None
+    extractor = (
+        _build_extractor(feature_select, feature_backend, rpeak_method, delineation_method)
+        if feature_plots else None
+    )
 
     # -------------------------------------------------------------- #
     # Load datasets                                                    #
@@ -229,15 +287,13 @@ def eval(
     feature_df_real = None
     feature_dfs_synth = None
     if feature_plots:
-        click.echo("\nExtracting clinical features...")
+        click.echo(f"\nExtracting clinical features ({extractor.backend!r})...")
         try:
-            from ecgen_eval.features import extract_features
-
-            _, feature_df_real = extract_features(real_ds)
+            _, feature_df_real = extractor.extract(real_ds)
             click.echo(f"  Real features: {feature_df_real.shape}")
             feature_dfs_synth = []
             for synth_ds in synth_datasets:
-                _, sdf = extract_features(synth_ds)
+                _, sdf = extractor.extract(synth_ds)
                 feature_dfs_synth.append(sdf)
                 click.echo(f"  {synth_ds.label} features: {sdf.shape}")
         except Exception as exc:
@@ -350,18 +406,22 @@ def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_s
               help="Cap number of recordings per folder.")
 @click.option("--lead", default="II", show_default=True,
               help="Lead to use for RR/interval detection.")
-def features(real, synthetic, output, fs, max_samples, lead):
+@_feature_options
+def features(real, synthetic, output, fs, max_samples, lead, feature_select, feature_backend,
+             rpeak_method, delineation_method):
     """Extract clinical ECG features and save a summary CSV."""
-    from ecgen_eval.features import extract_features
+    extractor = _build_extractor(feature_select, feature_backend, rpeak_method,
+                                 delineation_method, lead=lead)
 
     click.echo(f"\n{'='*60}")
     click.echo(f"  ECGEN-Eval v{__version__} — Feature Extraction")
     click.echo(f"{'='*60}\n")
+    click.echo(f"Extractor: {extractor!r}\n")
 
     real_ds = load_ecg_folder(real, fs=fs, max_samples=max_samples)
     click.echo(f"Loaded real: {real_ds}")
 
-    _, real_feat_df = extract_features(real_ds, lead_for_intervals=lead)
+    _, real_feat_df = extractor.extract(real_ds)
     real_feat_df["dataset"] = real_ds.label
 
     dfs = [real_feat_df]
@@ -369,7 +429,7 @@ def features(real, synthetic, output, fs, max_samples, lead):
     for s_path in synthetic:
         sds = load_ecg_folder(s_path, fs=fs, max_samples=max_samples)
         click.echo(f"Loaded synthetic: {sds}")
-        _, sdf = extract_features(sds, lead_for_intervals=lead)
+        _, sdf = extractor.extract(sds)
         sdf["dataset"] = sds.label
         dfs.append(sdf)
 
@@ -393,6 +453,22 @@ def list_metrics():
         obj = cls()
         click.echo(f"  {key:<12} {obj.description[:80]}")
         click.echo(f"  {'':12} Ref: {obj.reference[:80]}...\n")
+
+
+
+@main.command(name="list-features")
+def list_features():
+    """List the clinical feature groups and extraction backends."""
+    from ecgen_eval.features import AVAILABLE_BACKENDS, AVAILABLE_FEATURE_GROUPS
+
+    click.echo("\nFeature groups (select with --feature <group> or --feature <column>):\n")
+    for name, group in AVAILABLE_FEATURE_GROUPS.items():
+        click.echo(f"  {name:<12} {group.description}")
+        click.echo(f"  {'':12} columns: {', '.join(group.columns)}\n")
+    click.echo("Backends (select with --feature-backend):\n")
+    for name, cls in AVAILABLE_BACKENDS.items():
+        click.echo(f"  {name:<12} {cls.description}")
+        click.echo(f"  {'':12} requires: {', '.join(cls.requires) or '-'}\n")
 
 
 if __name__ == "__main__":

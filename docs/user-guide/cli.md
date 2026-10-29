@@ -1,6 +1,6 @@
 # Command-Line Interface
 
-Installing the package provides the `ecgen-eval` command, with four sub-commands:
+Installing the package provides the `ecgen-eval` command, with five sub-commands:
 
 | Command | Purpose |
 |---|---|
@@ -8,6 +8,7 @@ Installing the package provides the `ecgen-eval` command, with four sub-commands
 | [`features`](#features) | Extract clinical features and write a CSV |
 | [`visualize`](#visualize) | ECG waveform comparison only, no metrics |
 | [`list-metrics`](#list-metrics) | Print the available metrics |
+| [`list-features`](#list-features) | Print the clinical feature groups and extraction backends |
 
 ```bash
 ecgen-eval --help
@@ -50,6 +51,7 @@ ecgen-eval eval --real REAL --synthetic SYNTH [--synthetic SYNTH2 ...] [OPTIONS]
 | `--real-label TEXT` | file/folder name | Display label for the real set |
 | `--synth-labels TEXT` | file/folder names | Comma-separated labels, in `--synthetic` order |
 | `--feature-plots` | off | Extract clinical features and add summary table + 2D/3D plots (needs `[features]`) |
+| `-F, --feature`, `--feature-backend`, `--rpeak-method`, `--delineation-method` | all / `hybrid` | Which features and which library, with `--feature-plots`; see [Feature options](#feature-options) |
 | `--backbone` | `ecgfounder` | FED backbone: `ecgfounder`, `hubert_ecg`, `ecgfm` |
 | `--fed-device TEXT` | `cpu` | PyTorch device for FED, e.g. `cuda` |
 | `--fed-batch-size INT` | `32` | FED batch size |
@@ -85,6 +87,10 @@ ecgen-eval eval -r real.npy -s synth.npy -m fed -m fd \
 
 # Include clinical feature distributions
 ecgen-eval eval -r real.npy -s synth.npy -m mmd -m hrv --feature-plots -o features.html
+
+# Feature plots of intervals and heart rate only, delineated with plain NeuroKit2 DWT
+ecgen-eval eval -r real.npy -s synth.npy -m mmd --feature-plots \
+  -F intervals -F hr_bpm --feature-backend neurokit2 --delineation-method dwt
 ```
 
 ## `features`
@@ -103,10 +109,27 @@ ecgen-eval features --real REAL [--synthetic SYNTH ...] [OPTIONS]
 | `--fs FLOAT` | `500.0` | Sampling frequency (Hz) |
 | `--max-samples INT` | — | Cap on recordings per dataset |
 | `--lead TEXT` | `II` | Lead used for R-peak detection and interval timing |
+| `-F, --feature`, `--feature-backend`, `--rpeak-method`, `--delineation-method` | all / `hybrid` | See [Feature options](#feature-options) |
 
 ```bash
 ecgen-eval features -r real.npy -s synth.npy --lead II -o features.csv
+
+# Only HRV and QTc, SciPy-only R peaks (no NeuroKit2 needed)
+ecgen-eval features -r real.npy -s synth.npy -F hrv -F qtc_bazett_ms --feature-backend scipy
 ```
+
+### Feature options
+
+Shared by `features` and `eval --feature-plots`:
+
+| Option | Default | Description |
+|---|---|---|
+| `-F, --feature TEXT` | all groups | Feature group (`rhythm`, `intervals`, `hrv`, `amplitude`) or single column (e.g. `qtc_bazett_ms`). Repeatable |
+| `--feature-backend` | `hybrid` | Library that finds beats and P/QRS/T boundaries: `hybrid`, `neurokit2` or `scipy` |
+| `--rpeak-method TEXT` | backend default | `nk.ecg_peaks` method (`neurokit`, `pantompkins1985`, `hamilton2002`, `elgendi2010`, …) or `scipy` |
+| `--delineation-method` | backend default | `nk.ecg_delineate` method: `prominence`, `dwt`, `cwt`, `peak` |
+
+See [Clinical Features → Choosing features and libraries](features.md#choosing-features-and-libraries).
 
 ## `visualize`
 
@@ -139,3 +162,12 @@ ecgen-eval list-metrics
 ```
 
 Prints every metric key with its description and reference.
+
+## `list-features`
+
+```bash
+ecgen-eval list-features
+```
+
+Prints every feature group with its columns, and every extraction backend with the
+libraries it needs.

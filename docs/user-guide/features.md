@@ -136,6 +136,126 @@ for c in cols:
     print(f"{c:>18}  KS={stat:.3f}  p={p:.3g}")
 ```
 
+## Choosing features and libraries
+
+The extractor has two independent choices: **which features** to compute and **which
+library** finds the beats and their P/QRS/T boundaries. Every feature works with every
+library.
+
+### Selecting features
+
+Features are organised in groups. Pass group names, single columns, or both with `features=`
+(CLI: `-F/--feature`, repeatable). Run `ecgen-eval list-features` to see what is registered.
+
+| Group | Columns |
+|---|---|
+| `rhythm` | `rr_mean_ms`, `rr_std_ms`, `hr_bpm` |
+| `intervals` | `pr_interval_ms`, `qrs_duration_ms`, `qt_interval_ms`, `qtc_bazett_ms`, `p_wave_duration_ms` |
+| `hrv` | `hrv_sdnn_ms`, `hrv_rmssd_ms`, `hrv_pnn50` |
+| `amplitude` | `st_deviation_mv`, `t_amplitude_mv` |
+
+```python
+from ecgen_eval.features import FeatureExtractor
+
+# HRV group plus two single columns
+fe = FeatureExtractor(features=["hrv", "hr_bpm", "qtc_bazett_ms"])
+beat_df, summary_df = fe.extract(real)
+fe.columns   # ['hrv_sdnn_ms', 'hrv_rmssd_ms', 'hrv_pnn50', 'hr_bpm', 'qtc_bazett_ms']
+```
+
+`beat_df` only carries the per-beat / per-lead columns of the selected features. Without
+`features=` (or with `"all"`) every registered group is computed.
+
+### Choosing the extraction library (backend)
+
+| Backend | R peaks | QRS boundaries | P / T waves | Needs |
+|---|---|---|---|---|
+| `hybrid` *(default)* | NeuroKit2 `ecg_peaks` | Spatial velocity of all leads | NeuroKit2 `prominence` on every lead, tangent T offset | `neurokit2`, `scipy` |
+| `neurokit2` | NeuroKit2 `ecg_peaks` | NeuroKit2 `ecg_delineate` | NeuroKit2 `ecg_delineate` (`dwt`, `cwt`, `peak`, `prominence`) | `neurokit2` |
+| `scipy` | SciPy Pan–Tompkins | Spatial velocity of all leads | — (PR, QT, QTc, P duration are `NaN`) | `scipy` |
+
+```python
+# Plain NeuroKit2 with the DWT delineator, every lead combined with the median
+fe = FeatureExtractor(backend="neurokit2", delineation_method="dwt",
+                      backend_kwargs={"leads": "all"})
+
+# Default backend with a different R-peak detector
+fe = FeatureExtractor(rpeak_method="pantompkins1985")
+
+# No NeuroKit2 at all
+fe = FeatureExtractor(backend="scipy", features=["rhythm", "hrv", "qrs_duration_ms"])
+```
+
+`rpeak_method` accepts any [`nk.ecg_peaks`](https://neuropsychology.github.io/NeuroKit/functions/ecg.html#ecg-peaks)
+method, or `"scipy"`. The `neurokit2` backend delineates the primary lead by default
+(`leads="all"` delineates every lead at the primary lead's R peaks). Its `peak` method gives no
+QRS boundaries, so QRS duration, PR, QT and the amplitudes are `NaN`.
+
+!!! warning "Compare like with like"
+    Different backends give systematically different intervals (e.g. QT from `dwt` is
+    typically longer than from `hybrid`). Always extract real and synthetic data with the
+    **same** extractor. Only `hybrid` has been
+    [validated against GE 12SL](../clinical/index.md#validation).
+
+### Adding your own features
+
+A feature is a function of a `RecordingContext` — the recording `(L, T)`, `lead_names`, `fs`,
+`primary_lead_idx`, the R peaks (`rpeaks`) and the fiducials found by the backend (`waves`,
+arrays aligned with `rpeaks` under keys such as `ECG_QRS_Onsets`, `ECG_T_Offsets`). Pass it
+directly, or register it so it can be selected by name (also from `list-features`):
+
+```python
+import numpy as np
+from ecgen_eval.features import FeatureExtractor, feature_group
+
+def n_beats(ctx):
+    return {"n_beats": ctx.n_beats}
+
+@feature_group("qrs_area", columns=["qrs_area_mv_ms"])
+def qrs_area(ctx):
+    """Median absolute QRS area on the primary lead."""
+    on, off = ctx.waves["ECG_QRS_Onsets"], ctx.waves["ECG_QRS_Offsets"]
+    sig = ctx.primary_signal
+    areas = [np.abs(sig[int(a):int(b)]).sum() / ctx.fs * 1000
+             for a, b in zip(on, off) if np.isfinite(a) and np.isfinite(b)]
+    return {"qrs_area_mv_ms": float(np.median(areas)) if areas else np.nan}
+
+fe = FeatureExtractor(features=["intervals", "qrs_area", n_beats])
+```
+
+For per-beat or per-lead values in `beat_df`, subclass `FeatureGroup` and implement
+`compute`, `per_beat` and/or `per_lead`, then call `register_feature_group(MyGroup())`.
+A feature that raises for a recording gives `NaN` for that recording, with one warning.
+
+### Adding your own library
+
+Subclass `DelineationBackend` and return the R peaks and the fiducial arrays; any library
+(e.g. your own deep-learning delineator) then works with every feature group:
+
+```python
+import numpy as np
+from ecgen_eval.features import DelineationBackend, FeatureExtractor, register_backend
+
+@register_backend
+class MyDelineator(DelineationBackend):
+    name = "mylib"
+    description = "My delineation model"
+
+    def delineate(self, recording, fs, primary_lead_idx):
+        rpeaks = ...                       # (M,) sample indices
+        waves = {
+            "ECG_QRS_Onsets": ...,         # each (M,), NaN where missing
+            "ECG_QRS_Offsets": ...,
+            "ECG_P_Onsets": ..., "ECG_P_Offsets": ...,
+            "ECG_T_Peaks": ..., "ECG_T_Offsets": ...,
+        }
+        return rpeaks, waves
+
+fe = FeatureExtractor(backend="mylib")        # or backend=MyDelineator()
+```
+
+Missing keys simply make the features that need them `NaN`.
+
 ## Plots
 
 2D and 3D distribution plots are described in [Visualization](visualization.md#clinical-feature-plots).

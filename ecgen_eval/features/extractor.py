@@ -1,26 +1,32 @@
 """
-FeatureExtractor — wires QRS detection, interval, amplitude, and HRV modules
-into a unified pipeline that accepts an ECGDataset and returns DataFrames.
+FeatureExtractor — runs a delineation backend and a selection of feature groups over an
+ECGDataset and returns DataFrames.
+
+Two independent choices:
+
+- **backend** — the library that finds the beats and fiducials
+  (:mod:`ecgen_eval.features.backends`: ``hybrid``, ``neurokit2``, ``scipy`` or your own).
+- **features** — which feature groups / columns to compute
+  (:mod:`ecgen_eval.features.groups`: ``rhythm``, ``intervals``, ``amplitude``, ``hrv`` or
+  your own).
 """
 
 from __future__ import annotations
 
 import warnings
-from typing import List, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 from ecgen_eval.data.dataset import ECGDataset
-from ecgen_eval.features.qrs_detection import detect_rpeaks
-from ecgen_eval.features.delineation import delineate_recording
-from ecgen_eval.features.interval_features import (
-    beat_intervals,
-    extract_rr_hr,
-    extract_interval_features,
+from ecgen_eval.features.backends import DelineationBackend, get_backend
+from ecgen_eval.features.groups import (
+    FeatureGroup,
+    FeatureSpec,
+    RecordingContext,
+    resolve_features,
 )
-from ecgen_eval.features.amplitude_features import extract_amplitude_features
-from ecgen_eval.features.hrv_features import extract_hrv_features
 
 
 class FeatureExtractor:
@@ -31,37 +37,63 @@ class FeatureExtractor:
     ----------
     lead_for_intervals : str
         Lead whose R peaks define the beats (RR/HR/HRV).  Defaults to "II"; if not
-        present the first available lead is used.  Beat boundaries use all leads.
-    rpeak_method : str
-        Passed to neurokit2.ecg_peaks().  Ignored when neurokit2 absent.
-    delineation_method : str
-        NeuroKit2 ``ecg_delineate`` method for the P and T waves (default
-        ``"prominence"``, the most accurate against PTB-XL+ 12SL).
+        present the first available lead is used.
+    rpeak_method : str or None
+        ``nk.ecg_peaks`` method (or ``"scipy"``) given to the backend.  None keeps the
+        backend's default.
+    delineation_method : str or None
+        ``nk.ecg_delineate`` method given to the backend (``hybrid`` default
+        ``"prominence"``, ``neurokit2`` default ``"dwt"``).  None keeps the backend's default.
+    features : None, str, FeatureGroup, callable or a list of them
+        What to compute: group names (``"rhythm"``, ``"intervals"``, ``"amplitude"``,
+        ``"hrv"``), individual column names (e.g. ``"qtc_bazett_ms"``), ``FeatureGroup``
+        instances or ``func(ctx) -> dict`` callables.  None / ``"all"`` computes every
+        registered group.
+    backend : str or DelineationBackend
+        Delineation library: ``"hybrid"`` (default), ``"neurokit2"``, ``"scipy"``, any name
+        added with ``register_backend``, or a backend instance.
+    backend_kwargs : dict, optional
+        Extra constructor arguments for a backend given by name.
 
     Outputs
     -------
     beat_df : pd.DataFrame
-        One row per (recording_idx, beat_idx, lead_name).
-        Columns: r_sample, rr_ms, pr_interval_ms, qrs_duration_ms, qt_interval_ms,
-        p_wave_duration_ms (per beat, shared by all leads), t_amplitude_mv and
-        st_deviation_mv (per lead, median over beats).
+        One row per (sample_idx, beat_idx, lead).  Always has r_sample and rr_ms; plus the
+        per-beat columns (intervals) and per-lead columns (amplitudes) of the selected groups.
 
     summary_df : pd.DataFrame
-        One row per recording.  Columns: rr_mean_ms, rr_std_ms, hr_bpm,
-        pr_interval_ms, qrs_duration_ms, qt_interval_ms, qtc_bazett_ms,
-        p_wave_duration_ms, hrv_sdnn_ms, hrv_rmssd_ms, hrv_pnn50,
-        st_deviation_mv, t_amplitude_mv  (amplitude averaged over all leads).
+        One row per recording: ``sample_idx`` plus the selected feature columns.
     """
 
     def __init__(
         self,
         lead_for_intervals: str = "II",
-        rpeak_method: str = "neurokit",
-        delineation_method: str = "prominence",
+        rpeak_method: Optional[str] = None,
+        delineation_method: Optional[str] = None,
+        features: Union[None, FeatureSpec, Iterable[FeatureSpec]] = None,
+        backend: Union[str, DelineationBackend, None] = None,
+        backend_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.lead_for_intervals = lead_for_intervals
-        self.rpeak_method = rpeak_method
-        self.delineation_method = delineation_method
+        kwargs = dict(backend_kwargs or {})
+        if rpeak_method is not None:
+            kwargs["rpeak_method"] = rpeak_method
+        if delineation_method is not None:
+            kwargs["method"] = delineation_method
+        self.backend = get_backend(backend, **kwargs)
+        self.selection: List[Tuple[FeatureGroup, Optional[List[str]]]] = resolve_features(
+            features
+        )
+        self._warned: set = set()
+
+    @property
+    def columns(self) -> List[str]:
+        """Summary columns this extractor produces (unknown for groups without ``columns``)."""
+        return [c for g, keep in self.selection for c in (keep or g.columns)]
+
+    def __repr__(self) -> str:
+        names = [g.name if keep is None else f"{g.name}{keep}" for g, keep in self.selection]
+        return f"FeatureExtractor(backend={self.backend!r}, features={names})"
 
     # ---------------------------------------------------------------- #
     # Public API                                                         #
@@ -69,7 +101,7 @@ class FeatureExtractor:
 
     def extract(self, dataset: ECGDataset) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Run the full feature extraction pipeline.
+        Run the feature extraction pipeline.
 
         Parameters
         ----------
@@ -85,16 +117,9 @@ class FeatureExtractor:
         primary_lead_idx = self._primary_lead_idx(dataset.lead_names)
 
         for sample_idx in range(dataset.n_samples):
-            recording = dataset.data[sample_idx]  # (L, T)
-            row = self._extract_one(
-                recording=recording,
-                lead_names=dataset.lead_names,
-                fs=dataset.fs,
-                primary_lead_idx=primary_lead_idx,
-                sample_idx=sample_idx,
-                beat_rows=beat_rows,
-            )
-            summary_rows.append(row)
+            ctx = self._delineate(dataset.data[sample_idx], dataset, primary_lead_idx)
+            summary_rows.append(self._summary_row(ctx, sample_idx))
+            beat_rows.extend(self._beat_rows(ctx, sample_idx))
 
         beat_df = pd.DataFrame(beat_rows)
         summary_df = pd.DataFrame(summary_rows)
@@ -109,54 +134,62 @@ class FeatureExtractor:
             return lead_names.index(self.lead_for_intervals)
         return 0  # fallback to first lead
 
-    def _extract_one(
-        self,
-        recording: np.ndarray,
-        lead_names: List[str],
-        fs: float,
-        primary_lead_idx: int,
-        sample_idx: int,
-        beat_rows: List[dict],
-    ) -> dict:
-        """Process one recording (L, T) → summary feature dict."""
-
-        primary_sig = recording[primary_lead_idx].astype(float)
-
-        # ---- R-peak detection on primary lead ----
+    def _delineate(
+        self, recording: np.ndarray, dataset: ECGDataset, primary_lead_idx: int
+    ) -> RecordingContext:
+        rec = np.asarray(recording, dtype=float)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            rpeaks = detect_rpeaks(primary_sig, fs, method=self.rpeak_method)
-
-        # ---- Delineation: QRS from all leads, P/T per lead (neurokit2 if available) ----
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            waves = delineate_recording(recording, rpeaks, fs, method=self.delineation_method)
-
-        # ---- RR / HR ----
-        rr_hr = extract_rr_hr(rpeaks, fs)
-
-        # ---- Interval features (primary lead) ----
-        interval_feats = extract_interval_features(recording, fs, rpeaks, waves)
-        per_beat = beat_intervals(waves, fs)
-
-        # ---- HRV (primary lead) ----
-        hrv_feats = extract_hrv_features(rpeaks, fs)
-
-        # ---- Amplitude features (all leads, then average) ----
-        st_vals, t_vals = [], []
-        rr_ms_series = (
-            np.diff(rpeaks.astype(float)) / fs * 1000.0 if len(rpeaks) >= 2 else np.array([])
+            try:
+                rpeaks, waves = self.backend.delineate(rec, dataset.fs, primary_lead_idx)
+            except ImportError:
+                raise
+            except Exception as exc:  # flat / too short recording
+                self._warn_once(self.backend, f"delineation failed ({exc})")
+                rpeaks, waves = np.array([], dtype=int), None
+        return RecordingContext(
+            recording=rec,
+            lead_names=list(dataset.lead_names),
+            fs=dataset.fs,
+            primary_lead_idx=primary_lead_idx,
+            rpeaks=np.asarray(rpeaks, dtype=int),
+            waves=waves,
         )
 
-        for lead_idx, lead_name in enumerate(lead_names):
-            lead_sig = recording[lead_idx].astype(float)
-            amp = extract_amplitude_features(lead_sig, fs, rpeaks, waves)
-            st_vals.append(amp["st_deviation_mv"])
-            t_vals.append(amp["t_amplitude_mv"])
+    def _summary_row(self, ctx: RecordingContext, sample_idx: int) -> dict:
+        row = {"sample_idx": sample_idx}
+        for group, keep in self.selection:
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    values = group.compute(ctx)
+            except Exception as exc:
+                self._warn_once(group, f"failed ({exc}); its features are NaN")
+                values = {c: np.nan for c in group.columns}
+            cols = keep if keep is not None else (group.columns or list(values))
+            row.update({c: values.get(c, np.nan) for c in cols})
+        return row
 
-            # Beat-level rows for this lead
-            for beat_idx, (r, rr) in enumerate(zip(rpeaks, rr_ms_series)):
-                beat_rows.append(
+    def _beat_rows(self, ctx: RecordingContext, sample_idx: int) -> List[dict]:
+        per_beat: Dict[str, np.ndarray] = {}
+        per_lead: Dict[str, np.ndarray] = {}
+        for group, keep in self.selection:
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    pb, pl = group.per_beat(ctx), group.per_lead(ctx)
+            except Exception as exc:
+                self._warn_once(group, f"per-beat values failed ({exc})")
+                continue
+            per_beat.update({k: v for k, v in pb.items() if keep is None or k in keep})
+            per_lead.update({k: v for k, v in pl.items() if keep is None or k in keep})
+
+        rpeaks = ctx.rpeaks
+        rr_ms = np.diff(rpeaks.astype(float)) / ctx.fs * 1000.0 if len(rpeaks) >= 2 else []
+        rows = []
+        for lead_idx, lead_name in enumerate(ctx.lead_names):
+            for beat_idx, (r, rr) in enumerate(zip(rpeaks, rr_ms)):
+                rows.append(
                     {
                         "sample_idx": sample_idx,
                         "beat_idx": beat_idx,
@@ -165,22 +198,17 @@ class FeatureExtractor:
                         "rr_ms": float(rr),
                         **{k: float(v[beat_idx]) if beat_idx < len(v) else np.nan
                            for k, v in per_beat.items()},
-                        "st_deviation_mv": amp["st_deviation_mv"],
-                        "t_amplitude_mv": amp["t_amplitude_mv"],
+                        **{k: float(v[lead_idx]) if lead_idx < len(v) else np.nan
+                           for k, v in per_lead.items()},
                     }
                 )
+        return rows
 
-        st_mean = float(np.nanmean(st_vals)) if any(np.isfinite(v) for v in st_vals) else np.nan
-        t_mean = float(np.nanmean(t_vals)) if any(np.isfinite(v) for v in t_vals) else np.nan
-
-        return {
-            "sample_idx": sample_idx,
-            **rr_hr,
-            **interval_feats,
-            **hrv_feats,
-            "st_deviation_mv": st_mean,
-            "t_amplitude_mv": t_mean,
-        }
+    def _warn_once(self, owner, message: str) -> None:
+        key = (getattr(owner, "name", repr(owner)), message.split(" (")[0])
+        if key not in self._warned:
+            self._warned.add(key)
+            warnings.warn(f"{owner!r}: {message}", RuntimeWarning, stacklevel=3)
 
 
 # ------------------------------------------------------------------ #
@@ -190,13 +218,21 @@ class FeatureExtractor:
 def extract_features(
     dataset: ECGDataset,
     lead_for_intervals: str = "II",
+    features: Union[None, FeatureSpec, Iterable[FeatureSpec]] = None,
+    backend: Union[str, DelineationBackend, None] = None,
+    **kwargs,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Convenience wrapper around :class:`FeatureExtractor`.
+
+    Extra keyword arguments (``rpeak_method``, ``delineation_method``, ``backend_kwargs``)
+    are passed to :class:`FeatureExtractor`.
 
     Returns
     -------
     (beat_df, summary_df)
     """
-    extractor = FeatureExtractor(lead_for_intervals=lead_for_intervals)
+    extractor = FeatureExtractor(
+        lead_for_intervals=lead_for_intervals, features=features, backend=backend, **kwargs
+    )
     return extractor.extract(dataset)

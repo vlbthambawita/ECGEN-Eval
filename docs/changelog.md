@@ -10,6 +10,20 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+### Added
+
+- **Selectable clinical features.** `FeatureExtractor(features=...)` / `extract_features(...,
+  features=...)` take feature group names (`rhythm`, `intervals`, `hrv`, `amplitude`), single
+  column names, `FeatureGroup` instances or `func(ctx) -> dict` callables. Custom groups can be
+  registered with `register_feature_group` or the `@feature_group` decorator.
+- **Selectable extraction library.** `FeatureExtractor(backend=...)` chooses how beats are
+  delineated: `hybrid` (default, unchanged results), `neurokit2` (plain `nk.ecg_delineate` with
+  `dwt`/`cwt`/`peak`/`prominence`) or `scipy` (no NeuroKit2). Custom backends subclass
+  `DelineationBackend` and are registered with `register_backend`. `rpeak_method="scipy"`
+  forces the SciPy R-peak detector.
+- CLI: `-F/--feature`, `--feature-backend`, `--rpeak-method` and `--delineation-method` for
+  `features` and `eval --feature-plots`; new `list-features` command.
+
 ## [0.7.0] — 2026-10-29
 
 ### Fixed

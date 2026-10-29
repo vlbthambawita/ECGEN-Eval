@@ -22,7 +22,9 @@ def detect_rpeaks(signal: np.ndarray, fs: float, method: str = "neurokit") -> np
     fs : float
         Sampling frequency in Hz.
     method : str
-        Passed to neurokit2.ecg_peaks(). Ignored if neurokit2 unavailable.
+        Passed to neurokit2.ecg_peaks() (e.g. ``"neurokit"``, ``"pantompkins1985"``,
+        ``"hamilton2002"``, ``"elgendi2010"``). ``"scipy"`` forces the SciPy Pan-Tompkins
+        detector, which is also the fallback when neurokit2 is unavailable.
 
     Returns
     -------
@@ -30,6 +32,11 @@ def detect_rpeaks(signal: np.ndarray, fs: float, method: str = "neurokit") -> np
     """
     if signal.ndim != 1:
         raise ValueError(f"Expected 1-D signal, got shape {signal.shape}")
+
+    if method == "scipy":
+        from ecgen_eval.features.utils import find_r_peaks_scipy
+
+        return find_r_peaks_scipy(signal, fs)
 
     try:
         import neurokit2 as nk  # optional dependency
