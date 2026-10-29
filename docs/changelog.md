@@ -10,6 +10,8 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-10-29
+
 ### Added
 
 - **Selectable clinical features.** `FeatureExtractor(features=...)` / `extract_features(...,
@@ -23,6 +25,14 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
   forces the SciPy R-peak detector.
 - CLI: `-F/--feature`, `--feature-backend`, `--rpeak-method` and `--delineation-method` for
   `features` and `eval --feature-plots`; new `list-features` command.
+
+### Changed
+
+- Default extraction (`hybrid` backend, all feature groups) gives exactly the same output as
+  v0.7.0. `FeatureExtractor(rpeak_method=..., delineation_method=...)` now default to `None`
+  (the backend's own default).
+- Docs: feature-extraction and architecture diagrams show the backend → feature-group
+  pipeline; new *Choosing features and libraries* section in Clinical Features.
 
 ## [0.7.0] — 2026-10-29
 
@@ -197,7 +207,8 @@ Initial release.
 - Interactive Plotly visualizations on ECG graph paper and a self-contained HTML report.
 - `ecgen-eval` CLI with `eval`, `visualize` and `list-metrics`.
 
-[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.4.0...v0.5.0
