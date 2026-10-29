@@ -10,7 +10,7 @@
 ```text
 ecgen_eval/
 ├── __init__.py            exports loaders + AVAILABLE_METRICS
-├── cli.py                 Click entry point: eval, features, visualize, list-metrics
+├── cli.py                 Click entry point: eval, features, visualize, list-metrics, list-features
 ├── data/
 │   ├── dataset.py         ECGDataset, LEADS_12, LEADS_8
 │   └── loader.py          NumPy / WFDB / CSV loaders
@@ -21,8 +21,11 @@ ecgen_eval/
 │   ├── encoders/          foundation-model adapters for FED
 │   └── <metric>.py        one module per metric
 ├── features/
-│   ├── extractor.py       FeatureExtractor, extract_features
-│   ├── qrs_detection.py   R-peaks + delineation (NeuroKit2 / SciPy fallback)
+│   ├── extractor.py       FeatureExtractor, extract_features (features=, backend=)
+│   ├── backends.py        delineation backends: hybrid, neurokit2, scipy, register_backend
+│   ├── groups.py          feature groups: rhythm, intervals, hrv, amplitude, register_feature_group
+│   ├── delineation.py     spatial-velocity QRS, NeuroKit2 P/T, tangent T offset
+│   ├── qrs_detection.py   R-peak detection (NeuroKit2 / SciPy)
 │   ├── interval_features.py
 │   ├── amplitude_features.py
 │   ├── hrv_features.py

@@ -45,8 +45,13 @@ The clinical rationale for each feature is discussed in the
 
 ## How extraction works
 
-[![Feature extraction: R-peaks on the primary lead, delineation from all leads, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/features-light.svg "Open full size")
-[![Feature extraction: R-peaks on the primary lead, delineation from all leads, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/features-dark.svg "Open full size")
+Extraction has two stages: a **delineation backend** finds the beats and their fiducial points,
+then the selected **feature groups** measure them (see
+[Choosing features and libraries](#choosing-features-and-libraries)). The steps below describe
+the default `hybrid` backend.
+
+[![Feature extraction: a selectable delineation backend finds R peaks and fiducials, then the selected feature groups fill summary_df and beat_df](../assets/diagrams/features-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/features-light.svg "Open full size")
+[![Feature extraction: a selectable delineation backend finds R peaks and fiducials, then the selected feature groups fill summary_df and beat_df](../assets/diagrams/features-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/features-dark.svg "Open full size")
 
 For each recording:
 

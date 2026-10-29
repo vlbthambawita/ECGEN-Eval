@@ -4,33 +4,28 @@ direction: down
 
 rec: "Recording\n(L, T)" {class: data; style.multiple: true}
 
-primary: "Primary lead\n(lead_for_intervals, default II)" {
+backend: "Delineation backend  ·  backend=" {
   class: group
-  peaks: "R-peak detection\nnk.ecg_clean() + nk.ecg_peaks()\n↳ SciPy Pan–Tompkins fallback" {class: feature}
-  rr: "RR · HR" {class: feature}
-  hrv: "SDNN · RMSSD · pNN50" {class: feature}
-  peaks -> rr: {class: flow}
-  peaks -> hrv: {class: flow}
+  hybrid: "hybrid (default)\nR peaks: nk.ecg_peaks on primary lead\nQRS: spatial velocity of all leads\nP, T: nk prominence per lead (median)\nT end: tangent method" {class: feature}
+  others: "neurokit2\nnk.ecg_delineate: dwt · cwt · peak · prominence\n\nscipy\nPan–Tompkins + spatial-velocity QRS, no P/T\n\ncustom\nDelineationBackend + register_backend" {class: model}
 }
 
-all: "All leads" {
+ctx: "RecordingContext\nrpeaks · waves (fiducials per beat)\nrecording · lead_names · fs" {class: data}
+
+groups: "Feature groups  ·  features=" {
   class: group
-  delin: "Beat delineation\nQRS: spatial velocity of all leads\nP, T: nk prominence per lead (median)\nT end: tangent method" {class: feature}
-  intervals: "PR · QRS · QT · QTc · P-wave\nper beat → median" {class: feature}
-  amp: "ST deviation · T-wave amplitude\nper lead vs PR baseline" {class: feature}
-  delin -> intervals: {class: flow}
-  delin -> amp: beat fiducials {class: flow}
+  rhythm: "rhythm\nRR · HR" {class: feature}
+  intervals: "intervals\nPR · QRS · QT · QTc · P-wave\nper beat → median" {class: feature}
+  hrv: "hrv\nSDNN · RMSSD · pNN50" {class: feature}
+  amp: "amplitude\nST deviation · T amplitude\nper lead vs PR baseline" {class: feature}
+  custom: "custom\nfunc(ctx) → dict · @feature_group\nFeatureGroup subclass" {class: model}
 }
 
-summary: "summary_df\n1 row / recording" {class: report; shape: stored_data}
+summary: "summary_df\n1 row / recording\nselected columns" {class: report; shape: stored_data}
 beats: "beat_df\n1 row / (recording, beat, lead)" {class: report; shape: stored_data}
 
-rec -> primary.peaks: {class: hot}
-rec -> all.delin: {class: hot}
-primary.peaks -> all.delin: R-peaks {class: soft}
-primary.rr -> summary: {class: flow}
-primary.hrv -> summary: {class: flow}
-all.intervals -> summary: {class: flow}
-all.intervals -> beats: {class: flow}
-all.amp -> summary: lead average {class: flow}
-all.amp -> beats: {class: flow}
+rec -> backend: {class: hot}
+backend -> ctx: "(rpeaks, waves)" {class: hot}
+ctx -> groups: {class: flow}
+groups -> summary: compute() {class: flow}
+groups -> beats: "per_beat() · per_lead()" {class: flow}

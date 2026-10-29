@@ -2,7 +2,7 @@
 ...@_palette
 direction: down
 
-cli: "cli.py\necgen-eval\neval · features\nvisualize · list-metrics" {class: model; shape: hexagon}
+cli: "cli.py\necgen-eval\neval · features · visualize\nlist-metrics · list-features" {class: model; shape: hexagon}
 
 data: ecgen_eval.data {
   class: group
@@ -25,8 +25,13 @@ metrics: ecgen_eval.metrics {
 features: ecgen_eval.features {
   class: group
   extractor: "extractor.py\nFeatureExtractor" {class: feature}
-  modules: "qrs_detection · interval\namplitude · hrv" {class: feature}
-  extractor -> modules: {class: flow}
+  backends: "backends.py\nhybrid · neurokit2 · scipy\nregister_backend" {class: feature}
+  groups: "groups.py\nrhythm · intervals · hrv · amplitude\nregister_feature_group" {class: feature}
+  modules: "delineation · qrs_detection\ninterval · amplitude · hrv" {class: feature}
+  extractor -> backends: backend= {class: flow}
+  extractor -> groups: features= {class: flow}
+  backends -> modules: {class: soft}
+  groups -> modules: {class: soft}
 }
 
 viz: ecgen_eval.visualization {
