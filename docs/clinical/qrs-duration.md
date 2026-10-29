@@ -39,13 +39,17 @@ larger than the real ones looks "diseased" to a clinician even if the overall sh
 
 ## How ECGEN-Eval measures it
 
-`qrs_duration_ms` is meant to be the mean time from QRS onset to QRS end over all beats, using
-NeuroKit2's wave delineation on the primary lead.
+`qrs_duration_ms` is the time from QRS onset to QRS end, median over beats. It uses **all
+leads at once**, like commercial 12-lead programs:
 
-!!! warning "Not yet the clinical QRS width"
-    In v0.6.0 the value is measured from the Q dip to the S dip. That is shorter than the full
-    QRS and does not correlate with the GE 12SL QRS duration. Without NeuroKit2 it is a fixed
-    placeholder. See [Known limitations](index.md#known-limitations).
+1. Add up how steeply every lead is changing (the *spatial velocity*). It is near zero on the
+   flat parts and very high during the QRS.
+2. Around each R peak, the QRS is the stretch where that combined slope stays above 4 % of
+   its range.
+
+This needs no NeuroKit2. Against GE 12SL: typical error 6.4 ms, r 0.88, the same agreement
+as between two commercial programs ([validation](index.md#validation)). With a single lead
+it is less accurate (r ≈ 0.5).
 
 ## Learn more
 

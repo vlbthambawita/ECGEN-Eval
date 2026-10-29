@@ -9,8 +9,8 @@ real and synthetic distributions can be compared numerically and visually.
 
 !!! tip "New to ECGs?"
     [Clinical Features Explained](../clinical/index.md) explains every feature in plain language,
-    with interactive heartbeats. It also lists the
-    [known limitations](../clinical/index.md#known-limitations) of the current extractor.
+    with interactive heartbeats. It also shows how the extractor
+    [compares with commercial ECG software](../clinical/index.md#validation).
 
 ## Installation
 
@@ -18,8 +18,9 @@ real and synthetic distributions can be compared numerically and visually.
 pip install "ecgen-eval[features]"    # neurokit2 + scipy
 ```
 
-Without NeuroKit2 the extractor still runs, using a SciPy-based Pan–Tompkins R-peak detector
-and heuristic windows around R-peaks for delineation. Results are less accurate.
+Without NeuroKit2 the extractor still runs: R peaks come from a SciPy-based Pan–Tompkins
+detector, and heart rate, HRV, QRS duration, ST deviation and T amplitude are still measured.
+PR, QT, QTc and P-wave duration need NeuroKit2's P/T delineation and are `NaN` without it.
 
 ## Extracted features
 
@@ -44,18 +45,37 @@ The clinical rationale for each feature is discussed in the
 
 ## How extraction works
 
-[![Feature extraction: R-peaks and delineation on the primary lead, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/features-light.svg "Open full size")
-[![Feature extraction: R-peaks and delineation on the primary lead, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/features-dark.svg "Open full size")
+[![Feature extraction: R-peaks on the primary lead, delineation from all leads, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/features-light.svg "Open full size")
+[![Feature extraction: R-peaks on the primary lead, delineation from all leads, amplitudes on every lead, aggregated into summary_df and beat_df](../assets/diagrams/features-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/features-dark.svg "Open full size")
 
 For each recording:
 
 1. **R-peaks** are detected on a single *primary lead* — `lead_for_intervals`, default
-   `"II"`, falling back to the first lead if absent — with `nk.ecg_peaks()`.
-2. **Delineation** (P, QRS, T onsets/peaks/offsets) on the primary lead with
-   `nk.ecg_delineate()`.
-3. **RR/HR, intervals and HRV** are derived from the primary lead.
-4. **ST deviation and T-wave amplitude** are measured on **every lead** and averaged into the
-   summary row.
+   `"II"`, falling back to the first lead if absent — with `nk.ecg_clean()` +
+   `nk.ecg_peaks()`. They define the beats; RR, HR and HRV come from them.
+2. **Delineation uses every lead** (`ecgen_eval.features.delineation`):
+    - **QRS onset and offset** from the *spatial velocity* (sum of absolute slopes over all
+      leads): the QRS is where it stays above 4 % of its range around each R peak. This
+      needs only NumPy/SciPy.
+    - **P onset/offset and T peak** from NeuroKit2's peak-prominence delineator
+      (`nk.ecg_delineate(method="prominence")`) on every lead with that lead's own R peaks.
+      P boundaries are refined to 15 % of the P amplitude.
+    - **T offset** with the tangent method: the steepest return of the T wave to the
+      baseline, extended as a line to the baseline level.
+    - Per-lead points are assigned to the reference beats and combined with the median
+      across leads.
+3. **Intervals** are computed per beat (PR = QRS onset − P onset, QRS = offset − onset,
+   QT = T offset − QRS onset, P = P offset − P onset), beats outside plausible ranges
+   are dropped, and the summary is the **median over beats**. QTc = QT / √(mean RR in s).
+4. **ST deviation and T-wave amplitude** are measured on **every lead** against the PR-segment
+   baseline (QRS onset − 40 to − 10 ms): ST at J + 80 ms, T as the signed extreme between
+   J + 80 ms and the T offset. Each lead takes the median over beats; the summary averages
+   the leads.
+
+Accuracy against the GE 12SL measurements of PTB-XL+ is summarised in
+[Clinical Features Explained → Validation](../clinical/index.md#validation). Interval
+accuracy is best with several leads at ≥ 250 Hz; with a single lead the QRS duration is
+noticeably less accurate.
 
 !!! note "Amplitude units"
     ST and T amplitudes are reported in the units of your input signal. Column names say
@@ -91,7 +111,8 @@ beat_df, summary_df = extractor.extract(real)
 | `lead` | Lead name |
 | `r_sample` | R-peak position (sample index) |
 | `rr_ms` | RR interval following the beat |
-| `st_deviation_mv`, `t_amplitude_mv` | Lead-level amplitude features |
+| `pr_interval_ms`, `qrs_duration_ms`, `qt_interval_ms`, `p_wave_duration_ms` | Intervals of this beat (same for every lead; `NaN` if not measurable) |
+| `st_deviation_mv`, `t_amplitude_mv` | Lead-level amplitude features (median over beats) |
 
 ### Comparing distributions
 

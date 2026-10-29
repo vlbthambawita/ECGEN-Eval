@@ -10,6 +10,68 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-10-29
+
+### Fixed
+
+- **Clinical feature extractor.** In v0.6.0 and earlier:
+    - PR, QT, QTc, P-wave duration and ST deviation were always `NaN` with NeuroKit2
+      installed, because the `peak` delineation method never returns the wave boundaries
+      they need;
+    - fixed placeholder values were returned without NeuroKit2;
+    - QRS duration was measured from the Q dip to the S dip.
+
+  Delineation now uses all leads (new module `ecgen_eval.features.delineation`):
+    - QRS onset/offset from the spatial velocity (sum of absolute slopes of all leads);
+    - P boundaries and T peaks from NeuroKit2's `prominence` method on every lead, combined
+      with the median across leads;
+    - tangent-method T offset.
+
+  Intervals are measured per beat and summarised with the median over beats. ST is read at
+  J + 80 ms and T is the signed extreme, both against the PR-segment baseline. Validation
+  on 500 held-out PTB-XL records against GE 12SL (PTB-XL+):
+    - QRS: MAE 6.4 ms, r 0.88;
+    - PR: MAE 8.5 ms, r 0.87;
+    - QT: r 0.85, about 17 ms shorter on average;
+    - P-wave duration: MAE 12 ms, r 0.41 (GE 12SL vs Philips Uni-G: r 0.48);
+    - T amplitude: r 0.96;
+    - ST vs Uni-G at J + 80 ms: r 0.97.
+
+  Features that cannot be measured are `NaN`, never placeholders. Without NeuroKit2,
+  heart rate, HRV, QRS, ST and T amplitude are still measured.
+- R peaks for the clinical features are detected on the `nk.ecg_clean()`-filtered signal.
+  Heart-rate error against 12SL drops from 2.4 to 1.7 bpm.
+
+### Changed
+
+- **Feature values differ from v0.6.0.** Re-extract features saved with earlier versions
+  before comparing them with new results.
+- `beat_df` gains per-beat `pr_interval_ms`, `qrs_duration_ms`, `qt_interval_ms` and
+  `p_wave_duration_ms` columns. ST and T amplitude are now medians over beats.
+
+### Added
+
+- `FeatureExtractor(delineation_method=...)` selects the NeuroKit2 method for the P and T
+  waves (default `"prominence"`).
+- "Clinical Features Explained" docs section. It explains every clinical feature for
+  non-clinical readers, with an interactive heartbeat anatomy (the electrical wave through
+  the heart), one interactive widget per feature, typical ranges, and a validation table
+  against commercial ECG software.
+- Catalogue of 43 open-source ECG feature extractors usable from Python, checked against
+  their source code. For each tool it records the accepted inputs, sampling-rate handling,
+  minimum duration and native output names, mapped to a 94-feature vocabulary. It is
+  available as a "Feature extractors" tab in the Paper Database, as new SQLite tables
+  (`extractors`, `extractor_inputs`, `extractor_features`, `feature_vocab`, views
+  `feature_coverage` and `ecgen_feature_support`), and as CSV exports. The literature
+  review adds `04_ecg_feature_extractors.md`.
+- The Metric Reference page links each metric to its explanation, API entry, source file
+  and papers.
+
+### Docs
+
+- Fixed citations: the Zigel et al. PRD paper DOI, and the SSIM reference (now Shahriari et
+  al., IEEE TBME 2018).
+
 ## [0.6.0] — 2026-10-28
 
 ### Added
@@ -121,7 +183,8 @@ Initial release.
 - Interactive Plotly visualizations on ECG graph paper and a self-contained HTML report.
 - `ecgen-eval` CLI with `eval`, `visualize` and `list-metrics`.
 
-[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.3.0...v0.4.0

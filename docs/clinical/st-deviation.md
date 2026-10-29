@@ -46,14 +46,14 @@ centred near zero too.
 
 For every lead:
 
-1. The **baseline** is the median signal level between 200 ms and 50 ms before each R peak (the
-   flat stretch before the QRS), taken over all beats.
-2. The **ST level** is read 80 ms after the end of the QRS (the J point) in every beat.
-3. `st_deviation_mv` = mean ST level − baseline. The summary averages it over all leads.
+1. The **baseline** of each beat is the median level from 40 ms to 10 ms before the QRS onset
+   (the flat PR segment).
+2. The **ST level** is read 80 ms after the end of the QRS (the J point, found from all leads
+   together; see [QRS duration](qrs-duration.md)).
+3. ST deviation = ST level − baseline, median over beats. The summary averages the leads.
 
-!!! warning "Currently unavailable"
-    This feature is always `NaN` in v0.6.0 with NeuroKit2 installed, because the end of the QRS
-    is not found. See [Known limitations](index.md#known-limitations).
+Works with or without NeuroKit2. Against the Philips Uni-G ST level at J + 80 ms: r 0.97
+([validation](index.md#validation)).
 
 ## Learn more
 

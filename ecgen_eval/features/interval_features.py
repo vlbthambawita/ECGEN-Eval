@@ -1,18 +1,25 @@
 """
 Interval feature extraction: RR, HR, PR, QRS, QT, QTc, P-wave duration.
 
-When neurokit2 delineation is available (waves dict), we use the boundary
-indices it provides.  When it is None we fall back to heuristic estimates
-based on R-peak positions alone, which are rougher but still meaningful for
-distribution-level comparisons between real and synthetic ECG.
+Intervals are computed per beat from the aligned fiducial points of
+:func:`ecgen_eval.features.delineation.delineate_recording`, checked against plausible
+physiological ranges, and summarised with the median over beats:
+
+- PR  = QRS onset - P onset
+- QRS = QRS offset - QRS onset
+- QT  = T offset - QRS onset;  QTc (Bazett) = QT / sqrt(mean RR in s)
+- P duration = P offset - P onset
+
+QRS onset/offset need only NumPy/SciPy; the P and T points need NeuroKit2. Features whose
+points are missing are NaN (there are no fixed placeholder values).
 """
 
 from __future__ import annotations
 
 import numpy as np
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
-from ecgen_eval.features.utils import samples_to_ms, ms_to_samples
+from ecgen_eval.features.utils import samples_to_ms
 
 
 # ------------------------------------------------------------------ #
@@ -38,54 +45,44 @@ def extract_rr_hr(rpeaks: np.ndarray, fs: float) -> Dict[str, float]:
 
 
 # ------------------------------------------------------------------ #
-# Interval features — neurokit2 path                                  #
+# Interval features from aligned fiducials                            #
 # ------------------------------------------------------------------ #
 
-def _safe_mean_ms(indices: Optional[List], fs: float) -> float:
-    """Mean of (possibly None-filled) delineation index list → ms."""
-    if indices is None:
-        return np.nan
-    arr = np.array([v for v in indices if v is not None and not np.isnan(float(v))], dtype=float)
-    if len(arr) == 0:
-        return np.nan
-    return float(np.mean(arr) / fs * 1000.0)
+#: Plausible range (ms) per interval; beats outside it are treated as delineation errors.
+INTERVAL_BOUNDS_MS = {
+    "pr_interval_ms": (60.0, 400.0),
+    "qrs_duration_ms": (40.0, 250.0),
+    "qt_interval_ms": (200.0, 700.0),
+    "p_wave_duration_ms": (30.0, 200.0),
+}
+
+_INTERVAL_POINTS = {
+    "pr_interval_ms": ("ECG_P_Onsets", "ECG_QRS_Onsets"),
+    "qrs_duration_ms": ("ECG_QRS_Onsets", "ECG_QRS_Offsets"),
+    "qt_interval_ms": ("ECG_QRS_Onsets", "ECG_T_Offsets"),
+    "p_wave_duration_ms": ("ECG_P_Onsets", "ECG_P_Offsets"),
+}
 
 
-def _interval_ms_nk(onset_key: str, offset_key: str, waves: dict, fs: float) -> float:
-    """Compute mean interval in ms from onset/offset index arrays in waves dict."""
-    onsets = waves.get(onset_key, None)
-    offsets = waves.get(offset_key, None)
-    if onsets is None or offsets is None:
-        return np.nan
-    pairs = [
-        (float(a), float(b))
-        for a, b in zip(onsets, offsets)
-        if a is not None and b is not None and not np.isnan(float(a)) and not np.isnan(float(b))
-    ]
-    if not pairs:
-        return np.nan
-    intervals = [(b - a) / fs * 1000.0 for a, b in pairs]
-    return float(np.mean([v for v in intervals if v > 0]))
+def beat_intervals(waves: Optional[dict], fs: float) -> Dict[str, np.ndarray]:
+    """Per-beat intervals (ms, NaN where missing or implausible) from aligned fiducials."""
+    out = {}
+    for name, (start, end) in _INTERVAL_POINTS.items():
+        if not waves or start not in waves or end not in waves:
+            out[name] = np.array([])
+            continue
+        a = np.asarray(waves[start], dtype=float)
+        b = np.asarray(waves[end], dtype=float)
+        ms = (b - a) / fs * 1000.0
+        lo, hi = INTERVAL_BOUNDS_MS[name]
+        with np.errstate(invalid="ignore"):
+            out[name] = np.where((ms >= lo) & (ms <= hi), ms, np.nan)
+    return out
 
 
-# ------------------------------------------------------------------ #
-# Heuristic fallback intervals                                         #
-# ------------------------------------------------------------------ #
-# These assume a "normal" ECG morphology with typical timing.
-# Heuristic offsets (ms from R-peak):
-#   QRS onset  ≈ R - 50 ms
-#   QRS offset ≈ R + 60 ms  (J-point)
-#   T-peak     ≈ R + 200 ms
-#   T-end      ≈ R + 350 ms
-#   P-peak     ≈ R - 180 ms
-#   P-onset    ≈ R - 230 ms
-#   P-end      ≈ R - 140 ms
-
-_QRS_ONSET_MS  = -50.0
-_QRS_OFFSET_MS =  60.0
-_T_END_MS      = 350.0
-_P_ONSET_MS    = -230.0
-_P_END_MS      = -140.0
+def _median(values: np.ndarray) -> float:
+    values = values[np.isfinite(values)] if len(values) else values
+    return float(np.median(values)) if len(values) else np.nan
 
 
 def extract_interval_features(
@@ -99,51 +96,35 @@ def extract_interval_features(
 
     Parameters
     ----------
-    signal : (T,)  Single-lead ECG.
+    signal : (T,) or (L, T) ECG; only used to delineate when ``waves`` is None.
     fs : float
     rpeaks : (M,) R-peak sample indices.
-    waves : dict or None  Neurokit2 delineation result.
+    waves : dict or None
+        Fiducials aligned with ``rpeaks`` (from ``delineate_recording``). When None, the
+        signal is delineated here.
 
     Returns
     -------
     dict with keys: pr_interval_ms, qrs_duration_ms, qt_interval_ms,
                     qtc_bazett_ms, p_wave_duration_ms
     """
+    if waves is None and len(rpeaks) >= 2:
+        from ecgen_eval.features.delineation import delineate_recording
+
+        waves = delineate_recording(signal, rpeaks, fs)
+
+    per_beat = beat_intervals(waves, fs)
+    feats = {name: _median(v) for name, v in per_beat.items()}
+
     rr = extract_rr_hr(rpeaks, fs)
-    rr_s = rr["rr_mean_ms"] / 1000.0 if not np.isnan(rr["rr_mean_ms"]) else np.nan
-
-    if waves is not None:
-        # neurokit2 delineation
-        qrs_dur = _interval_ms_nk("ECG_Q_Peaks", "ECG_S_Peaks", waves, fs)
-        if np.isnan(qrs_dur):
-            qrs_dur = _interval_ms_nk("ECG_QRS_Onsets", "ECG_QRS_Offsets", waves, fs)
-
-        qt = _interval_ms_nk("ECG_QRS_Onsets", "ECG_T_Offsets", waves, fs)
-        pr = _interval_ms_nk("ECG_P_Onsets", "ECG_QRS_Onsets", waves, fs)
-        p_dur = _interval_ms_nk("ECG_P_Onsets", "ECG_P_Offsets", waves, fs)
-    else:
-        # Heuristic fallback
-        qrs_dur = _QRS_OFFSET_MS - _QRS_ONSET_MS   # ~110 ms
-        qt = _T_END_MS - _QRS_ONSET_MS              # ~400 ms
-        pr = -_QRS_ONSET_MS + (_P_ONSET_MS - _P_END_MS) / 2  # rough
-        p_dur = _P_END_MS - _P_ONSET_MS             # ~90 ms
-
-        # Modulate with actual signal length: cap implausible values
-        if qrs_dur < 0 or qrs_dur > 300:
-            qrs_dur = np.nan
-        if qt < 0 or qt > 700:
-            qt = np.nan
-
-    # QTc (Bazett): QT / sqrt(RR_s)
-    if not np.isnan(qt) and not np.isnan(rr_s) and rr_s > 0:
-        qtc = qt / np.sqrt(rr_s)
-    else:
-        qtc = np.nan
+    rr_s = rr["rr_mean_ms"] / 1000.0
+    qt = feats["qt_interval_ms"]
+    qtc = qt / np.sqrt(rr_s) if np.isfinite(qt) and np.isfinite(rr_s) and rr_s > 0 else np.nan
 
     return {
-        "pr_interval_ms": float(pr),
-        "qrs_duration_ms": float(qrs_dur),
-        "qt_interval_ms": float(qt),
+        "pr_interval_ms": feats["pr_interval_ms"],
+        "qrs_duration_ms": feats["qrs_duration_ms"],
+        "qt_interval_ms": qt,
         "qtc_bazett_ms": float(qtc),
-        "p_wave_duration_ms": float(p_dur),
+        "p_wave_duration_ms": feats["p_wave_duration_ms"],
     }

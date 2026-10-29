@@ -39,12 +39,14 @@ represent normal (sinus) rhythm, even if every other part looks right.
 
 ## How ECGEN-Eval measures it
 
-`p_wave_duration_ms` is the mean time from P-wave start to P-wave end over all beats, found by
-NeuroKit2's wave delineation on the primary lead.
+`p_wave_duration_ms` is the time from P-wave start to P-wave end, median over beats.
+NeuroKit2's peak-prominence delineator finds the P wave on every lead. Its start and end are
+then moved in to where the wave reaches 15 % of its height, and the leads are combined with
+the median.
 
-!!! warning "Currently unavailable"
-    This feature is always `NaN` in v0.6.0 with NeuroKit2 installed, and a fixed placeholder
-    without it. See [Known limitations](index.md#known-limitations).
+Needs NeuroKit2 (`NaN` without it). The P wave is small and its edges are gentle, so this is
+the least precise feature: against GE 12SL the typical error is 12 ms (r 0.41), and even two
+commercial programs only reach r 0.48 ([validation](index.md#validation)).
 
 ## Learn more
 

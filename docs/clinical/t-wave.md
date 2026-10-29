@@ -47,10 +47,15 @@ the recharge part of the beat, not just the spike.
 
 For every lead:
 
-1. The **baseline** is the median level between 200 ms and 50 ms before each R peak.
-2. The T peak of each beat is found by NeuroKit2's delineation (without NeuroKit2: the highest
-   point 100–400 ms after the R peak).
-3. `t_amplitude_mv` = mean T-peak level − baseline. The summary averages it over all leads.
+1. The **baseline** of each beat is the median level from 40 ms to 10 ms before the QRS onset
+   (the flat PR segment).
+2. The **T peak** is the point furthest from the baseline between 80 ms after the end of the
+   QRS and the end of the T wave. It keeps its sign, so an inverted T wave gives a negative
+   value.
+3. T amplitude = T-peak level − baseline, median over beats. The summary averages the leads.
+
+Works with or without NeuroKit2. Against GE 12SL (average over the 12 leads): r 0.96
+([validation](index.md#validation)).
 
 ## Learn more
 

@@ -1,8 +1,16 @@
 """
 Amplitude feature extraction: ST deviation, T-wave amplitude.
 
-Uses neurokit2 delineation when available; otherwise applies heuristic
-windows around R-peaks.
+Both are measured per beat against the beat's baseline, the median level of the PR segment
+just before the QRS onset ([QRS onset - 40 ms, QRS onset - 10 ms]):
+
+- ST deviation = signal at the J point (QRS offset) + 80 ms - baseline.
+- T amplitude = signed extreme of the T wave (the sample furthest from the baseline) between
+  J + 80 ms and the T offset (or QRS onset + min(0.6 RR, 550 ms) when the T offset is unknown).
+
+The recording value is the median over beats. Fiducials come from
+:func:`ecgen_eval.features.delineation.delineate_recording`, so leads of a recording share the
+same beat timing.
 """
 
 from __future__ import annotations
@@ -12,32 +20,11 @@ from typing import Dict, Optional
 
 from ecgen_eval.features.utils import ms_to_samples
 
-
-# Heuristic offsets (ms from R-peak)
-_J_POINT_MS      =  80   # J-point (end of QRS)
-_ST_MEASURE_MS   = 120   # ST level measured here (80 ms after J-point standard)
-_T_WINDOW_START  = 100   # T-wave search window start (ms after R)
-_T_WINDOW_END    = 400   # T-wave search window end (ms after R)
-_ISOELECTRIC_PRE = 200   # ms before R for baseline estimation (PQ segment)
-_ISOELECTRIC_POST =  50  # endpoint of baseline window (ms before R)
-
-
-def _isoelectric_level(signal: np.ndarray, rpeaks: np.ndarray, fs: float) -> float:
-    """
-    Estimate the isoelectric (baseline) voltage as the median of the PQ segment
-    across all beats.  Window: [R - 200 ms, R - 50 ms].
-    """
-    pre = ms_to_samples(_ISOELECTRIC_PRE, fs)
-    post = ms_to_samples(_ISOELECTRIC_POST, fs)
-    segments = []
-    for r in rpeaks:
-        lo = r - pre
-        hi = r - post
-        if lo >= 0 and hi < len(signal) and hi > lo:
-            segments.append(np.median(signal[lo:hi]))
-    if segments:
-        return float(np.median(segments))
-    return 0.0
+_BASELINE_START_MS = 40   # baseline window: [QRS onset - 40 ms, QRS onset - 10 ms]
+_BASELINE_END_MS = 10
+_ST_AFTER_J_MS = 80       # ST level read at J + 80 ms
+_T_MAX_AFTER_ONSET_MS = 550
+_T_MAX_RR_FRACTION = 0.6
 
 
 def extract_amplitude_features(
@@ -54,69 +41,57 @@ def extract_amplitude_features(
     signal : (T,) Single-lead ECG (mV).
     fs : float
     rpeaks : (M,) R-peak sample indices.
-    waves : dict or None  Neurokit2 delineation result.
+    waves : dict or None
+        Fiducials aligned with ``rpeaks`` (from ``delineate_recording``); computed from this
+        lead alone when None.
 
     Returns
     -------
     dict with keys: st_deviation_mv, t_amplitude_mv
     """
-    if len(rpeaks) == 0:
-        return {"st_deviation_mv": np.nan, "t_amplitude_mv": np.nan}
+    nan = {"st_deviation_mv": np.nan, "t_amplitude_mv": np.nan}
+    rpeaks = np.asarray(rpeaks, dtype=int)
+    if len(rpeaks) < 2:
+        return nan
+    if waves is None:
+        from ecgen_eval.features.delineation import delineate_recording
 
-    baseline = _isoelectric_level(signal, rpeaks, fs)
+        waves = delineate_recording(signal, rpeaks, fs)
+    if not waves:
+        return nan
 
-    # ---- T-wave amplitude ---- #
-    if waves is not None:
-        t_peaks = waves.get("ECG_T_Peaks", None)
-        if t_peaks is not None:
-            vals = [
-                signal[int(p)] - baseline
-                for p in t_peaks
-                if p is not None and not np.isnan(float(p)) and 0 <= int(p) < len(signal)
-            ]
-            t_amp = float(np.mean(vals)) if vals else np.nan
-        else:
-            t_amp = np.nan
-    else:
-        # Heuristic: search for maximum in T-wave window after each R
-        t_start = ms_to_samples(_T_WINDOW_START, fs)
-        t_end = ms_to_samples(_T_WINDOW_END, fs)
-        vals = []
-        for r in rpeaks:
-            lo = r + t_start
-            hi = r + t_end
-            if hi < len(signal):
-                peak_val = float(np.max(signal[lo:hi]) - baseline)
-                vals.append(peak_val)
-        t_amp = float(np.mean(vals)) if vals else np.nan
+    sig = np.asarray(signal, dtype=float)
+    n = len(sig)
+    on = np.asarray(waves["ECG_QRS_Onsets"], dtype=float)
+    off = np.asarray(waves["ECG_QRS_Offsets"], dtype=float)
+    t_off = np.asarray(waves.get("ECG_T_Offsets", np.full(len(rpeaks), np.nan)), dtype=float)
+    rr = np.diff(rpeaks)
+    rr = np.append(rr, rr[-1])
 
-    # ---- ST deviation ---- #
-    if waves is not None:
-        j_points = waves.get("ECG_QRS_Offsets", None)
-        if j_points is not None:
-            st_window = ms_to_samples(80, fs)  # 80 ms after J-point
-            st_vals = []
-            for j in j_points:
-                if j is None or np.isnan(float(j)):
-                    continue
-                j = int(j)
-                measure_pt = j + st_window
-                if measure_pt < len(signal):
-                    st_vals.append(float(signal[measure_pt]) - baseline)
-            st_dev = float(np.mean(st_vals)) if st_vals else np.nan
-        else:
-            st_dev = np.nan
-    else:
-        # Heuristic: measure at fixed offset after R-peak
-        st_pt = ms_to_samples(_ST_MEASURE_MS, fs)
-        vals = []
-        for r in rpeaks:
-            pt = r + st_pt
-            if pt < len(signal):
-                vals.append(float(signal[pt]) - baseline)
-        st_dev = float(np.mean(vals)) if vals else np.nan
+    b0, b1 = ms_to_samples(_BASELINE_START_MS, fs), ms_to_samples(_BASELINE_END_MS, fs)
+    st_gap = ms_to_samples(_ST_AFTER_J_MS, fs)
+    t_cap = ms_to_samples(_T_MAX_AFTER_ONSET_MS, fs)
+
+    st_vals, t_vals = [], []
+    for i in range(len(rpeaks)):
+        if not (np.isfinite(on[i]) and np.isfinite(off[i])):
+            continue
+        qo, j = int(on[i]), int(off[i])
+        if qo - b0 < 0:
+            continue
+        baseline = float(np.median(sig[qo - b0: qo - b1 + 1]))
+        st_pt = j + st_gap
+        if st_pt < n:
+            st_vals.append(sig[st_pt] - baseline)
+        end = qo + min(t_cap, int(_T_MAX_RR_FRACTION * rr[i]))
+        if np.isfinite(t_off[i]) and st_pt < t_off[i] <= end + t_cap:
+            end = int(t_off[i])
+        end = min(end, n - 1)
+        if end > st_pt:
+            seg = sig[st_pt: end + 1] - baseline
+            t_vals.append(float(seg[np.argmax(np.abs(seg))]))
 
     return {
-        "st_deviation_mv": st_dev,
-        "t_amplitude_mv": t_amp,
+        "st_deviation_mv": float(np.median(st_vals)) if st_vals else np.nan,
+        "t_amplitude_mv": float(np.median(t_vals)) if t_vals else np.nan,
     }

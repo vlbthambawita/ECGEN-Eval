@@ -57,8 +57,9 @@ Optional subpackage (requires `neurokit2`; falls back to scipy/NumPy). Extracts 
 | Module | Purpose |
 |--------|---------|
 | `qrs_detection.py` | R-peak detection via `nk.ecg_peaks()` (Pan-Tompkins); scipy fallback |
-| `interval_features.py` | RR, HR, PR, QRS, QT, QTc (Bazett), P-wave duration |
-| `amplitude_features.py` | ST deviation and T-wave amplitude per lead (averaged across leads in summary) |
+| `delineation.py` | Per-beat fiducials aligned to the R peaks: QRS onset/offset from all-lead spatial velocity (NumPy/SciPy); P on/offset, T peak (NeuroKit2 `prominence`, every lead, median) and tangent-method T offset |
+| `interval_features.py` | RR, HR, PR, QRS, QT, QTc (Bazett), P-wave duration — per beat from fiducials, median over beats; NaN when points are missing (no placeholders) |
+| `amplitude_features.py` | ST (J+80 ms) and signed T amplitude per lead vs. PR-segment baseline (averaged across leads in summary) |
 | `hrv_features.py` | SDNN, RMSSD, pNN50 from RR series |
 | `extractor.py` | `FeatureExtractor` class: takes `ECGDataset`, returns `(beat_df, summary_df)` |
 

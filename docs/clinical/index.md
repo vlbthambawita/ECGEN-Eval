@@ -167,26 +167,49 @@ the real ones?"** If 10 % of real ECGs have a wide QRS, about 10 % of synthetic 
     print(synth_summary[cols].describe().round(1))
     ```
 
-Timings are measured on one lead (lead II by default, see `lead_for_intervals`); the ST and T
-heights are measured on every lead and averaged. The [Clinical Features](../user-guide/features.md)
+Beats are found on one lead (lead II by default, see `lead_for_intervals`); the wave boundaries
+use all leads, and the ST and T heights are measured on every lead and averaged. The [Clinical Features](../user-guide/features.md)
 user guide covers the options and output tables. The [ECG Feature Review](../ecg_features_review.md)
 gives the clinical background and references.
 
-## Known limitations { #known-limitations }
+## How well the measurements agree with clinical software { #validation }
 
-!!! warning "Not every feature is measured reliably yet (v0.6.0)"
-    We compared the extractor with the GE 12SL measurements that come with PTB-XL+ on 60 real
-    recordings:
+The extractor was compared with the **GE 12SL** measurements that PTB-XL+ publishes for every
+PTB-XL recording. The check used 500 recordings from PTB-XL fold 9 (12 leads, 500 Hz, 10 s),
+which were not used to tune the extractor. For context, the last column shows how well two
+commercial programs, GE 12SL and Philips Uni-G, agree with *each other* on the same kind of
+data. P-wave boundaries are hard to pin down even for them.
 
-    | Feature | Status |
-    |---|---|
-    | `hr_bpm`, `rr_mean_ms`, `rr_std_ms` | Reliable: mean error 1.5 bpm against 12SL |
-    | `hrv_sdnn_ms`, `hrv_rmssd_ms`, `hrv_pnn50` | Computed from the same R peaks; limited mainly by recording length |
-    | `t_amplitude_mv` | Measured |
-    | `pr_interval_ms`, `qt_interval_ms`, `qtc_bazett_ms`, `p_wave_duration_ms`, `st_deviation_mv` | **Always `NaN` with NeuroKit2 installed.** The delineation method used does not return the wave boundaries these features need. |
-    | `qrs_duration_ms` | Measured from the Q dip to the S dip, not QRS start to end, so it does not match clinical QRS width |
-    | All interval features without NeuroKit2 | Fixed placeholder values, the same for every recording |
+| Feature | Ours vs 12SL: mean difference | typical error (MAE) | correlation r | 12SL vs Uni-G (r) |
+|---|---|---|---|---|
+| `hr_bpm` | −0.4 bpm | 1.7 bpm | 0.90 | — |
+| `pr_interval_ms` | +2 ms | 8.5 ms | 0.87 | 0.89 |
+| `qrs_duration_ms` | +1 ms | 6.4 ms | 0.88 | 0.88 |
+| `qt_interval_ms` | −17 ms | 22.6 ms | 0.85 | 0.96 |
+| `qtc_bazett_ms` | −17 ms | 25.5 ms | 0.63 | 0.81 |
+| `p_wave_duration_ms` | −4 ms | 12.0 ms | 0.41 | 0.48 |
+| `t_amplitude_mv` (lead average) | +0.01 mV | | 0.96 | |
+| `st_deviation_mv` (lead average, vs Uni-G at J + 80 ms) | 0.00 mV | | 0.97 | |
 
-    Until this is fixed, compare real and synthetic data with heart rate, HRV and T amplitude,
-    and treat the interval features as unavailable. The explanations on these pages describe what
-    each feature *means*, which does not depend on the implementation.
+How to read it:
+
+- **Heart rate, PR, QRS, T amplitude and ST** match the clinical software about as closely as
+  the two commercial programs match each other.
+- **QT** follows 12SL closely (r 0.85) but is about 17 ms shorter on average: the tangent
+  method used for the end of the T wave is known to end it earlier. **QTc** inherits this, and
+  it also adds the small errors of QT and RR together, so its correlation is lower.
+- **P-wave duration** is the least reliable feature for every algorithm, including the
+  commercial ones.
+- Accuracy drops with **fewer leads** (single-lead QRS r ≈ 0.5) and **lower sampling rates**
+  (at 100 Hz, PR r 0.93 but QRS MAE 13 ms and QT r 0.73).
+- **Without NeuroKit2**, heart rate, HRV, QRS duration, ST and T amplitude are still measured;
+  PR, QT, QTc and P-wave duration are `NaN`.
+
+Because real and synthetic data go through exactly the same extractor, small systematic
+offsets such as the QT bias cancel out when you compare their distributions.
+
+!!! note "Changed in v0.7.0"
+    In v0.6.0 and earlier, PR, QT, QTc, P-wave duration and ST deviation were always `NaN`
+    with NeuroKit2 installed (and fixed placeholder values without it), and QRS was measured
+    from the Q dip to the S dip. Re-extract features made with those versions before
+    comparing them with new results.

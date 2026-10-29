@@ -275,3 +275,70 @@ class TestFeaturePlots:
         # Request non-existent column — should return a Figure, not raise
         fig = plot_feature_2d(real_df, synth_df, "nonexistent_x", "nonexistent_y")
         assert isinstance(fig, go.Figure)
+
+
+# ------------------------------------------------------------------ #
+# delineation (synthetic beats with known timing)                      #
+# ------------------------------------------------------------------ #
+
+def _synthetic_ecg(fs=500, seconds=10, rr_ms=800, n_leads=12, seed=0):
+    """
+    ECG with known fiducials: P 100 ms (R-200..R-100 ms), QRS 90 ms (R-45..R+45 ms),
+    T offset at R+350 ms. So PR = 155 ms, QRS = 90 ms, QT = 395 ms, T amplitude 0.3 mV.
+    """
+    rng = np.random.default_rng(seed)
+    t = np.arange(int(seconds * fs)) / fs * 1000.0  # ms
+    beat = np.zeros_like(t)
+    for r in np.arange(400.0, t[-1] - 400.0, rr_ms):
+        d = t - r
+        p = (d >= -200) & (d <= -100)
+        beat[p] += 0.15 * np.sin(np.pi * (d[p] + 200) / 100)
+        beat += np.interp(d, [-45, -30, 0, 25, 45], [0, -0.1, 1.2, -0.3, 0], left=0, right=0)
+        tw = (d >= 150) & (d <= 350)
+        beat[tw] += 0.3 * np.sin(np.pi * (d[tw] - 150) / 200)
+    gains = np.linspace(0.6, 1.4, n_leads)
+    data = gains[:, None] * beat[None, :] + rng.standard_normal((n_leads, len(t))) * 0.005
+    return data
+
+
+class TestDelineation:
+    def test_align_to_beats_handles_missing_points(self):
+        from ecgen_eval.features.delineation import align_to_beats
+
+        rpeaks = np.array([100, 300, 500])
+        # point for beat 1 missing, NaN ignored, duplicate for beat 2 keeps the first
+        out = align_to_beats([60, np.nan, 460, 470], rpeaks)
+        assert out[0] == 60 and np.isnan(out[1]) and out[2] == 460
+
+    def test_qrs_boundaries_match_known_width(self):
+        from ecgen_eval.features.delineation import qrs_boundaries
+
+        fs = 500
+        data = _synthetic_ecg(fs=fs)
+        rpeaks = detect_rpeaks(data[1], fs)
+        q = qrs_boundaries(data, rpeaks, fs)
+        width = (q["ECG_QRS_Offsets"] - q["ECG_QRS_Onsets"]) / fs * 1000
+        assert np.isfinite(width).sum() >= len(rpeaks) - 2
+        assert 70 <= np.nanmedian(width) <= 110
+
+    def test_interval_features_on_known_beats(self):
+        pytest.importorskip("neurokit2")
+        fs = 500
+        data = _synthetic_ecg(fs=fs)
+        ds = ECGDataset(data=data[None].astype(np.float32), lead_names=LEADS_12, fs=float(fs),
+                        source_path="/tmp/test", label="synthetic")
+        _, s = extract_features(ds)
+        row = s.iloc[0]
+        assert 70 <= row["hr_bpm"] <= 80
+        assert 120 <= row["pr_interval_ms"] <= 190
+        assert 70 <= row["qrs_duration_ms"] <= 110
+        assert 340 <= row["qt_interval_ms"] <= 430
+        assert 60 <= row["p_wave_duration_ms"] <= 130
+        assert 0.15 <= row["t_amplitude_mv"] <= 0.45
+        assert abs(row["st_deviation_mv"]) < 0.1
+
+    def test_no_placeholder_values_without_delineation(self, simple_ecg_signal):
+        """Intervals that cannot be measured are NaN, never fixed constants."""
+        peaks = detect_rpeaks(simple_ecg_signal, fs=500.0)
+        result = extract_interval_features(simple_ecg_signal, fs=500.0, rpeaks=peaks[:1])
+        assert all(np.isnan(result[k]) for k in ("pr_interval_ms", "qt_interval_ms"))

@@ -1,7 +1,7 @@
 """
 R-peak detection for ECG signals.
 
-Primary:  neurokit2.ecg_peaks()  (Pan-Tompkins implementation)
+Primary:  neurokit2.ecg_clean() + neurokit2.ecg_peaks()
 Fallback: scipy-based implementation in ecgen_eval.features.utils
 """
 
@@ -34,7 +34,8 @@ def detect_rpeaks(signal: np.ndarray, fs: float, method: str = "neurokit") -> np
     try:
         import neurokit2 as nk  # optional dependency
 
-        _, info = nk.ecg_peaks(signal.astype(float), sampling_rate=int(fs), method=method)
+        clean = nk.ecg_clean(signal.astype(float), sampling_rate=int(fs))
+        _, info = nk.ecg_peaks(clean, sampling_rate=int(fs), method=method)
         peaks = np.asarray(info["ECG_R_Peaks"], dtype=int)
         return peaks[peaks >= 0]
     except ImportError:
@@ -49,22 +50,17 @@ def detect_rpeaks(signal: np.ndarray, fs: float, method: str = "neurokit") -> np
 
 
 def delineate_ecg(
-    signal: np.ndarray, rpeaks: np.ndarray, fs: float
+    signal: np.ndarray, rpeaks: np.ndarray, fs: float, method: str = "prominence"
 ) -> Optional[dict]:
     """
-    Delineate P, QRS, and T boundaries using neurokit2.ecg_delineate().
+    Delineate P, QRS and T boundaries of a single-lead ECG.
 
-    Returns the ``waves`` dict from neurokit2 on success, or None if neurokit2
-    is not installed or delineation fails (caller must handle None).
+    Thin wrapper around :func:`ecgen_eval.features.delineation.delineate_recording`; returns
+    fiducial arrays aligned with ``rpeaks``, or None when there are fewer than 2 R peaks.
     """
-    if len(rpeaks) < 2:
-        return None
-    try:
-        import neurokit2 as nk
+    from ecgen_eval.features.delineation import delineate_recording
 
-        _, waves = nk.ecg_delineate(
-            signal.astype(float), rpeaks, sampling_rate=int(fs), method="peak"
-        )
-        return waves
+    try:
+        return delineate_recording(signal, rpeaks, fs, method=method)
     except Exception:
         return None

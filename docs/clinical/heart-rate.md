@@ -47,14 +47,15 @@ The [`heart_rate` metric](../metrics/heart_rate.md) compares exactly these distr
 
 ## How ECGEN-Eval measures it
 
-1. R peaks are detected on the primary lead with NeuroKit2's `ecg_peaks()` (a SciPy
-   Pan–Tompkins detector without NeuroKit2).
+1. R peaks are detected on the primary lead with NeuroKit2's `ecg_clean()` + `ecg_peaks()`
+   (a SciPy Pan–Tompkins detector without NeuroKit2).
 2. `rr_mean_ms` and `rr_std_ms` are the mean and standard deviation of the gaps between
    consecutive R peaks.
 3. `hr_bpm` = 60 000 ÷ `rr_mean_ms`.
 
-Against the GE 12SL heart rate of 60 PTB-XL recordings the mean error is 1.5 bpm. At least two
-R peaks are needed; otherwise the value is `NaN`.
+Against the GE 12SL heart rate of 500 PTB-XL recordings the typical error is 1.7 bpm
+([validation](index.md#validation)). At least two R peaks are needed; otherwise the value is
+`NaN`.
 
 ## Learn more
 

@@ -40,12 +40,16 @@ that are too short, too long or far too variable.
 
 ## How ECGEN-Eval measures it
 
-`pr_interval_ms` is the mean time from P-wave onset to QRS onset over all beats, using
-NeuroKit2's wave delineation on the primary lead.
+For every beat, `pr_interval_ms` is the time from P-wave onset to QRS onset; the recording
+value is the median over beats.
 
-!!! warning "Currently unavailable"
-    This feature is always `NaN` in v0.6.0 with NeuroKit2 installed, and a fixed placeholder
-    without it. See [Known limitations](index.md#known-limitations).
+- **QRS onset** comes from all leads together: where the combined slope of the leads rises
+  above 4 % of its range before the R peak.
+- **P onset** comes from NeuroKit2's peak-prominence delineator on every lead (the median
+  across leads), refined to where the P wave reaches 15 % of its height.
+
+Needs NeuroKit2 (`NaN` without it). Against GE 12SL: typical error 8.5 ms, r 0.87
+([validation](index.md#validation)).
 
 ## Learn more
 

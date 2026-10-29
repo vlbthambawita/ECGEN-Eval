@@ -6,14 +6,19 @@ into a unified pipeline that accepts an ECGDataset and returns DataFrames.
 from __future__ import annotations
 
 import warnings
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 
 from ecgen_eval.data.dataset import ECGDataset
-from ecgen_eval.features.qrs_detection import detect_rpeaks, delineate_ecg
-from ecgen_eval.features.interval_features import extract_rr_hr, extract_interval_features
+from ecgen_eval.features.qrs_detection import detect_rpeaks
+from ecgen_eval.features.delineation import delineate_recording
+from ecgen_eval.features.interval_features import (
+    beat_intervals,
+    extract_rr_hr,
+    extract_interval_features,
+)
 from ecgen_eval.features.amplitude_features import extract_amplitude_features
 from ecgen_eval.features.hrv_features import extract_hrv_features
 
@@ -25,16 +30,21 @@ class FeatureExtractor:
     Parameters
     ----------
     lead_for_intervals : str
-        Lead used for RR/HR/HRV and interval timing.  Defaults to "II"; if not
-        present the first available lead is used.
+        Lead whose R peaks define the beats (RR/HR/HRV).  Defaults to "II"; if not
+        present the first available lead is used.  Beat boundaries use all leads.
     rpeak_method : str
         Passed to neurokit2.ecg_peaks().  Ignored when neurokit2 absent.
+    delineation_method : str
+        NeuroKit2 ``ecg_delineate`` method for the P and T waves (default
+        ``"prominence"``, the most accurate against PTB-XL+ 12SL).
 
     Outputs
     -------
     beat_df : pd.DataFrame
         One row per (recording_idx, beat_idx, lead_name).
-        Columns: rr_ms, t_amplitude_mv, st_deviation_mv.
+        Columns: r_sample, rr_ms, pr_interval_ms, qrs_duration_ms, qt_interval_ms,
+        p_wave_duration_ms (per beat, shared by all leads), t_amplitude_mv and
+        st_deviation_mv (per lead, median over beats).
 
     summary_df : pd.DataFrame
         One row per recording.  Columns: rr_mean_ms, rr_std_ms, hr_bpm,
@@ -47,9 +57,11 @@ class FeatureExtractor:
         self,
         lead_for_intervals: str = "II",
         rpeak_method: str = "neurokit",
+        delineation_method: str = "prominence",
     ) -> None:
         self.lead_for_intervals = lead_for_intervals
         self.rpeak_method = rpeak_method
+        self.delineation_method = delineation_method
 
     # ---------------------------------------------------------------- #
     # Public API                                                         #
@@ -115,16 +127,17 @@ class FeatureExtractor:
             warnings.simplefilter("ignore")
             rpeaks = detect_rpeaks(primary_sig, fs, method=self.rpeak_method)
 
-        # ---- Delineation on primary lead (neurokit2 if available) ----
+        # ---- Delineation: QRS from all leads, P/T per lead (neurokit2 if available) ----
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            waves = delineate_ecg(primary_sig, rpeaks, fs)
+            waves = delineate_recording(recording, rpeaks, fs, method=self.delineation_method)
 
         # ---- RR / HR ----
         rr_hr = extract_rr_hr(rpeaks, fs)
 
         # ---- Interval features (primary lead) ----
-        interval_feats = extract_interval_features(primary_sig, fs, rpeaks, waves)
+        interval_feats = extract_interval_features(recording, fs, rpeaks, waves)
+        per_beat = beat_intervals(waves, fs)
 
         # ---- HRV (primary lead) ----
         hrv_feats = extract_hrv_features(rpeaks, fs)
@@ -150,6 +163,8 @@ class FeatureExtractor:
                         "lead": lead_name,
                         "r_sample": int(r),
                         "rr_ms": float(rr),
+                        **{k: float(v[beat_idx]) if beat_idx < len(v) else np.nan
+                           for k, v in per_beat.items()},
                         "st_deviation_mv": amp["st_deviation_mv"],
                         "t_amplitude_mv": amp["t_amplitude_mv"],
                     }

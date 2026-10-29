@@ -43,14 +43,17 @@ shrink at fast rates, which shows up as a QTc distribution that is too wide or s
 
 ## How ECGEN-Eval measures it
 
-1. `qt_interval_ms`: mean time from QRS onset to T-wave end over all beats (NeuroKit2
-   delineation on the primary lead).
-2. `qtc_bazett_ms` = `qt_interval_ms` ÷ √(`rr_mean_ms` / 1000).
+1. `qt_interval_ms`: time from QRS onset (all leads, see [QRS duration](qrs-duration.md)) to
+   the end of the T wave, median over beats.
+2. The **end of the T wave** uses the *tangent method*: find the steepest part of the T wave's
+   return to the baseline, extend it as a straight line, and take the point where the line
+   meets the baseline. This is done on every lead (T peaks from NeuroKit2's delineator) and
+   combined with the median across leads.
+3. `qtc_bazett_ms` = `qt_interval_ms` ÷ √(`rr_mean_ms` / 1000).
 
-!!! warning "Currently unavailable"
-    Both features are always `NaN` in v0.6.0 with NeuroKit2 installed. Without NeuroKit2 the QT
-    is a fixed 400 ms placeholder, so QTc then only reflects the heart rate. See
-    [Known limitations](index.md#known-limitations).
+Needs NeuroKit2 (`NaN` without it). Against GE 12SL, QT has r 0.85 but is about 17 ms
+shorter on average; the tangent method is known to end the T wave earlier. QTc has r 0.63
+([validation](index.md#validation)).
 
 ## Learn more
 

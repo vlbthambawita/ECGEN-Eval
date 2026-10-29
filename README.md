@@ -220,6 +220,7 @@ ecgen_eval/
 │   ├── __init__.py         Exports FeatureExtractor, extract_features
 │   ├── extractor.py        FeatureExtractor class → (beat_df, summary_df)
 │   ├── qrs_detection.py    R-peak detection (neurokit2 primary, scipy fallback)
+│   ├── delineation.py      Multi-lead QRS (spatial velocity) + P/T boundaries (neurokit2)
 │   ├── interval_features.py  RR, HR, PR, QRS, QT, QTc, P-wave duration
 │   ├── amplitude_features.py ST deviation, T-wave amplitude
 │   ├── hrv_features.py     SDNN, RMSSD, pNN50

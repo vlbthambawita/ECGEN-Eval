@@ -175,7 +175,9 @@ interface.
 
 ## 10. Implications for ECGEN-Eval
 
-1. **Fix the extractor with what is already a dependency.** ECGEN-Eval already uses NeuroKit2,
+1. **Fix the extractor with what is already a dependency.** *(Done 2026-10-29: P/T from
+   `method="prominence"` on every lead, QRS from multi-lead spatial velocity, tangent T
+   offset; validated against PTB-XL+ 12SL, see `docs/clinical/index.md#validation`.)* ECGEN-Eval already uses NeuroKit2,
    and the installed version (0.2.12) supports `ecg_delineate(method="dwt")`, which returns P,
    R and T onsets and offsets, and `method="prominence"`. The extractor currently calls
    `method="peak"` and reads keys that this method never returns. Switching method and key
