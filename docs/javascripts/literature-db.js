@@ -896,7 +896,10 @@
         t.feats.forEach(function (f) { groups[X_GROUPS[f.feature_group] || f.feature_group] = true; });
         var tr = el("tr", { class: "litdb-row", tabindex: "0", "aria-expanded": "false", id: "litdb-x-" + t.id }, [
           el("td", {}, [el("span", { class: "litdb-title", text: t.name }),
-            el("span", { class: "litdb-sub", text: t.id + " · " + (X_CATEGORIES[t.category] || t.category) })]),
+            el("span", { class: "litdb-sub", text: t.id + " · " + (X_CATEGORIES[t.category] || t.category) }),
+            t.ecgen_eval_backend ? el("div", { class: "litdb-tags" }, [el("span", {
+              class: "litdb-tag", title: "ECGEN-Eval feature backend (--feature-backend)",
+              text: "backend: " + t.ecgen_eval_backend.split("; ").join(", ") })]) : null]),
           el("td", {}, [el("span", { text: t.license || "" }),
             el("span", { class: "litdb-sub", text: t.license_class || "" })]),
           el("td", {}, [el("span", { text: (t.kinds.join(", ") || "not stated") }),
@@ -957,7 +960,8 @@
     dl.addEventListener("click", function () {
       var cols = ["id", "name", "category", "url", "install", "license", "license_class", "version",
         "signal_types", "input_kinds", "shape", "multilead", "fs_param", "fs_default", "fs_supported",
-        "fs_min_recommended", "fs_notes", "min_duration_s", "amplitude_units", "output_format"];
+        "fs_min_recommended", "fs_notes", "min_duration_s", "amplitude_units", "output_format",
+        "ecgen_eval_backend"];
       var lines = [cols.concat(["features"]).join(",")].concat(filteredTools().map(function (t) {
         return cols.map(function (k) { return csvCell(t[k]); })
           .concat([csvCell(Object.keys(t.fset))]).join(",");

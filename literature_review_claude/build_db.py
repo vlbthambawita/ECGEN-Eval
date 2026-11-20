@@ -539,7 +539,8 @@ CREATE TABLE extractors (
     n_features_reported INTEGER,            -- as stated by the tool / paper
     other_outputs       TEXT,               -- outputs without a feature_vocab id
     verified            TEXT,               -- source | docs | paper | readme
-    notes               TEXT
+    notes               TEXT,
+    ecgen_eval_backend  TEXT                -- ECGEN-Eval feature backend(s) built on it, if any
 );
 
 -- What each extractor accepts and returns (one row per extractor).
@@ -670,13 +671,13 @@ def write_extractors(con: sqlite3.Connection, vocab: list[dict], tools: list[dic
     for t in tools:
         inp, out = t.get("input", {}), t.get("output", {})
         con.execute(
-            "INSERT INTO extractors VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO extractors VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (t["id"], t["name"], t["category"], t.get("url"), t.get("pypi"), t.get("install"),
              t.get("license"), t.get("license_class"), t.get("version"), t.get("release_date"),
              t.get("maintained"), t.get("language"), t.get("python_requires"),
              t.get("runtime_deps"), t.get("paper_citation"), t.get("paper_doi"),
              t.get("method"), t.get("n_features_reported"), joined(t.get("other_outputs")),
-             t.get("verified"), t.get("notes")))
+             t.get("verified"), t.get("notes"), joined(t.get("ecgen_eval_backend"))))
         con.execute(
             "INSERT INTO extractor_inputs VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (t["id"], joined(inp.get("signal_types")), joined(inp.get("input_kinds")),
@@ -816,7 +817,8 @@ def main() -> None:
 def write_extractor_csv(vocab: list[dict], tools: list[dict]) -> None:
     """Flat tool list and a feature x tool support matrix, for spreadsheets."""
     cols = ["id", "name", "category", "url", "install", "license", "license_class", "version",
-            "release_date", "maintained", "language", "runtime_deps", "paper_doi", "method"]
+            "release_date", "maintained", "language", "runtime_deps", "paper_doi", "method",
+            "ecgen_eval_backend"]
     icols = ["signal_types", "input_kinds", "shape", "multilead", "fs_param", "fs_default",
              "fs_supported", "fs_min_recommended", "fs_notes", "min_duration_s",
              "amplitude_units", "preprocessing"]

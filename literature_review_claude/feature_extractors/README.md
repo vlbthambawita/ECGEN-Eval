@@ -28,6 +28,7 @@ The narrative review is `../04_ecg_feature_extractors.md`; `../build_db.py` load
   "runtime_deps": "numpy, scipy, pandas",   // notable heavy / non-Python dependencies
   "paper_citation": "Makowski et al., Behav Res Methods 2021", "paper_doi": "10.3758/...",
   "method": "short description of the algorithm(s)",
+  "ecgen_eval_backend": ["biosppy"],  // optional: ECGEN-Eval feature backends built on this tool
   "input": {
     "signal_types": ["ECG", "PPG"],
     "input_kinds": ["raw_1d"],        // raw_1d | raw_multilead | wfdb_record | csv | edf | mat |
