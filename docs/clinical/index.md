@@ -208,6 +208,35 @@ How to read it:
 Because real and synthetic data go through exactly the same extractor, small systematic
 offsets such as the QT bias cancel out when you compare their distributions.
 
+### Backend comparison { #backend-comparison }
+
+The table above is for the default `hybrid` backend. The same check was repeated for every
+[extraction backend](../user-guide/features.md#choosing-the-extraction-library-backend) on
+500 recordings drawn at random from PTB-XL fold 9 (a different draw from the table above, so the
+`hybrid` numbers differ slightly). Each cell gives the mean absolute error against GE 12SL and,
+in brackets, the share of recordings within a tolerance: 5 bpm for heart rate, 20 ms for PR and
+QRS, 30 ms for QT. "—" means the backend does not measure that feature.
+
+| Backend | HR | PR | QRS | QT | Time / recording |
+|---|---|---|---|---|---|
+| `hybrid` *(default)* | 1.4 bpm (95 %) | 8.2 ms (95 %) | 6.2 ms (96 %) | 24.5 ms (85 %) | 104 ms |
+| `neurokit2` (`dwt`) | 1.4 bpm (95 %) | 52.4 ms (26 %) | 72.2 ms (9 %) | 63.6 ms (30 %) | 69 ms |
+| `scipy` | 2.7 bpm (91 %) | — | 6.2 ms (96 %) | — | 13 ms |
+| `biosppy` | 0.6 bpm (97 %) | 37.6 ms (24 %) | 17.2 ms (69 %) | 35.4 ms (58 %) | 26 ms |
+| `biosppy`, `leads="all"` | 0.6 bpm (97 %) | 52.9 ms (4 %) | 14.9 ms (79 %) | 49.0 ms (46 %) | 173 ms |
+| `heartpy` | 2.7 bpm (87 %) | — | — | — | 13 ms |
+
+- **`hybrid`** is the only backend whose intervals are close to the clinical software.
+- **`biosppy`** has the most accurate heart rate. Its rule-based wave points are much less
+  accurate: the P onset is placed near the P peak, so PR is about 37 ms short. Combining the
+  leads helps QRS but not PR or QT.
+- **`heartpy`** and **`scipy`** are the fastest. They measure only rhythm and HRV (`scipy`
+  also QRS). HeartPy drops beats it rejects, which merges RR intervals and lowers the heart
+  rate of some recordings.
+
+Results from different backends are not interchangeable: extract real and synthetic data with
+the same backend.
+
 !!! note "Changed in v0.7.0"
     In v0.6.0 and earlier, PR, QT, QTc, P-wave duration and ST deviation were always `NaN`
     with NeuroKit2 installed (and fixed placeholder values without it), and QRS was measured

@@ -22,7 +22,7 @@ ecgen_eval/
 │   └── <metric>.py        one module per metric
 ├── features/
 │   ├── extractor.py       FeatureExtractor, extract_features (features=, backend=)
-│   ├── backends.py        delineation backends: hybrid, neurokit2, scipy, register_backend
+│   ├── backends.py        delineation backends: hybrid, neurokit2, scipy, biosppy, heartpy, register_backend
 │   ├── groups.py          feature groups: rhythm, intervals, hrv, amplitude, register_feature_group
 │   ├── delineation.py     spatial-velocity QRS, NeuroKit2 P/T, tangent T offset
 │   ├── qrs_detection.py   R-peak detection (NeuroKit2 / SciPy)

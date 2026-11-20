@@ -178,6 +178,8 @@ fe.columns   # ['hrv_sdnn_ms', 'hrv_rmssd_ms', 'hrv_pnn50', 'hr_bpm', 'qtc_bazet
 | `hybrid` *(default)* | NeuroKit2 `ecg_peaks` | Spatial velocity of all leads | NeuroKit2 `prominence` on every lead, tangent T offset | `neurokit2`, `scipy` |
 | `neurokit2` | NeuroKit2 `ecg_peaks` | NeuroKit2 `ecg_delineate` | NeuroKit2 `ecg_delineate` (`dwt`, `cwt`, `peak`, `prominence`) | `neurokit2` |
 | `scipy` | SciPy Pan–Tompkins | Spatial velocity of all leads | — (PR, QT, QTc, P duration are `NaN`) | `scipy` |
+| `biosppy` | [BioSPPy](https://github.com/scientisst/BioSPPy) segmenter (`hamilton`, `christov`, `engzee`, `gamboa`, `ssf`, `asi`, `pantompkins`) | Q start / S end on heartbeat templates | `getPPositions` / `getTPositions` on heartbeat templates | `pip install "ecgen-eval[biosppy]"` |
+| `heartpy` | [HeartPy](https://github.com/paulvangentcom/heartrate_analysis_python) moving-average detector | — | — (only `rhythm` and `hrv` are measured) | `pip install "ecgen-eval[heartpy]"` |
 
 ```python
 # Plain NeuroKit2 with the DWT delineator, every lead combined with the median
@@ -189,18 +191,42 @@ fe = FeatureExtractor(rpeak_method="pantompkins1985")
 
 # No NeuroKit2 at all
 fe = FeatureExtractor(backend="scipy", features=["rhythm", "hrv", "qrs_duration_ms"])
+
+# BioSPPy with the Christov detector, every lead combined with the median
+fe = FeatureExtractor(backend="biosppy", rpeak_method="christov",
+                      backend_kwargs={"leads": "all"})
+
+# HeartPy: heart rate and HRV only
+fe = FeatureExtractor(backend="heartpy", features=["rhythm", "hrv"])
+```
+
+```bash
+ecgen-eval features -r real/ --feature-backend biosppy --rpeak-method christov -o f.csv
+ecgen-eval list-features   # backends, their R-peak / delineation methods, and what is installed
 ```
 
 `rpeak_method` accepts any [`nk.ecg_peaks`](https://neuropsychology.github.io/NeuroKit/functions/ecg.html#ecg-peaks)
-method, or `"scipy"`. The `neurokit2` backend delineates the primary lead by default
-(`leads="all"` delineates every lead at the primary lead's R peaks). Its `peak` method gives no
-QRS boundaries, so QRS duration, PR, QT and the amplitudes are `NaN`.
+method, or `"scipy"`, for the `hybrid` and `neurokit2` backends; `biosppy` takes one of its own
+segmenters and `heartpy` has a single detector. An option the chosen backend does not take
+(e.g. `delineation_method` with `scipy`, `biosppy` or `heartpy`) raises `ValueError`, or a
+usage error in the CLI. The `neurokit2` and `biosppy` backends delineate the primary lead by
+default (`leads="all"` delineates every lead at the primary lead's R peaks and takes the
+median). The `neurokit2` `peak` method gives no QRS boundaries, so QRS duration, PR, QT and the
+amplitudes are `NaN`.
+
+- **`biosppy`** finds each wave point as a local extremum of a heartbeat template (−0.2 s to
+  +0.4 s around R). This is fast but literal: the P onset lands close to the P peak (PR about
+  35 ms short), a missing Q or S wave moves the QRS boundaries, and a negative or late T wave is
+  not followed.
+- **`heartpy`** was designed for PPG. The primary lead is notch-filtered, scaled and upsampled
+  4× before detection, as HeartPy recommends for ECG. Beats that HeartPy rejects are dropped,
+  which merges their RR intervals.
 
 !!! warning "Compare like with like"
     Different backends give systematically different intervals (e.g. QT from `dwt` is
     typically longer than from `hybrid`). Always extract real and synthetic data with the
-    **same** extractor. Only `hybrid` has been
-    [validated against GE 12SL](../clinical/index.md#validation).
+    **same** extractor. `hybrid` is the most accurate backend against GE 12SL; see the
+    [backend comparison](../clinical/index.md#backend-comparison).
 
 ### Adding your own features
 

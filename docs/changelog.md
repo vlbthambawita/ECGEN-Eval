@@ -10,6 +10,31 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+### Added
+
+- **`biosppy` feature backend.** [BioSPPy](https://github.com/scientisst/BioSPPy) R-peak
+  segmenters (`--rpeak-method hamilton`, `christov`, `engzee`, `gamboa`, `ssf`, `asi`,
+  `pantompkins`) and its template-based `getP/Q/S/TPositions` fiducials, on the primary lead or
+  every lead (`backend_kwargs={"leads": "all"}`). Fills every feature group. Install with
+  `pip install "ecgen-eval[biosppy]"`.
+- **`heartpy` feature backend.** [HeartPy](https://github.com/paulvangentcom/heartrate_analysis_python)
+  R peaks only, with the filter → scale → upsample preparation that HeartPy recommends for ECG.
+  Only `rhythm` and `hrv` are measured. Install with `pip install "ecgen-eval[heartpy]"`.
+- `DelineationBackend.rpeak_methods` / `delineation_methods` / `is_available()`. `get_backend`
+  rejects options the backend does not take, so `--delineation-method` with `scipy`,
+  `biosppy` or `heartpy` (or an unknown `--rpeak-method` for `biosppy`) is a usage error.
+- `ecgen-eval list-features` lists each backend's R-peak and delineation methods and marks
+  backends whose packages are not installed.
+- Backend comparison against GE 12SL in
+  [Clinical Features Explained](clinical/index.md#backend-comparison).
+- The feature-extractor catalogue (`ecgen_literature.sqlite`, `feature_extractors.csv`) has an
+  `ecgen_eval_backend` column naming the ECGEN-Eval backends built on each tool.
+
+### Changed
+
+- `--rpeak-method` and `--delineation-method` help no longer assume NeuroKit2;
+  `--delineation-method` choices come from the registered backends.
+
 ## [0.8.0] — 2026-10-29
 
 Same code as 0.7.1, released under a minor version because 0.7.1 added new features

@@ -7,7 +7,7 @@ rec: "Recording\n(L, T)" {class: data; style.multiple: true}
 backend: "Delineation backend  ·  backend=" {
   class: group
   hybrid: "hybrid (default)\nR peaks: nk.ecg_peaks on primary lead\nQRS: spatial velocity of all leads\nP, T: nk prominence per lead (median)\nT end: tangent method" {class: feature}
-  others: "neurokit2\nnk.ecg_delineate: dwt · cwt · peak · prominence\n\nscipy\nPan–Tompkins + spatial-velocity QRS, no P/T\n\ncustom\nDelineationBackend + register_backend" {class: model}
+  others: "neurokit2\nnk.ecg_delineate: dwt · cwt · peak · prominence\n\nscipy\nPan–Tompkins + spatial-velocity QRS, no P/T\n\nbiosppy\nsegmenters + template P/Q/S/T positions\n\nheartpy\nR peaks only (rhythm, HRV)\n\ncustom\nDelineationBackend + register_backend" {class: model}
 }
 
 ctx: "RecordingContext\nrpeaks · waves (fiducials per beat)\nrecording · lead_names · fs" {class: data}
