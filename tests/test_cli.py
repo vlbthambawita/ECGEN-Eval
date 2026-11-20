@@ -42,3 +42,47 @@ def test_eval_forwards_fs_to_metrics(npy_pair, tmp_path, monkeypatch):
     assert result.exit_code == 0, result.output
     assert seen["fs"] == 250.0
     assert (tmp_path / "report.html").exists()
+
+
+def test_list_features_shows_backends():
+    result = CliRunner().invoke(cli.main, ["list-features"])
+    assert result.exit_code == 0, result.output
+    for name in ("hybrid", "neurokit2", "scipy", "biosppy", "heartpy"):
+        assert name in result.output
+    assert "--rpeak-method: hamilton" in result.output
+
+
+@pytest.mark.parametrize("backend, option", [
+    ("scipy", ["--delineation-method", "dwt"]),
+    ("heartpy", ["--rpeak-method", "neurokit"]),
+    ("biosppy", ["--rpeak-method", "neurokit"]),
+])
+def test_features_rejects_backend_options(npy_pair, tmp_path, backend, option):
+    real, _ = npy_pair
+    result = CliRunner().invoke(
+        cli.main,
+        ["features", "-r", real, "--feature-backend", backend, *option,
+         "-o", str(tmp_path / "f.csv")],
+    )
+    assert result.exit_code == 2
+    assert option[0] in result.output
+
+
+@pytest.mark.parametrize("backend", ["biosppy", "heartpy"])
+def test_features_with_new_backends(tmp_path, backend):
+    pytest.importorskip(backend)
+    from tests.test_features import _synthetic_ecg
+
+    np.save(tmp_path / "real.npy", np.stack([_synthetic_ecg(seed=s) for s in range(2)])
+            .astype(np.float32))
+    out = tmp_path / "f.csv"
+    result = CliRunner().invoke(
+        cli.main,
+        ["features", "-r", str(tmp_path / "real.npy"), "--feature-backend", backend,
+         "-F", "rhythm", "-F", "hrv", "-o", str(out)],
+    )
+    assert result.exit_code == 0, result.output
+    import pandas as pd
+
+    df = pd.read_csv(out)
+    assert df["hr_bpm"].between(70, 80).all()

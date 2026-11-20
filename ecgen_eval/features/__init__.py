@@ -31,7 +31,9 @@ detector; features that need P/T boundaries (PR, QT, QTc, P duration) are then N
 
 from ecgen_eval.features.backends import (
     AVAILABLE_BACKENDS,
+    BioSPPyBackend,
     DelineationBackend,
+    HeartPyBackend,
     HybridBackend,
     NeuroKitBackend,
     ScipyBackend,
@@ -53,7 +55,9 @@ __all__ = [
     "FeatureExtractor",
     "extract_features",
     "AVAILABLE_BACKENDS",
+    "BioSPPyBackend",
     "DelineationBackend",
+    "HeartPyBackend",
     "HybridBackend",
     "NeuroKitBackend",
     "ScipyBackend",

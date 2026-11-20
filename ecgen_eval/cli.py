@@ -46,6 +46,8 @@ def _feature_options(func):
     """Options choosing which clinical features to compute and with which library."""
     from ecgen_eval.features.backends import AVAILABLE_BACKENDS, DEFAULT_BACKEND
 
+    delineation_methods = sorted({m for cls in AVAILABLE_BACKENDS.values()
+                                  for m in cls.delineation_methods})
     options = [
         click.option("--feature", "-F", "feature_select", multiple=True,
                      help="Feature group (rhythm, intervals, amplitude, hrv) or column "
@@ -55,12 +57,13 @@ def _feature_options(func):
                      type=click.Choice(sorted(AVAILABLE_BACKENDS), case_sensitive=False),
                      help="Library that detects beats and delineates P/QRS/T waves."),
         click.option("--rpeak-method", default=None,
-                     help="R-peak detector: a neurokit2 ecg_peaks method (e.g. neurokit, "
-                          "pantompkins1985, hamilton2002) or 'scipy'. Default: backend's own."),
+                     help="R-peak detector of the chosen backend (hybrid / neurokit2: a "
+                          "neurokit2 ecg_peaks method or 'scipy'; biosppy: hamilton, christov, "
+                          "...). Default: backend's own. See `ecgen-eval list-features`."),
         click.option("--delineation-method", default=None,
-                     type=click.Choice(["prominence", "dwt", "cwt", "peak"]),
-                     help="neurokit2 ecg_delineate method (hybrid default: prominence, "
-                          "neurokit2 default: dwt)."),
+                     type=click.Choice(delineation_methods),
+                     help="P/QRS/T delineation method, for backends that offer a choice "
+                          "(hybrid default: prominence, neurokit2 default: dwt)."),
     ]
     for option in reversed(options):
         func = option(func)
@@ -69,18 +72,23 @@ def _feature_options(func):
 
 def _build_extractor(feature_select, feature_backend, rpeak_method, delineation_method,
                      lead="II"):
-    from ecgen_eval.features import FeatureExtractor
+    from ecgen_eval.features import FeatureExtractor, get_backend
 
-    if feature_backend == "scipy" and delineation_method:
-        raise click.BadParameter("the scipy backend does not delineate P/T waves.",
-                                 param_hint="--delineation-method")
+    kwargs = {}
+    if rpeak_method is not None:
+        kwargs["rpeak_method"] = rpeak_method
+    if delineation_method is not None:
+        kwargs["method"] = delineation_method
+    try:
+        backend = get_backend(feature_backend, **kwargs)
+    except ValueError as exc:
+        hint = "--delineation-method" if "delineation" in str(exc) else "--rpeak-method"
+        raise click.BadParameter(str(exc), param_hint=hint) from exc
     try:
         return FeatureExtractor(
             lead_for_intervals=lead,
             features=list(feature_select) or None,
-            backend=feature_backend,
-            rpeak_method=rpeak_method,
-            delineation_method=delineation_method,
+            backend=backend,
         )
     except ValueError as exc:
         raise click.BadParameter(str(exc), param_hint="--feature") from exc
@@ -467,8 +475,14 @@ def list_features():
         click.echo(f"  {'':12} columns: {', '.join(group.columns)}\n")
     click.echo("Backends (select with --feature-backend):\n")
     for name, cls in AVAILABLE_BACKENDS.items():
-        click.echo(f"  {name:<12} {cls.description}")
-        click.echo(f"  {'':12} requires: {', '.join(cls.requires) or '-'}\n")
+        status = "" if cls.is_available() else "  [not installed]"
+        click.echo(f"  {name:<12} {cls.description}{status}")
+        click.echo(f"  {'':12} requires: {', '.join(cls.requires) or '-'}")
+        if cls.rpeak_methods:
+            click.echo(f"  {'':12} --rpeak-method: {', '.join(cls.rpeak_methods)}")
+        if cls.delineation_methods:
+            click.echo(f"  {'':12} --delineation-method: {', '.join(cls.delineation_methods)}")
+        click.echo("")
 
 
 if __name__ == "__main__":

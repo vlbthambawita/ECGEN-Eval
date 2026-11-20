@@ -432,6 +432,86 @@ class TestBackends:
         assert 70 <= s.iloc[0]["hr_bpm"] <= 80
         assert np.isfinite(s.iloc[0]["qrs_duration_ms"])
 
+    def test_backend_rejects_unsupported_options(self):
+        with pytest.raises(ValueError, match="does not take a delineation method"):
+            FeatureExtractor(backend="scipy", delineation_method="dwt")
+        with pytest.raises(ValueError, match="Unknown delineation method"):
+            FeatureExtractor(backend="hybrid", delineation_method="nope")
+
+    @pytest.mark.parametrize("leads", ["primary", "all"])
+    def test_biosppy_backend(self, leads):
+        pytest.importorskip("biosppy")
+        ds = ECGDataset(data=_synthetic_ecg()[None].astype(np.float32), lead_names=LEADS_12,
+                        fs=500.0, source_path="/tmp/test", label="synthetic")
+        fe = FeatureExtractor(backend="biosppy", backend_kwargs={"leads": leads})
+        _, s = fe.extract(ds)
+        row = s.iloc[0]
+        assert 70 <= row["hr_bpm"] <= 80
+        assert 70 <= row["qrs_duration_ms"] <= 120
+        assert 350 <= row["qt_interval_ms"] <= 450
+        # BioSPPy places the P onset close to the P peak, so PR comes out short
+        assert 80 <= row["pr_interval_ms"] <= 170
+
+    def test_biosppy_backend_aligns_fiducials(self):
+        pytest.importorskip("biosppy")
+        from ecgen_eval.features import BioSPPyBackend
+
+        data = _synthetic_ecg()
+        rpeaks, waves = BioSPPyBackend(leads="all").delineate(data, 500.0, 1)
+        assert len(rpeaks) >= 10
+        for key, values in waves.items():
+            assert len(values) == len(rpeaks), key
+        on, off = waves["ECG_QRS_Onsets"], waves["ECG_QRS_Offsets"]
+        ok = np.isfinite(on) & np.isfinite(off)
+        assert ok.any() and np.all(on[ok] < rpeaks[ok]) and np.all(off[ok] > rpeaks[ok])
+
+    def test_biosppy_backend_flat_signal(self):
+        pytest.importorskip("biosppy")
+        ds = ECGDataset(data=np.zeros((1, 12, 5000), dtype=np.float32), lead_names=LEADS_12,
+                        fs=500.0, source_path="/tmp/test", label="flat")
+        _, s = extract_features(ds, backend="biosppy")
+        assert s.drop(columns="sample_idx").isna().all(axis=None)
+
+    def test_biosppy_backend_rpeak_methods(self):
+        with pytest.raises(ValueError, match="Unknown R-peak method"):
+            FeatureExtractor(backend="biosppy", rpeak_method="neurokit")
+        assert FeatureExtractor(backend="biosppy", rpeak_method="christov").backend.rpeak_method \
+            == "christov"
+
+    def test_heartpy_backend_rhythm_and_hrv_only(self):
+        pytest.importorskip("heartpy")
+        ds = ECGDataset(data=_synthetic_ecg()[None].astype(np.float32), lead_names=LEADS_12,
+                        fs=500.0, source_path="/tmp/test", label="synthetic")
+        _, s = extract_features(ds, backend="heartpy")
+        row = s.iloc[0]
+        assert abs(row["hr_bpm"] - 75) <= 5
+        assert np.isfinite(row["hrv_sdnn_ms"]) and np.isfinite(row["hrv_rmssd_ms"])
+        for col in ("pr_interval_ms", "qrs_duration_ms", "qt_interval_ms", "st_deviation_mv"):
+            assert np.isnan(row[col]), col
+
+    def test_heartpy_backend_peaks_on_r(self):
+        pytest.importorskip("heartpy")
+        from ecgen_eval.features import HeartPyBackend
+
+        data = _synthetic_ecg()
+        rpeaks, waves = HeartPyBackend().delineate(data, 500.0, 1)
+        assert waves is None
+        # synthetic R peaks at 400 ms + k * 800 ms
+        assert np.all(np.abs(((rpeaks / 500 * 1000 - 400) + 400) % 800 - 400) <= 4)
+
+    def test_heartpy_backend_bad_signal(self):
+        pytest.importorskip("heartpy")
+        ds = ECGDataset(data=np.zeros((1, 12, 5000), dtype=np.float32), lead_names=LEADS_12,
+                        fs=500.0, source_path="/tmp/test", label="flat")
+        _, s = extract_features(ds, backend="heartpy")
+        assert s.drop(columns="sample_idx").isna().all(axis=None)
+
+    def test_heartpy_backend_takes_no_methods(self):
+        with pytest.raises(ValueError, match="does not take an R-peak method"):
+            FeatureExtractor(backend="heartpy", rpeak_method="neurokit")
+        with pytest.raises(ValueError, match="does not take a delineation method"):
+            FeatureExtractor(backend="heartpy", delineation_method="dwt")
+
     def test_custom_backend_instance(self, tiny_dataset):
         from ecgen_eval.features import DelineationBackend
 

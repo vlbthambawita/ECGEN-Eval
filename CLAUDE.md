@@ -13,6 +13,8 @@ ECGEN-Eval is a Python package providing evaluation metrics and interactive HTML
 pip install -e ".[dev]"        # core + dev tools
 pip install -e ".[features]"   # + neurokit2 + scipy for clinical feature extraction
 pip install -e ".[fed]"        # + torch + transformers + huggingface_hub for FED metric
+pip install -e ".[biosppy]"    # + biosppy (+ peakutils) for the biosppy feature backend
+pip install -e ".[heartpy]"    # + heartpy for the heartpy feature backend
 pip install scipy wfdb         # optional: needed for Welch PSD and WFDB loading
 
 # Test
@@ -61,7 +63,7 @@ Optional subpackage (requires `neurokit2`; falls back to scipy/NumPy). Extracts 
 | `interval_features.py` | RR, HR, PR, QRS, QT, QTc (Bazett), P-wave duration — per beat from fiducials, median over beats; NaN when points are missing (no placeholders) |
 | `amplitude_features.py` | ST (J+80 ms) and signed T amplitude per lead vs. PR-segment baseline (averaged across leads in summary) |
 | `hrv_features.py` | SDNN, RMSSD, pNN50 from RR series |
-| `backends.py` | Delineation backends (`hybrid` default, `neurokit2`, `scipy`): recording → `(rpeaks, waves)`; registry `AVAILABLE_BACKENDS` + `register_backend` |
+| `backends.py` | Delineation backends (`hybrid` default, `neurokit2`, `scipy`, `biosppy`, `heartpy` R peaks only): recording → `(rpeaks, waves)`; registry `AVAILABLE_BACKENDS` + `register_backend`; backends declare `rpeak_methods` / `delineation_methods`, which `get_backend` validates |
 | `groups.py` | Feature groups (`rhythm`, `intervals`, `hrv`, `amplitude`) computed from a `RecordingContext`; registry `AVAILABLE_FEATURE_GROUPS` + `register_feature_group` / `@feature_group`; `resolve_features` handles group/column/callable selection |
 | `extractor.py` | `FeatureExtractor(features=..., backend=...)`: takes `ECGDataset`, returns `(beat_df, summary_df)` |
 

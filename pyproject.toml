@@ -45,6 +45,15 @@ features = [
     "neurokit2>=0.2",
     "scipy>=1.7",
 ]
+biosppy = [
+    "biosppy>=2.2",
+    "peakutils>=1.3",  # imported by biosppy.signals.ecg but not declared by BioSPPy 2.2.4
+    "scipy>=1.7",
+]
+heartpy = [
+    "heartpy>=1.2.7",
+    "scipy>=1.7",
+]
 fed = [
     "torch>=2.0",
     "transformers>=4.40",
