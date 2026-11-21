@@ -10,7 +10,42 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-11-21
+
 ### Added
+
+- **Nine fidelity metrics from the literature review.** Every Fidelity metric family that
+  more than 10 of the 172 reviewed papers report now has an ECGEN-Eval counterpart
+  ([which metric did the paper use?](metrics/index.md#which-metric-did-the-paper-use)):
+  [`mse`](metrics/mse.md), [`rmse`](metrics/mse.md), [`euclidean`](metrics/euclidean.md),
+  [`pearson`](metrics/pearson.md), [`cosine`](metrics/cosine.md),
+  [`curve_frechet`](metrics/curve_frechet.md) (discrete Fréchet distance between curves),
+  [`js_div`](metrics/js_div.md) (amplitude-distribution JS divergence, KL in `extra`),
+  [`ks_test`](metrics/ks_test.md) (two-sample Kolmogorov–Smirnov test on 7 signal features)
+  and [`c2st`](metrics/c2st.md) (classifier two-sample test / discriminative score). Each has
+  a Metrics Explained page with an interactive demo and a Metric Reference entry.
+- **`pairing` option** for the six waveform metrics: `"nn"` (nearest neighbour, default),
+  `"paired"` (recording *i* with recording *i*) and `"mean"` (mean waveforms), set on the CLI
+  with `ecgen-eval eval --pairing`. These metrics also report a real-vs-real baseline in
+  `extra["real_vs_real"]`. See
+  [Matching protocol](user-guide/metric-reference.md#matching-protocol).
+- **Beat morphology plots.** `plot_beat_bands` draws the median and 5–95 % band (or a density
+  map) of all R-peak-aligned beats per dataset. Reports include it by default
+  (`--no-beat-bands` to skip); `ecgen-eval visualize --compare-mode beats|beat-density`.
+- **Embedding projections.** `compute_embedding_2d` / `plot_embedding_2d` for PCA, t-SNE and
+  UMAP (new `[umap]` extra), fitted on the real data where the method allows it.
+  `ecgen-eval eval --embedding-plots [--embedding-method ...] [--embedding-features ...]` and
+  `ecgen-eval visualize --embedding`.
+- **Statistics for clinical features.** `compare_feature_distributions` (KS, Mann–Whitney U,
+  Cohen's d per feature); KS columns in the report's Clinical Feature Summary;
+  `ecgen-eval features --stats-output`.
+- `plot_ecg_comparison(show_r_peaks=True)` and `ecgen-eval visualize --show-r-peaks`.
+- `generate_report(gallery_selection="random")` / `--gallery-selection random`; the report
+  now prints which recordings the gallery shows.
+- `plot_amplitude_hist` (shown for `js_div` in reports); `plot_metric_violin` also draws the
+  per-pair values of the pairwise metrics.
+- Metric score tables in the report show the real-vs-real baseline, classifier accuracy and
+  AUC, or KL values where a metric provides them.
 
 - **`biosppy` feature backend.** [BioSPPy](https://github.com/scientisst/BioSPPy) R-peak
   segmenters (`--rpeak-method hamilton`, `christov`, `engzee`, `gamboa`, `ssf`, `asi`,
@@ -37,6 +72,15 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ### Changed
 
+- **`ecgen-eval eval` without `-m` now runs a curated set of 12 metrics** instead of every
+  metric except `fed`: `fd`, `mmd`, `pr_dist`, `c2st`, `rmse`, `pearson`, `dtw`, `js_div`, `psd`, `heart_rate`, `hrv`, `nn_dist`.
+  Reports made with the default are shorter and no longer contain `prd`, `psnr`, `ssim`,
+  `swd`, `mae`, `sqi` or `spectral_entropy` unless requested.
+- **`-m all`** runs every registered metric except `fed` (the previous default plus the nine
+  new metrics); `-m all -m fed` runs everything.
+- Internal: the JS divergence, the 7- and 11-feature signal descriptors and subsampling are
+  shared helpers (`_divergence.py`, `_signal_features.py`, `_matching.py`). Scores of the
+  existing metrics are unchanged (pinned by a regression test).
 - `--rpeak-method` and `--delineation-method` help no longer assume NeuroKit2;
   `--delineation-method` choices come from the registered backends.
 
@@ -242,7 +286,8 @@ Initial release.
 - Interactive Plotly visualizations on ECG graph paper and a self-contained HTML report.
 - `ecgen-eval` CLI with `eval`, `visualize` and `list-metrics`.
 
-[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.6.0...v0.7.0
