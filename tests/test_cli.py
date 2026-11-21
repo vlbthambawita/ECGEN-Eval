@@ -19,9 +19,42 @@ def npy_pair(tmp_path):
     return _save(tmp_path / "real.npy", 0), _save(tmp_path / "synth.npy", 1)
 
 
-def test_default_metrics_exclude_fed():
+def test_default_metrics_are_a_curated_subset():
+    assert cli.DEFAULT_METRICS == [
+        "fd", "mmd", "pr_dist", "c2st", "rmse", "pearson", "dtw", "js_div", "psd",
+        "heart_rate", "hrv", "nn_dist",
+    ]
+    assert set(cli.DEFAULT_METRICS) < set(AVAILABLE_METRICS)
     assert "fed" not in cli.DEFAULT_METRICS
-    assert set(cli.DEFAULT_METRICS) == set(AVAILABLE_METRICS) - {"fed"}
+
+
+def test_all_metrics_exclude_fed():
+    assert set(cli.ALL_METRICS) == set(AVAILABLE_METRICS) - {"fed"}
+
+
+def test_resolve_metrics():
+    assert cli.resolve_metrics(["MMD", "prd", "mmd"]) == ["mmd", "prd"]
+    assert cli.resolve_metrics(["all"]) == cli.ALL_METRICS
+    with_fed = cli.resolve_metrics(["all", "fed"])
+    assert with_fed[-1] == "fed" and len(with_fed) == len(AVAILABLE_METRICS)
+    assert cli.resolve_metrics(["rmse", "all"])[0] == "rmse"
+
+
+def test_eval_default_and_all(npy_pair, tmp_path, monkeypatch):
+    ran = []
+
+    def fake_report(metric_results, output_path, **kwargs):
+        ran.append(list(metric_results))
+        return tmp_path / "unused.html"
+
+    monkeypatch.setattr(cli, "generate_report", fake_report)
+    real, synth = npy_pair
+    base = ["eval", "-r", real, "-s", synth, "-o", str(tmp_path / "r.html")]
+    assert CliRunner().invoke(cli.main, base).exit_code == 0
+    assert CliRunner().invoke(cli.main, base + ["-m", "all"]).exit_code == 0
+    assert ran == [cli.DEFAULT_METRICS, cli.ALL_METRICS]
+    bad = CliRunner().invoke(cli.main, base + ["-m", "everything"])
+    assert bad.exit_code != 0
 
 
 def test_eval_forwards_fs_to_metrics(npy_pair, tmp_path, monkeypatch):

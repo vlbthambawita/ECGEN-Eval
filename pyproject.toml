@@ -54,6 +54,9 @@ heartpy = [
     "heartpy>=1.2.7",
     "scipy>=1.7",
 ]
+umap = [
+    "umap-learn>=0.5",  # UMAP embedding plots (ecgen_eval.visualization.embedding_plots)
+]
 fed = [
     "torch>=2.0",
     "transformers>=4.40",

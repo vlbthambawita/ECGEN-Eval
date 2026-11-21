@@ -35,7 +35,9 @@ def _assert_result(result: MetricResult, name: str):
 def test_available_metrics_keys():
     expected_original = {"mmd", "dtw", "prd", "psd", "fd", "fed"}
     expected_new = {"psnr", "ssim", "swd", "mae", "hrv", "pr_dist", "sqi", "nn_dist", "heart_rate", "spectral_entropy"}
-    assert expected_original | expected_new == set(AVAILABLE_METRICS.keys())
+    expected_fidelity = {"mse", "rmse", "pearson", "cosine", "euclidean", "curve_frechet",
+                         "js_div", "ks_test", "c2st"}
+    assert expected_original | expected_new | expected_fidelity == set(AVAILABLE_METRICS.keys())
 
 
 # ------------------------------------------------------------------ #
@@ -254,3 +256,33 @@ def test_heart_rate_metric_detects_tachycardia():
     r = AVAILABLE_METRICS["heart_rate"](fs=500).compute(real, synth, lead_names=["II"])
     assert abs(r.extra["II"]["real_hr_mean"] - 70) < 3
     assert abs(r.extra["II"]["synth_hr_mean"] - 160) < 5
+
+
+# ------------------------------------------------------------------ #
+# Scores of the original metrics are pinned across helper refactors    #
+# ------------------------------------------------------------------ #
+
+_PINNED_SCORES = {
+    "mmd": 0.00013530254364013672,
+    "dtw": 6.826717217297684,
+    "prd": 138.41630427042642,
+    "psd": 0.0003394902107351689,
+    "fd": 1.542681483783255,
+    "psnr": 24.387137152434658,
+    "ssim": 0.25881416806690166,
+    "swd": 0.2281358409527832,
+    "mae": 0.16859671254124906,
+    "hrv": 0.13792187135070802,
+    "pr_dist": 0.7778319200508451,
+    "sqi": -0.00031419462783674137,
+    "nn_dist": 1.3880648513634999,
+    "heart_rate": 0.1192349582358891,
+    "spectral_entropy": 0.22527426366320477,
+}
+
+
+@pytest.mark.parametrize("key", sorted(_PINNED_SCORES))
+def test_original_metric_scores_unchanged(key, real_ecg, synth_ecg):
+    """`_divergence.py` / `_signal_features.py` must not change any existing score."""
+    score = AVAILABLE_METRICS[key]().compute(real_ecg, synth_ecg).score
+    assert score == pytest.approx(_PINNED_SCORES[key], rel=1e-6, abs=1e-9)

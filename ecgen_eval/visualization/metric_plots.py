@@ -3,7 +3,8 @@ Plotly-based plots for metric results.
 
 Provides:
   - Per-lead bar chart
-  - Distribution violin (for DTW pairwise distances)
+  - Distribution violin (for DTW pairwise distances and per-pair metric values)
+  - PSD overlay and amplitude-histogram overlay
   - Radar chart summarising all metrics across datasets
 """
 
@@ -95,6 +96,10 @@ def plot_metric_violin(
     """
     # Check if data is available
     sample_result = next(iter(results.values()))
+    what = "Pairwise Distance"
+    if dist_key not in sample_result.extra and "per_lead_all_values" in sample_result.extra:
+        # Pairwise metrics (mse, pearson, ...) store one value per matched pair.
+        dist_key, what = "per_lead_all_values", "Per-pair Value"
     if dist_key not in sample_result.extra:
         return _empty_figure(f"No per-pair distances available for {metric_name}")
 
@@ -137,7 +142,7 @@ def plot_metric_violin(
             )
 
     fig.update_layout(
-        title=f"{metric_name} Pairwise Distance Distribution per Lead",
+        title=f"{metric_name} {what} Distribution per Lead",
         height=280 * n_rows + 80,
         violinmode="group",
         plot_bgcolor="white",
@@ -323,6 +328,83 @@ def plot_psd_overlay(
     )
     fig.update_xaxes(title_text="Frequency (Hz)", gridcolor="rgba(200,200,200,0.5)")
     fig.update_yaxes(title_text="Normalised Power", gridcolor="rgba(200,200,200,0.5)")
+    return fig
+
+
+# ------------------------------------------------------------------ #
+# Amplitude histogram overlay (js_div metric)                          #
+# ------------------------------------------------------------------ #
+
+def plot_amplitude_hist(
+    results: Dict[str, MetricResult],
+    leads: Optional[List[str]] = None,
+) -> go.Figure:
+    """
+    Overlay the amplitude-value distributions of real vs. synthetic datasets per lead.
+
+    Only meaningful for AmplitudeJSMetric (``js_div``) results, which store the
+    histograms in ``result.extra["per_lead_hist_real"]`` / ``["per_lead_hist_synth"]``
+    and the bin edges in ``result.extra["bin_edges"]``. The two open-ended tail bins
+    are drawn at the first and last edge.
+
+    Parameters
+    ----------
+    results : dict  dataset_label → MetricResult
+    leads : list of str, optional
+    """
+    sample_result = next(iter(results.values()))
+    if "per_lead_hist_real" not in sample_result.extra:
+        return _empty_figure("Amplitude histograms not available (run the js_div metric first)")
+
+    all_leads = list(sample_result.extra["per_lead_hist_real"].keys())
+    if leads:
+        all_leads = [l for l in leads if l in all_leads]
+
+    n_cols = min(4, len(all_leads))
+    n_rows = (len(all_leads) + n_cols - 1) // n_cols
+    fig = make_subplots(
+        rows=n_rows, cols=n_cols, subplot_titles=all_leads,
+        vertical_spacing=0.14, horizontal_spacing=0.06,
+    )
+
+    for li, lead in enumerate(all_leads):
+        row = li // n_cols + 1
+        col = li % n_cols + 1
+        edges = np.array(sample_result.extra["bin_edges"][lead])
+        width = edges[1] - edges[0]
+        # Bin centres; the two tail bins sit half a bin outside the finite range.
+        x = np.concatenate([[edges[0] - width / 2], 0.5 * (edges[:-1] + edges[1:]),
+                            [edges[-1] + width / 2]])
+        fig.add_trace(
+            go.Scatter(
+                x=x.tolist(), y=sample_result.extra["per_lead_hist_real"][lead],
+                name="Real", legendgroup="real", showlegend=(li == 0),
+                line=dict(color="black", width=2, shape="hvh"), mode="lines",
+            ),
+            row=row, col=col,
+        )
+        for si, (label, result) in enumerate(results.items()):
+            hist = result.extra["per_lead_hist_synth"].get(lead, [])
+            if len(hist) == 0:
+                continue
+            fig.add_trace(
+                go.Scatter(
+                    x=x.tolist(), y=hist, name=label, legendgroup=label,
+                    showlegend=(li == 0), mode="lines", opacity=0.8,
+                    line=dict(color=get_synth_color(si), width=1.5, dash="dash", shape="hvh"),
+                ),
+                row=row, col=col,
+            )
+
+    fig.update_layout(
+        title="Amplitude Distribution per Lead (outermost bins collect out-of-range values)",
+        height=280 * n_rows + 80,
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    fig.update_xaxes(title_text="Amplitude", gridcolor="rgba(200,200,200,0.5)")
+    fig.update_yaxes(title_text="Share of samples", gridcolor="rgba(200,200,200,0.5)")
     return fig
 
 

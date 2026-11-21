@@ -35,6 +35,7 @@ from typing import List, Optional
 
 import numpy as np
 
+from ecgen_eval.metrics._signal_features import stat_features
 from ecgen_eval.metrics.base import BaseMetric, MetricResult
 
 
@@ -130,33 +131,8 @@ class MMDMetric(BaseMetric):
 
     @staticmethod
     def _extract_features(signals: np.ndarray) -> np.ndarray:
-        """
-        Extract a statistical feature vector per recording.
-
-        Input : (N, T)
-        Output: (N, 7) float32
-        """
-        mean_amp = np.mean(signals, axis=1)
-        std_amp = np.std(signals, axis=1)
-        rms = np.sqrt(np.mean(signals ** 2, axis=1))
-        max_abs = np.max(np.abs(signals), axis=1)
-        energy = np.sum(signals ** 2, axis=1) / signals.shape[1]
-        # Zero-crossing rate
-        signs = np.sign(signals)
-        zcr = np.sum(np.abs(np.diff(signs, axis=1)), axis=1) / (2.0 * (signals.shape[1] - 1))
-        # Lag-1 autocorrelation
-        mu = mean_amp[:, None]
-        centered = signals - mu
-        ac = np.sum(centered[:, :-1] * centered[:, 1:], axis=1) / (
-            np.sum(centered ** 2, axis=1) + 1e-9
-        )
-
-        feats = np.stack([mean_amp, std_amp, rms, max_abs, energy, zcr, ac], axis=1)
-        return feats.astype(np.float32)
-
-    # ------------------------------------------------------------------ #
-    # Kernel & MMD                                                         #
-    # ------------------------------------------------------------------ #
+        """7-feature statistical vector per recording (N, T) → (N, 7)."""
+        return stat_features(signals)
 
     def _mmd_squared(self, X: np.ndarray, Y: np.ndarray) -> float:
         """

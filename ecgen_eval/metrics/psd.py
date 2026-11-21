@@ -34,6 +34,7 @@ from typing import List, Optional
 
 import numpy as np
 
+from ecgen_eval.metrics._divergence import js_divergence
 from ecgen_eval.metrics.base import BaseMetric, MetricResult
 
 
@@ -161,9 +162,4 @@ class PSDMetric(BaseMetric):
     @staticmethod
     def _js_divergence(p: np.ndarray, q: np.ndarray) -> float:
         """Jensen-Shannon divergence (base e). Range [0, ln 2]."""
-        p = p / (p.sum() + 1e-12)
-        q = q / (q.sum() + 1e-12)
-        m = 0.5 * (p + q)
-        kl_pm = np.sum(np.where(p > 0, p * np.log(p / (m + 1e-12)), 0.0))
-        kl_qm = np.sum(np.where(q > 0, q * np.log(q / (m + 1e-12)), 0.0))
-        return float(0.5 * kl_pm + 0.5 * kl_qm)
+        return js_divergence(p, q)

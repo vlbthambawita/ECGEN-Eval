@@ -43,6 +43,7 @@ def plot_ecg_comparison(
     leads: Optional[List[str]] = None,
     mode: str = "overlay",
     add_calibration_pulse: bool = True,
+    show_r_peaks: bool = False,
 ) -> go.Figure:
     """
     Plot one ECG recording from *real* and the corresponding sample from each
@@ -59,6 +60,9 @@ def plot_ecg_comparison(
     mode : 'overlay' | 'sidebyside' | 'grid'
     add_calibration_pulse : bool
         Prepend a 1 mV × 0.2 s calibration square wave to every trace.
+    show_r_peaks : bool
+        Mark the R peaks found by ECGEN-Eval's detector on every trace, so the
+        reader sees what the rhythm metrics (``heart_rate``, ``hrv``) work with.
 
     Returns
     -------
@@ -72,11 +76,14 @@ def plot_ecg_comparison(
         raise ValueError("No valid lead names found in real dataset.")
 
     if mode == "overlay":
-        return _overlay(real, synthetics, sample_index, leads, add_calibration_pulse)
+        return _overlay(real, synthetics, sample_index, leads, add_calibration_pulse,
+                        show_r_peaks)
     elif mode == "sidebyside":
-        return _sidebyside(real, synthetics, sample_index, leads, add_calibration_pulse)
+        return _sidebyside(real, synthetics, sample_index, leads, add_calibration_pulse,
+                           show_r_peaks)
     elif mode == "grid":
-        return _grid(real, synthetics, sample_index, leads, add_calibration_pulse)
+        return _grid(real, synthetics, sample_index, leads, add_calibration_pulse,
+                     show_r_peaks)
     else:
         raise ValueError(f"Unknown mode: {mode!r}. Choose 'overlay', 'sidebyside', or 'grid'.")
 
@@ -91,6 +98,7 @@ def _overlay(
     sample_index: int,
     leads: List[str],
     add_cal: bool,
+    show_r_peaks: bool = False,
 ) -> go.Figure:
     """All datasets on the same axes, one subplot per lead."""
     n_leads = len(leads)
@@ -127,6 +135,9 @@ def _overlay(
             ),
             row=row, col=col,
         )
+        if show_r_peaks:
+            _add_r_peaks(fig, real.data[sample_index, real.lead_names.index(lead), :], t,
+                         real.fs, TRACE_REAL_COLOR, row, col)
 
         # Synthetic traces
         for si, synth in enumerate(synthetics):
@@ -150,6 +161,9 @@ def _overlay(
                 ),
                 row=row, col=col,
             )
+            if show_r_peaks:
+                _add_r_peaks(fig, synth.data[sample_index, synth.lead_names.index(lead), :], t,
+                             synth.fs, get_synth_color(si), row, col)
 
         # Lead label annotation
         fig = _add_lead_label(fig, lead, row, col)
@@ -164,6 +178,7 @@ def _sidebyside(
     sample_index: int,
     leads: List[str],
     add_cal: bool,
+    show_r_peaks: bool = False,
 ) -> go.Figure:
     """One column for Real + one column per synthetic dataset."""
     n_datasets = 1 + len(synthetics)
@@ -210,6 +225,9 @@ def _sidebyside(
                 ),
                 row=row, col=col,
             )
+            if show_r_peaks:
+                _add_r_peaks(fig, ds.data[sample_index, ds.lead_names.index(lead), :], t,
+                             ds.fs, color, row, col)
 
     _add_scale_annotation(fig)
     return fig
@@ -221,9 +239,10 @@ def _grid(
     sample_index: int,
     leads: List[str],
     add_cal: bool,
+    show_r_peaks: bool = False,
 ) -> go.Figure:
     """Rows = leads, Cols = datasets. Compact grid view."""
-    return _sidebyside(real, synthetics, sample_index, leads, add_cal)
+    return _sidebyside(real, synthetics, sample_index, leads, add_cal, show_r_peaks)
 
 
 # ------------------------------------------------------------------ #
@@ -253,6 +272,27 @@ def _prepare_signal(signal: np.ndarray, t: np.ndarray, add_cal: bool):
     x = np.concatenate([t_cal, t])
     y = np.concatenate([cal, signal.astype(float)])
     return x, y
+
+
+def _add_r_peaks(fig: go.Figure, signal: np.ndarray, t: np.ndarray, fs: float, color: str,
+                 row: int, col: int) -> None:
+    """Mark detected R peaks of one trace with open triangles."""
+    from ecgen_eval.metrics._rpeaks import detect_r_peaks
+
+    peaks = detect_r_peaks(signal, fs)
+    peaks = peaks[peaks < len(t)]
+    if len(peaks) == 0:
+        return
+    fig.add_trace(
+        go.Scatter(
+            x=t[peaks], y=signal[peaks].astype(float),
+            mode="markers",
+            marker=dict(symbol="triangle-down-open", size=9, color=color, line=dict(width=1.5)),
+            showlegend=False,
+            hovertemplate="R peak<br>t=%{x:.3f}s<br>%{y:.3f} mV<extra></extra>",
+        ),
+        row=row, col=col,
+    )
 
 
 # ------------------------------------------------------------------ #

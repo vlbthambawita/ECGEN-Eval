@@ -22,8 +22,10 @@ from ecgen_eval.visualization.metric_plots import (
     plot_per_lead_bar,
     plot_metric_violin,
     plot_psd_overlay,
+    plot_amplitude_hist,
     plot_radar_chart,
 )
+from ecgen_eval.visualization.beat_plots import plot_beat_bands
 from ecgen_eval.visualization.feature_plots import (
     plot_feature_pair_grid,
     plot_feature_triple_grid,
@@ -50,6 +52,10 @@ def generate_report(
     feature_dfs_synth=None,
     feature_plots_2d: bool = False,
     feature_plots_3d: bool = False,
+    beat_bands: bool = True,
+    embedding_plots: Optional[List[go.Figure]] = None,
+    gallery_selection: str = "first",
+    gallery_seed: int = 42,
 ) -> Path:
     """
     Build and write a self-contained HTML report.
@@ -65,6 +71,16 @@ def generate_report(
     compare_mode : 'overlay' | 'sidebyside' | 'grid'
     plotly_cdn : bool — if True, load Plotly.js from CDN (smaller HTML);
                         if False, embed full JS (offline-capable).
+    beat_bands : bool — add a "Beat Morphology" section with median and 5–95 %
+                        bands of all R-peak-aligned beats (skipped when no beat
+                        is detected in the real data).
+    embedding_plots : list of go.Figure, optional — figures from
+                        ``plot_embedding_2d`` shown in an "Embedding Projections"
+                        section.
+    gallery_selection : 'first' | 'random' — which recordings the ECG gallery
+                        shows. 'random' draws them with ``gallery_seed``; the
+                        chosen indices are printed under the gallery either way.
+    gallery_seed : int
 
     Returns
     -------
@@ -85,8 +101,17 @@ def generate_report(
 
     # 3. ECG Sample Gallery
     sections.append(_render_ecg_gallery(
-        real, synthetics, n_ecg_samples, leads, compare_mode, include_js
+        real, synthetics, n_ecg_samples, leads, compare_mode, include_js,
+        selection=gallery_selection, seed=gallery_seed, beat_bands=beat_bands,
     ))
+
+    # 3b. Beat morphology bands (all detected beats, not hand-picked samples)
+    if beat_bands:
+        sections.append(_render_beat_bands(real, synthetics, leads))
+
+    # 3c. Embedding projections
+    if embedding_plots:
+        sections.append(_render_embedding_section(embedding_plots))
 
     # 4. Metric sections
     for metric_name, by_synth in metric_results.items():
@@ -196,10 +221,15 @@ def _render_ecg_gallery(
     leads: Optional[List[str]],
     mode: str,
     include_js,
+    selection: str = "first",
+    seed: int = 42,
+    beat_bands: bool = False,
 ) -> str:
     n_samples = min(n_samples, real.n_samples)
+    more = " See Beat Morphology below for all beats." if beat_bands else ""
+    indices = gallery_indices(real, synthetics, n_samples, selection, seed)
     plots_html = ""
-    for i in range(n_samples):
+    for k, i in enumerate(indices):
         fig = plot_ecg_comparison(
             real=real,
             synthetics=synthetics,
@@ -211,7 +241,7 @@ def _render_ecg_gallery(
         plots_html += f'<div class="ecg-sample"><h4>Sample {i}</h4>'
         plots_html += fig.to_html(
             full_html=False,
-            include_plotlyjs=include_js if i == 0 else False,
+            include_plotlyjs=include_js if k == 0 else False,
             div_id=f"ecg_sample_{i}",
             config={"responsive": True, "displayModeBar": True},
         )
@@ -225,6 +255,76 @@ def _render_ecg_gallery(
     Comparison mode: <code>{mode}</code> &nbsp;|&nbsp;
     Calibration pulse: 1 mV &times; 0.2 s prepended &nbsp;|&nbsp;
     Paper: 25 mm/s &middot; 10 mm/mV
+  </p>
+  <p class="hint">
+    Recordings shown: {"first" if selection == "first" else f"random (seed {seed})"}
+    &nbsp;|&nbsp; indices {", ".join(str(i) for i in indices)}.
+    A few samples cannot represent a dataset.{more}
+  </p>
+  {plots_html}
+</div>
+"""
+
+
+def gallery_indices(
+    real: ECGDataset,
+    synthetics: List[ECGDataset],
+    n_samples: int,
+    selection: str = "first",
+    seed: int = 42,
+) -> List[int]:
+    """Recording indices shown in the ECG gallery ('first' or seeded 'random')."""
+    if selection not in ("first", "random"):
+        raise ValueError(f"Unknown gallery_selection {selection!r}. Choose 'first' or 'random'.")
+    n_samples = min(n_samples, real.n_samples)
+    if selection == "first":
+        return list(range(n_samples))
+    pool = min([real.n_samples] + [s.n_samples for s in synthetics])
+    n_samples = min(n_samples, pool)
+    rng = np.random.default_rng(seed)
+    return sorted(int(i) for i in rng.choice(pool, size=n_samples, replace=False))
+
+
+def _render_beat_bands(
+    real: ECGDataset,
+    synthetics: List[ECGDataset],
+    leads: Optional[List[str]],
+) -> str:
+    """Median and 5–95 % bands of R-peak-aligned beats; empty string if none are found."""
+    try:
+        fig = plot_beat_bands(real, synthetics, leads=leads)
+    except Exception:  # a plot must never break the report
+        return ""
+    if not fig.data:
+        return ""
+    plot_html = fig.to_html(
+        full_html=False, include_plotlyjs=False, config={"responsive": True},
+    )
+    return f"""
+<div class="section">
+  <h2>Beat Morphology</h2>
+  <p class="hint">
+    Every detected beat of each dataset, aligned at its R peak. Line: median beat.
+    Shaded band: 5th to 95th percentile. The legend gives the number of beats used;
+    a low count for a synthetic dataset means R-peak detection struggled on it.
+  </p>
+  {plot_html}
+</div>
+"""
+
+
+def _render_embedding_section(figures: List[go.Figure]) -> str:
+    plots_html = "".join(
+        fig.to_html(full_html=False, include_plotlyjs=False, config={"responsive": True})
+        for fig in figures
+    )
+    return f"""
+<div class="section">
+  <h2>Embedding Projections</h2>
+  <p class="hint">
+    Each point is one recording. Blue contours show where the real data lies.
+    Qualitative only: distances and cluster sizes in t-SNE / UMAP plots are not
+    quantitative, and overlap in 2-D does not prove that the distributions match.
   </p>
   {plots_html}
 </div>
@@ -241,17 +341,36 @@ def _render_metric_section(
     # Pick first result for description/reference
     sample = next(iter(by_synth.values()))
 
-    # Score table
+    # Score table, with scalar extras that help to read the score
+    extra_cols = [
+        (key, title) for key, title in _EXTRA_COLUMNS
+        if any(_is_number(r.extra.get(key)) for r in by_synth.values())
+    ]
     score_rows = ""
     for label, result in by_synth.items():
-        score_rows += f"<tr><td>{label}</td><td><strong>{result.score:.6f}</strong></td></tr>"
+        cells = "".join(
+            f"<td>{result.extra[key]:.6f}</td>" if _is_number(result.extra.get(key))
+            else "<td>—</td>"
+            for key, _ in extra_cols
+        )
+        score_rows += (
+            f"<tr><td>{label}</td><td><strong>{result.score:.6f}</strong></td>{cells}</tr>"
+        )
+    extra_head = "".join(f"<th>{title}</th>" for _, title in extra_cols)
+
+    pairing_hint = ""
+    if "pairing" in sample.extra:
+        pairing_hint = (
+            f' Pairing: <code>{sample.extra["pairing"]}</code> '
+            f'({_PAIRING_TEXT.get(sample.extra["pairing"], "")}).'
+        )
 
     table = f"""
   <table class="metric-table">
-    <thead><tr><th>Dataset</th><th>Score</th></tr></thead>
+    <thead><tr><th>Dataset</th><th>Score</th>{extra_head}</tr></thead>
     <tbody>{score_rows}</tbody>
   </table>
-  <p class="hint">{"Higher is better." if sample.higher_is_better else "Lower is better (0 = identical distributions)."}</p>
+  <p class="hint">{"Higher is better." if sample.higher_is_better else "Lower is better (0 = identical distributions)."}{pairing_hint}</p>
 """
 
     # Per-lead bar chart
@@ -283,6 +402,16 @@ def _render_metric_section(
                 config={"responsive": True},
             )
 
+    # Amplitude histogram overlay (js_div metric)
+    if metric_name.lower() == "js_div":
+        hist_fig = plot_amplitude_hist(by_synth)
+        if hist_fig.data:
+            psd_html = hist_fig.to_html(
+                full_html=False,
+                include_plotlyjs=False,
+                config={"responsive": True},
+            )
+
     return f"""
 <div class="section metric-section">
   <h2>{metric_name.upper()} — {sample.description}</h2>
@@ -297,6 +426,28 @@ def _render_metric_section(
   {psd_html}
 </div>
 """
+
+
+#: Scalar ``extra`` values shown as additional columns of a metric's score table.
+_EXTRA_COLUMNS = [
+    ("real_vs_real", "Real vs real (baseline)"),
+    ("accuracy", "Classifier accuracy"),
+    ("auc", "ROC AUC"),
+    ("kl_real_synth", "KL(real ‖ synth)"),
+    ("kl_synth_real", "KL(synth ‖ real)"),
+    ("frac_rejected", "Share of tests rejected"),
+]
+
+_PAIRING_TEXT = {
+    "nn": "each real signal vs its nearest synthetic signal",
+    "paired": "real signal i vs synthetic signal i",
+    "mean": "mean real waveform vs mean synthetic waveform",
+}
+
+
+def _is_number(value) -> bool:
+    return isinstance(value, (int, float, np.floating)) and not isinstance(value, bool) \
+        and bool(np.isfinite(value))
 
 
 def _render_summary_table(
@@ -410,9 +561,26 @@ def _render_feature_summary_table(
     if not cols:
         return ""
 
+    from ecgen_eval.features.stats import compare_feature_distributions
+
     header = "<th>Feature</th>" + "<th>Real (mean ± std)</th>" + "".join(
-        f"<th>{ds.label} (mean ± std)</th>" for ds in synthetics
+        f"<th>{ds.label} (mean ± std)</th><th>{ds.label} KS D</th><th>{ds.label} p (Holm)</th>"
+        for ds in synthetics
     )
+    stats = []
+    for sdf in synth_dfs:
+        try:
+            stats.append(compare_feature_distributions(real_df, sdf).set_index("feature"))
+        except Exception:  # statistics are an add-on; never break the table
+            stats.append(None)
+
+    def _stat_cells(st, col) -> str:
+        if st is None or col not in st.index or not np.isfinite(st.loc[col, "ks_D"]):
+            return "<td>N/A</td><td>N/A</td>"
+        p = st.loc[col, "ks_p_adjusted"]
+        p_txt = "&lt;0.001" if p < 0.001 else f"{p:.3f}"
+        return f"<td>{st.loc[col, 'ks_D']:.3f}</td><td>{p_txt}</td>"
+
     def _mean_std(series) -> str:
         vals = series.dropna()
         if vals.empty:
@@ -423,14 +591,17 @@ def _render_feature_summary_table(
     for col in cols:
         cells = f"<td><code>{col}</code></td>"
         cells += f"<td>{_mean_std(real_df[col])}</td>"
-        for sdf in synth_dfs:
+        for sdf, st in zip(synth_dfs, stats):
             cells += f"<td>{_mean_std(sdf[col]) if col in sdf.columns else 'N/A'}</td>"
+            cells += _stat_cells(st, col)
         rows += f"<tr>{cells}</tr>"
 
     return f"""
 <div class="section">
   <h2>Clinical Feature Summary</h2>
-  <p class="hint">Mean ± std of each feature across recordings. NaN indicates feature could not be extracted.</p>
+  <p class="hint">Mean ± std of each feature across recordings. NaN indicates feature could not be extracted.
+  KS D: two-sample Kolmogorov–Smirnov statistic against the real data (0 = same distribution, 1 = no overlap);
+  p: its p-value, Holm-adjusted over the features. Read D as the effect size: p shrinks with sample size.</p>
   <table class="summary-table">
     <thead><tr>{header}</tr></thead>
     <tbody>{rows}</tbody>

@@ -41,6 +41,7 @@ from ecgen_eval.features.backends import (
     register_backend,
 )
 from ecgen_eval.features.extractor import FeatureExtractor, extract_features
+from ecgen_eval.features.stats import compare_feature_distributions
 from ecgen_eval.features.groups import (
     AVAILABLE_FEATURE_GROUPS,
     FeatureGroup,
@@ -54,6 +55,7 @@ from ecgen_eval.features.groups import (
 __all__ = [
     "FeatureExtractor",
     "extract_features",
+    "compare_feature_distributions",
     "AVAILABLE_BACKENDS",
     "BioSPPyBackend",
     "DelineationBackend",

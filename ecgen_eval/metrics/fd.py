@@ -42,6 +42,7 @@ from typing import List, Optional
 
 import numpy as np
 
+from ecgen_eval.metrics._signal_features import extended_features
 from ecgen_eval.metrics.base import BaseMetric, MetricResult
 from ecgen_eval.metrics._frechet_utils import frechet_distance
 
@@ -135,46 +136,5 @@ class FDMetric(BaseMetric):
 
     @staticmethod
     def _extract_features(signals: np.ndarray) -> np.ndarray:
-        """
-        Input : (N, T)
-        Output: (N, 11) float64
-        """
-        x = signals.astype(np.float64)
-        T = x.shape[1]
-
-        mean = np.mean(x, axis=1)
-        std = np.std(x, axis=1) + 1e-9
-        rms = np.sqrt(np.mean(x ** 2, axis=1))
-        energy = np.sum(x ** 2, axis=1) / T
-        max_abs = np.max(np.abs(x), axis=1)
-
-        # Skewness and kurtosis (standardised central moments)
-        centred = x - mean[:, None]
-        skew = np.mean((centred / std[:, None]) ** 3, axis=1)
-        kurt = np.mean((centred / std[:, None]) ** 4, axis=1)
-
-        # Zero-crossing rate
-        signs = np.sign(x)
-        zcr = np.sum(np.abs(np.diff(signs, axis=1)), axis=1) / (2.0 * (T - 1))
-
-        # Lag-1 autocorrelation
-        ac = np.sum(centred[:, :-1] * centred[:, 1:], axis=1) / (
-            np.sum(centred ** 2, axis=1) + 1e-9
-        )
-
-        # Spectral centroid and bandwidth (from magnitude FFT)
-        fft_mag = np.abs(np.fft.rfft(x, axis=1))
-        freqs = np.arange(fft_mag.shape[1], dtype=np.float64)
-        total_power = np.sum(fft_mag, axis=1) + 1e-9
-        spectral_centroid = np.sum(fft_mag * freqs[None, :], axis=1) / total_power
-        spectral_bandwidth = np.sqrt(
-            np.sum(fft_mag * (freqs[None, :] - spectral_centroid[:, None]) ** 2, axis=1)
-            / total_power
-        )
-
-        feats = np.stack([
-            mean, std, rms, energy, max_abs, skew, kurt,
-            zcr, ac, spectral_centroid, spectral_bandwidth
-        ], axis=1)
-        return feats
-
+        """11-feature vector per recording (N, T) → (N, 11) float64."""
+        return extended_features(signals)

@@ -42,6 +42,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 
 from ecgen_eval.metrics._rpeaks import detect_r_peaks
+from ecgen_eval.metrics._divergence import js_from_samples
 from ecgen_eval.metrics.base import BaseMetric, MetricResult
 
 
@@ -183,32 +184,7 @@ class HRVMetric(BaseMetric):
     @staticmethod
     def _js_divergence(p_vals: np.ndarray, q_vals: np.ndarray, n_bins: int = 50) -> float:
         """JS divergence between two scalar distributions via histogram binning."""
-        p_vals = p_vals[~np.isnan(p_vals)]
-        q_vals = q_vals[~np.isnan(q_vals)]
-        if len(p_vals) == 0 or len(q_vals) == 0:
-            return 0.0
-
-        lo = min(p_vals.min(), q_vals.min())
-        hi = max(p_vals.max(), q_vals.max())
-        if hi <= lo:
-            return 0.0
-
-        bins = np.linspace(lo, hi, n_bins + 1)
-        p_hist, _ = np.histogram(p_vals, bins=bins, density=True)
-        q_hist, _ = np.histogram(q_vals, bins=bins, density=True)
-
-        p_hist = p_hist + 1e-10
-        q_hist = q_hist + 1e-10
-        p_hist /= p_hist.sum()
-        q_hist /= q_hist.sum()
-
-        m = 0.5 * (p_hist + q_hist)
-        eps = 1e-15
-        js = 0.5 * (
-            np.sum(p_hist * np.log((p_hist + eps) / (m + eps)))
-            + np.sum(q_hist * np.log((q_hist + eps) / (m + eps)))
-        )
-        return float(np.clip(js, 0.0, np.log(2)))
+        return js_from_samples(p_vals, q_vals, n_bins)
 
     def _subsample(self, X: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         if X.shape[0] <= self.n_subsample:

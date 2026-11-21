@@ -22,8 +22,32 @@ from ecgen_eval.data.loader import load_ecg_folder
 from ecgen_eval.metrics import AVAILABLE_METRICS
 from ecgen_eval.report.html_report import generate_report
 
-# `fed` needs the [fed] extras and downloads model weights, so it must be requested explicitly.
-DEFAULT_METRICS = [k for k in AVAILABLE_METRICS if k != "fed"]
+# Curated default: one or two metrics per evaluation question, without near-duplicates
+# (mse / euclidean / mae / prd / psnr repeat rmse; swd / ks_test share mmd's features) and
+# without the metrics that separate generators poorly (cosine, curve_frechet).
+DEFAULT_METRICS = [
+    "fd", "mmd", "pr_dist", "c2st",        # distribution
+    "rmse", "pearson", "dtw",              # waveform: amplitude error, shape, shape with warping
+    "js_div",                              # amplitude values
+    "psd",                                 # frequency content
+    "heart_rate", "hrv",                   # rhythm
+    "nn_dist",                             # memorisation
+]
+
+# `-m all` runs every registered metric except `fed`, which needs the [fed] extras and downloads
+# model weights, so it must always be requested explicitly (`-m all -m fed`).
+ALL_METRICS = [k for k in AVAILABLE_METRICS if k != "fed"]
+
+
+def resolve_metrics(selected) -> List[str]:
+    """Expand ``all`` and drop duplicates, keeping the order in which metrics were requested."""
+    out: List[str] = []
+    for key in selected:
+        key = key.lower()
+        for k in (ALL_METRICS if key == "all" else [key]):
+            if k not in out:
+                out.append(k)
+    return out
 
 
 # ------------------------------------------------------------------ #
@@ -117,8 +141,9 @@ def _build_extractor(feature_select, feature_backend, rpeak_method, delineation_
     multiple=True,
     default=DEFAULT_METRICS,
     show_default=True,
-    type=click.Choice(list(AVAILABLE_METRICS.keys()), case_sensitive=False),
-    help="Metric to compute. Repeatable (-m mmd -m prd). Defaults to all metrics except 'fed'.",
+    type=click.Choice(list(AVAILABLE_METRICS.keys()) + ["all"], case_sensitive=False),
+    help="Metric to compute. Repeatable (-m mmd -m prd). 'all' runs every metric except 'fed' "
+         "(add -m fed to include it). Defaults to a curated set of 12 metrics.",
 )
 @click.option(
     "--output", "-o",
@@ -180,6 +205,50 @@ def _build_extractor(feature_select, feature_backend, rpeak_method, delineation_
 )
 @_feature_options
 @click.option(
+    "--pairing",
+    default="nn",
+    show_default=True,
+    type=click.Choice(["nn", "paired", "mean"], case_sensitive=False),
+    help="How waveform metrics (mse, rmse, pearson, cosine, euclidean, curve_frechet) match "
+         "real and synthetic signals: nearest neighbour, index-aligned pairs (needs equal "
+         "counts), or mean waveforms.",
+)
+@click.option(
+    "--beat-bands/--no-beat-bands",
+    default=True,
+    show_default=True,
+    help="Add the Beat Morphology section (median and 5-95 % bands of all detected beats).",
+)
+@click.option(
+    "--embedding-plots",
+    is_flag=True,
+    default=False,
+    help="Add 2-D embedding projections of real vs synthetic recordings to the report.",
+)
+@click.option(
+    "--embedding-method",
+    multiple=True,
+    default=("pca",),
+    show_default=True,
+    type=click.Choice(["pca", "tsne", "umap"], case_sensitive=False),
+    help="Projection for --embedding-plots. Repeatable. 'umap' needs the [umap] extra.",
+)
+@click.option(
+    "--embedding-features",
+    default="handcrafted",
+    show_default=True,
+    type=click.Choice(["handcrafted", "signal", "clinical"], case_sensitive=False),
+    help="What is projected: 11 signal features per lead, the raw waveform, or the "
+         "clinical features (the latter runs feature extraction).",
+)
+@click.option(
+    "--gallery-selection",
+    default="first",
+    show_default=True,
+    type=click.Choice(["first", "random"], case_sensitive=False),
+    help="Recordings shown in the ECG gallery: the first ones or a seeded random draw.",
+)
+@click.option(
     "--backbone",
     default="ecgfounder",
     show_default=True,
@@ -217,6 +286,12 @@ def eval(
     feature_backend,
     rpeak_method,
     delineation_method,
+    pairing,
+    beat_bands,
+    embedding_plots,
+    embedding_method,
+    embedding_features,
+    gallery_selection,
     backbone,
     fed_device,
     fed_batch_size,
@@ -232,9 +307,10 @@ def eval(
         [s.strip() for s in synth_labels.split(",")] if synth_labels else []
     )
     leads_list = [l.strip() for l in leads.split(",")] if leads else None
+    need_features = feature_plots or (embedding_plots and embedding_features == "clinical")
     extractor = (
         _build_extractor(feature_select, feature_backend, rpeak_method, delineation_method)
-        if feature_plots else None
+        if need_features else None
     )
 
     # -------------------------------------------------------------- #
@@ -261,6 +337,15 @@ def eval(
     # -------------------------------------------------------------- #
     # Compute metrics                                                  #
     # -------------------------------------------------------------- #
+    if pairing == "paired":
+        for ds in synth_datasets:
+            if ds.n_samples != real_ds.n_samples:
+                raise click.UsageError(
+                    f"--pairing paired needs the same number of recordings in every dataset: "
+                    f"{real_ds.label} has {real_ds.n_samples}, {ds.label} has {ds.n_samples}."
+                )
+
+    metrics = resolve_metrics(metrics)
     click.echo("\nComputing metrics...")
     metric_results: dict = {}
 
@@ -272,10 +357,14 @@ def eval(
                 device=fed_device,
                 batch_size=fed_batch_size,
             )
-        elif "fs" in inspect.signature(metric_cls.__init__).parameters:
-            metric_obj = metric_cls(fs=real_ds.fs)
         else:
-            metric_obj = metric_cls()
+            params = inspect.signature(metric_cls.__init__).parameters
+            kwargs = {}
+            if "fs" in params:
+                kwargs["fs"] = real_ds.fs
+            if "pairing" in params:
+                kwargs["pairing"] = pairing
+            metric_obj = metric_cls(**kwargs)
         click.echo(f"  [{metric_key.upper()}]")
         by_synth = {}
         for synth_ds in synth_datasets:
@@ -294,7 +383,7 @@ def eval(
     # -------------------------------------------------------------- #
     feature_df_real = None
     feature_dfs_synth = None
-    if feature_plots:
+    if need_features:
         click.echo(f"\nExtracting clinical features ({extractor.backend!r})...")
         try:
             _, feature_df_real = extractor.extract(real_ds)
@@ -308,6 +397,39 @@ def eval(
             click.echo(f"  WARNING: Feature extraction failed ({exc}). Skipping feature plots.")
             feature_df_real = None
             feature_dfs_synth = None
+
+    # -------------------------------------------------------------- #
+    # Embedding projections (optional)                                 #
+    # -------------------------------------------------------------- #
+    embedding_figs = []
+    if embedding_plots:
+        from ecgen_eval.visualization.embedding_plots import (
+            compute_embedding_2d,
+            plot_embedding_2d,
+        )
+
+        click.echo("\nComputing embedding projections...")
+        if embedding_features == "clinical":
+            emb_real = feature_df_real
+            emb_synth = (
+                {ds.label: df for ds, df in zip(synth_datasets, feature_dfs_synth)}
+                if feature_dfs_synth else None
+            )
+        else:
+            emb_real, emb_synth = real_ds, synth_datasets
+        for method in embedding_method:
+            if emb_real is None or emb_synth is None:
+                click.echo("  WARNING: clinical features unavailable. Skipping embedding plots.")
+                break
+            try:
+                emb = compute_embedding_2d(
+                    emb_real, emb_synth, method=method, features=embedding_features
+                )
+                emb["meta"]["real_label"] = real_ds.label
+                embedding_figs.append(plot_embedding_2d(emb))
+                click.echo(f"  {method}: {emb['meta']['n_per_set']} points per set")
+            except (ImportError, ValueError) as exc:
+                click.echo(f"  WARNING: {method} projection skipped ({exc})")
 
     # -------------------------------------------------------------- #
     # Generate report                                                  #
@@ -327,6 +449,9 @@ def eval(
         feature_dfs_synth=feature_dfs_synth,
         feature_plots_2d=feature_plots,
         feature_plots_3d=feature_plots,
+        beat_bands=beat_bands,
+        embedding_plots=embedding_figs,
+        gallery_selection=gallery_selection,
     )
     click.echo(f"\nDone!  Report saved to: {out_path.resolve()}")
     click.echo("Open in any modern browser.\n")
@@ -346,12 +471,22 @@ def eval(
 @click.option(
     "--compare-mode",
     default="overlay",
-    type=click.Choice(["overlay", "sidebyside", "grid"]),
+    type=click.Choice(["overlay", "sidebyside", "grid", "beats", "beat-density"]),
+    help="overlay / sidebyside / grid show individual recordings; beats shows median and "
+         "5-95 % bands of all R-peak-aligned beats; beat-density shows their density maps.",
 )
 @click.option("--max-samples", default=None, type=int)
 @click.option("--offline", is_flag=True, default=False)
-def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_samples, offline):
+@click.option("--show-r-peaks", is_flag=True, default=False,
+              help="Mark detected R peaks on every trace.")
+@click.option("--embedding", "embedding", multiple=True,
+              type=click.Choice(["pca", "tsne", "umap"], case_sensitive=False),
+              help="Also add a 2-D embedding projection (11 signal features per lead). "
+                   "Repeatable.")
+def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_samples, offline,
+              show_r_peaks, embedding):
     """Generate ECG sample comparison plots (no metrics)."""
+    from ecgen_eval.visualization.beat_plots import plot_beat_bands
     from ecgen_eval.visualization.ecg_waveform import plot_ecg_comparison
 
     leads_list = [l.strip() for l in leads.split(",")] if leads else None
@@ -365,6 +500,17 @@ def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_s
     plots_html_parts = []
     include_js = "cdn" if not offline else True
 
+    if compare_mode in ("beats", "beat-density"):
+        fig = plot_beat_bands(
+            real_ds, synth_datasets, leads=leads_list,
+            mode="bands" if compare_mode == "beats" else "density",
+        )
+        plots_html_parts.append(
+            fig.to_html(full_html=False, include_plotlyjs=include_js,
+                        config={"responsive": True})
+        )
+        n_samples = 0
+
     for i in range(n_samples):
         fig = plot_ecg_comparison(
             real=real_ds,
@@ -373,6 +519,7 @@ def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_s
             leads=leads_list,
             mode=compare_mode,
             add_calibration_pulse=True,
+            show_r_peaks=show_r_peaks,
         )
         plots_html_parts.append(
             f"<h3>Sample {i}</h3>"
@@ -382,6 +529,29 @@ def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_s
                 config={"responsive": True},
             )
         )
+
+    if embedding:
+        from ecgen_eval.visualization.embedding_plots import (
+            compute_embedding_2d,
+            plot_embedding_2d,
+        )
+
+        for method in embedding:
+            try:
+                fig = plot_embedding_2d(
+                    compute_embedding_2d(real_ds, synth_datasets, method=method)
+                )
+            except (ImportError, ValueError) as exc:
+                click.echo(f"WARNING: {method} projection skipped ({exc})")
+                continue
+            plots_html_parts.append(
+                f"<h3>{method.upper()} projection</h3>"
+                + fig.to_html(
+                    full_html=False,
+                    include_plotlyjs=include_js if not plots_html_parts else False,
+                    config={"responsive": True},
+                )
+            )
 
     cdn_tag = (
         '<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>'
@@ -414,9 +584,12 @@ def visualize(real, synthetic, output, fs, n_samples, leads, compare_mode, max_s
               help="Cap number of recordings per folder.")
 @click.option("--lead", default="II", show_default=True,
               help="Lead to use for RR/interval detection.")
+@click.option("--stats-output", default=None,
+              help="Also write a CSV of two-sample tests (KS, Mann-Whitney, Cohen's d) between "
+                   "the real and each synthetic feature distribution.")
 @_feature_options
-def features(real, synthetic, output, fs, max_samples, lead, feature_select, feature_backend,
-             rpeak_method, delineation_method):
+def features(real, synthetic, output, fs, max_samples, lead, stats_output, feature_select,
+             feature_backend, rpeak_method, delineation_method):
     """Extract clinical ECG features and save a summary CSV."""
     extractor = _build_extractor(feature_select, feature_backend, rpeak_method,
                                  delineation_method, lead=lead)
@@ -433,11 +606,18 @@ def features(real, synthetic, output, fs, max_samples, lead, feature_select, fea
     real_feat_df["dataset"] = real_ds.label
 
     dfs = [real_feat_df]
+    stats = []
 
     for s_path in synthetic:
         sds = load_ecg_folder(s_path, fs=fs, max_samples=max_samples)
         click.echo(f"Loaded synthetic: {sds}")
         _, sdf = extractor.extract(sds)
+        if stats_output:
+            from ecgen_eval.features import compare_feature_distributions
+
+            st = compare_feature_distributions(real_feat_df, sdf)
+            st.insert(0, "dataset", sds.label)
+            stats.append(st)
         sdf["dataset"] = sds.label
         dfs.append(sdf)
 
@@ -447,6 +627,13 @@ def features(real, synthetic, output, fs, max_samples, lead, feature_select, fea
     combined.to_csv(out, index=False)
     click.echo(f"\nFeature summary saved to: {out.resolve()}")
     click.echo(f"Shape: {combined.shape[0]} rows × {combined.shape[1]} columns\n")
+    if stats_output:
+        if stats:
+            stats_path = Path(stats_output)
+            pd.concat(stats, ignore_index=True).to_csv(stats_path, index=False)
+            click.echo(f"Feature statistics saved to: {stats_path.resolve()}\n")
+        else:
+            click.echo("--stats-output needs at least one --synthetic dataset; nothing written.\n")
 
 
 # ------------------------------------------------------------------ #
@@ -459,8 +646,8 @@ def list_metrics():
     click.echo(f"\nAvailable metrics in ecgen-eval v{__version__}:\n")
     for key, cls in AVAILABLE_METRICS.items():
         obj = cls()
-        click.echo(f"  {key:<12} {obj.description[:80]}")
-        click.echo(f"  {'':12} Ref: {obj.reference[:80]}...\n")
+        click.echo(f"  {key:<17} {obj.description[:80]}")
+        click.echo(f"  {'':17} Ref: {obj.reference[:80]}...\n")
 
 
 
