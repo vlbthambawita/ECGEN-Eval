@@ -82,17 +82,17 @@ EVAL_CATEGORIES = {
 # Canonical metric family -> (default evaluation category, ECGEN-Eval key(s) or "",
 # keyword regex used only for papers without a structured extraction).
 METRICS = {
-    "RMSE": ("Fidelity", "mae (RMSE in extra)", r"\brmse\b|root mean squared? error"),
+    "RMSE": ("Fidelity", "rmse", r"\brmse\b|root mean squared? error"),
     "MAE": ("Fidelity", "mae", r"\bmae\b|mean absolute error"),
-    "MSE": ("Fidelity", "", r"\bmse\b|mean squared? error"),
+    "MSE": ("Fidelity", "mse", r"\bmse\b|mean squared? error"),
     "PRD / normalised PRD": ("Fidelity", "prd", r"\bn?prd\b|percent(age)? root.mean"),
-    "Pearson / correlation": ("Fidelity", "", r"pearson|correlation coeff|\bpcc\b|cross-?correlation"),
+    "Pearson / correlation": ("Fidelity", "pearson", r"pearson|correlation coeff|\bpcc\b|cross-?correlation"),
     "DTW": ("Fidelity", "dtw", r"\bdtw\b|dynamic time warp"),
-    "Curve Fréchet distance": ("Fidelity", "", r"(discrete|curve)[- ]?fr[eé]chet|\bfd\b"),
+    "Curve Fréchet distance": ("Fidelity", "curve_frechet", r"(discrete|curve)[- ]?fr[eé]chet|\bfd\b"),
     "PSNR / SNR": ("Fidelity", "psnr", r"psnr|\bsnr\b|signal.to.noise"),
     "SSIM": ("Fidelity", "ssim", r"ssim|structural similarity"),
-    "Euclidean distance": ("Fidelity", "", r"euclidean"),
-    "Cosine similarity": ("Fidelity", "", r"cosine"),
+    "Euclidean distance": ("Fidelity", "euclidean", r"euclidean"),
+    "Cosine similarity": ("Fidelity", "cosine", r"cosine"),
     "Spectral / PSD similarity": (
         "Fidelity", "psd, spectral_entropy", r"\bpsd\b|spectral (similarity|distance)|power spectr"),
     "FID / embedding Fréchet": (
@@ -100,16 +100,16 @@ METRICS = {
     "Inception-score-like": ("Fidelity", "", r"inception score|resnet score"),
     "MMD": ("Fidelity", "mmd", r"\bmmd\b|maximum mean discrep"),
     "Wasserstein / EMD": ("Fidelity", "swd", r"wasserstein|\bemd\b|earth mover"),
-    "KL / JS divergence": ("Fidelity", "", r"kullback|\bkl\b|jensen|\bjsd?\b"),
+    "KL / JS divergence": ("Fidelity", "js_div", r"kullback|\bkl\b|jensen|\bjsd?\b"),
     "Precision / recall / density / coverage": (
         "Diversity", "pr_dist", r"precision.recall|\bdensity\b|coverage|α-precision|improved precision"),
     "Diversity / mode-collapse measure": ("Diversity", "", r"mode collapse|diversity|intra-class"),
     "Classifier two-sample test": (
-        "Fidelity", "", r"discriminative score|two-sample|c2st|real.vs.?.?(fake|synthetic) classif|1-?nn"),
+        "Fidelity", "c2st", r"discriminative score|two-sample|c2st|real.vs.?.?(fake|synthetic) classif|1-?nn"),
     "Statistical tests": (
-        "Fidelity", "", r"\bks\b|kolmogorov|t-test|hotelling|wilcoxon|mann.whitney|permutation"),
-    "t-SNE / UMAP / PCA plots": ("Fidelity", "", r"t-?sne|umap|pacmap|\bpca\b"),
-    "Visual inspection (qualitative)": ("Fidelity", "", r"visual inspection|qualitative"),
+        "Fidelity", "ks_test", r"\bks\b|kolmogorov|t-test|hotelling|wilcoxon|mann.whitney|permutation"),
+    "t-SNE / UMAP / PCA plots": ("Fidelity", "embedding plots (report, visualize)", r"t-?sne|umap|pacmap|\bpca\b"),
+    "Visual inspection (qualitative)": ("Fidelity", "gallery, beat bands (report, visualize)", r"visual inspection|qualitative"),
     "R² (coefficient of determination)": ("Fidelity", "", r"\br2\b|r²|coefficient of determination"),
     "Heart rate / HRV": ("Clinical validity", "heart_rate, hrv", r"heart.rate|hrv|sdnn|rmssd|pnn50"),
     "Clinical intervals (PR/QRS/QT/ST)": (

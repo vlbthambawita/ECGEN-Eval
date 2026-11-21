@@ -559,6 +559,31 @@
         metricTable.appendChild(el("p", { text: "No metrics in this category for the current filters." }));
         return;
       }
+      // Metric keys link to their Metric Reference entry; plot features to the Visualization guide.
+      var METRIC_KEYS = ["mmd", "dtw", "prd", "psd", "fd", "fed", "psnr", "ssim", "swd", "mae", "hrv",
+        "pr_dist", "sqi", "nn_dist", "heart_rate", "spectral_entropy", "mse", "rmse", "pearson",
+        "cosine", "euclidean", "curve_frechet", "js_div", "ks_test", "c2st"];
+      function coverageCell(cov) {
+        var box = el("span", {});
+        function link(href, label) {
+          var a = el("a", { href: href }, [el("code", { text: label })]);
+          a.addEventListener("click", function (e) { e.stopPropagation(); });  // do not toggle the row
+          return a;
+        }
+        if (cov.indexOf("embedding plots") === 0) {
+          box.appendChild(link("../../user-guide/visualization/#embedding-projections", cov));
+        } else if (cov.indexOf("beat bands") >= 0) {
+          box.appendChild(link("../../user-guide/visualization/#beat-morphology", cov));
+        } else {
+          cov.split(", ").forEach(function (part, i) {
+            if (i) box.appendChild(document.createTextNode(", "));
+            box.appendChild(METRIC_KEYS.indexOf(part) >= 0
+              ? link("../../user-guide/metric-reference/#" + part, part)
+              : el("code", { text: part }));
+          });
+        }
+        return box;
+      }
       var body = el("tbody");
       famList.forEach(function (f) {
         var n = Object.keys(f.papers).length;
@@ -569,7 +594,7 @@
           el("td", {}, [el("span", { class: "litdb-title", text: f.name }),
             el("span", { class: "litdb-sub", text: Object.keys(names).slice(0, 6).join(" · ") })]),
           el("td", { class: "litdb-num", text: String(n) }),
-          el("td", {}, [cov ? el("code", { text: cov }) : el("span", { class: "litdb-sub", text: "not yet" })]),
+          el("td", {}, [cov ? coverageCell(cov) : el("span", { class: "litdb-sub", text: "not yet" })]),
         ]);
         var evRows = f.evals.slice().sort(function (a, b) { return (b.paper.year || 0) - (a.paper.year || 0); });
         var detail = el("tr", { class: "litdb-detail" }, [el("td", { colspan: "3" }, [

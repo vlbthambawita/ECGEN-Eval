@@ -64,24 +64,29 @@ matching of the extracted metric lists, so the numbers are approximate):
 | Metric family | Papers | Type | In ECGEN-Eval |
 |---|---:|---|---|
 | Downstream classification (accuracy / F1 / AUROC) | 82 | utility | — |
-| RMSE | 34 | fidelity | `mae` (RMSE in `extra`) |
-| Pearson correlation | 33 | fidelity | — |
+| RMSE | 34 | fidelity | [`rmse`](../metrics/mse.md) |
+| Pearson correlation | 33 | fidelity | [`pearson`](../metrics/pearson.md) |
 | MAE | 30 | fidelity | `mae` |
 | Cardiologist assessment / visual Turing test | 25 | expert | — |
 | Heart rate / HRV | 22 | clinical | `heart_rate`, `hrv` |
-| MSE | 20 | fidelity | — |
+| MSE | 20 | fidelity | [`mse`](../metrics/mse.md) |
 | DTW | 18 | fidelity | `dtw` |
 | TSTR / TRTS | 18 | utility | — |
 | FID-style Fréchet distance on embeddings | 16 | distribution | `fed`, `fd` |
 | PSNR / SNR | 16 | fidelity | `psnr` |
 | Clinical intervals (PR / QRS / QT) | 16 | clinical | feature extraction only |
-| Curve (discrete) Fréchet distance | 14 | fidelity | — |
+| Curve (discrete) Fréchet distance | 14 | fidelity | [`curve_frechet`](../metrics/curve_frechet.md) |
 | MMD | 12 | distribution | `mmd` |
 | PRD | 12 | fidelity | `prd` |
 | Manifold precision / recall / coverage | 10 | distribution | `pr_dist` |
 | Privacy (membership inference, NN distance) | 9 | privacy | `nn_dist` (partial) |
 | Inter-lead consistency (Einthoven, lead correlation) | 7 | clinical | — |
-| Classifier two-sample test | 4 | distribution | — |
+| Classifier two-sample test | 4 | distribution | [`c2st`](../metrics/c2st.md) |
+
+Every Fidelity metric family used by more than 10 papers in the
+[Paper Database](database.md#metrics/Fidelity) is implemented; the mapping from each family
+to its ECGEN-Eval key is in
+[Which metric did the paper use?](../metrics/index.md#which-metric-did-the-paper-use)
 
 ## Most used loss functions
 
@@ -104,8 +109,10 @@ loss for text or PPG conditioning.
 
 ## Pitfalls reported in the literature
 
-- **"FD" is ambiguous.** Some papers mean a curve Fréchet distance on raw signals, others an
-  FID-style distance between Gaussians fitted to embeddings. FID values computed with different
+- **"FD" is ambiguous.** Some papers mean a curve Fréchet distance on raw signals
+  ([`curve_frechet`](../metrics/curve_frechet.md) in ECGEN-Eval), others an
+  FID-style distance between Gaussians fitted to embeddings ([`fd`](../metrics/fd.md),
+  [`fed`](../metrics/fed.md)). FID values computed with different
   encoders are not comparable, and several papers do not name their encoder.
 - **Good utility does not imply realism.** Classifiers trained on synthetic ECGs can perform well
   on real data while cardiologists still identify almost every synthetic ECG
