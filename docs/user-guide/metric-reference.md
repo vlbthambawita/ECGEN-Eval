@@ -20,11 +20,20 @@ The **Reference** line links to the paper that defines the metric.
 | [`fed`](#fed) | Distribution | ↓ | \(\ge 0\) | [FED](../metrics/fed.md) | [`fed.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/fed.py) |
 | [`swd`](#swd) | Distribution | ↓ | \(\ge 0\) | [SWD](../metrics/swd.md) | [`swd.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/swd.py) |
 | [`pr_dist`](#pr_dist) | Distribution | ↑ | \([0, 1]\) | [Precision & Recall](../metrics/pr_dist.md) | [`pr_dist.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/pr_dist.py) |
+| [`js_div`](#js_div) | Distribution | ↓ | \([0, \ln 2]\) | [Amplitude JS / KL](../metrics/js_div.md) | [`js_div.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/js_div.py) |
+| [`ks_test`](#ks_test) | Distribution | ↓ | \([0, 1]\) | [KS test](../metrics/ks_test.md) | [`ks_test.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/ks_test.py) |
+| [`c2st`](#c2st) | Distribution | ↓ | \([0, 0.5]\) | [C2ST](../metrics/c2st.md) | [`c2st.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/c2st.py) |
 | [`prd`](#prd) | Signal fidelity | ↓ | \(\ge 0\) (%) | [PRD](../metrics/prd.md) | [`prd.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/prd.py) |
 | [`mae`](#mae) | Signal fidelity | ↓ | \(\ge 0\) (signal units) | [MAE](../metrics/mae.md) | [`mae.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/mae.py) |
 | [`psnr`](#psnr) | Signal fidelity | ↑ | dB, capped at 100 | [PSNR](../metrics/psnr.md) | [`psnr.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/psnr.py) |
 | [`ssim`](#ssim) | Signal fidelity | ↑ | \([-1, 1]\) | [SSIM](../metrics/ssim.md) | [`ssim.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/ssim.py) |
 | [`dtw`](#dtw) | Signal fidelity | ↓ | \(\ge 0\) | [DTW](../metrics/dtw.md) | [`dtw.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/dtw.py) |
+| [`mse`](#mse) | Signal fidelity | ↓ | \(\ge 0\) (signal units²) | [MSE](../metrics/mse.md) | [`mse.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/mse.py) |
+| [`rmse`](#rmse) | Signal fidelity | ↓ | \(\ge 0\) (signal units) | [RMSE](../metrics/mse.md) | [`mse.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/mse.py) |
+| [`euclidean`](#euclidean) | Signal fidelity | ↓ | \(\ge 0\) (signal units) | [Euclidean](../metrics/euclidean.md) | [`euclidean.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/euclidean.py) |
+| [`pearson`](#pearson) | Signal fidelity | ↑ | \([-1, 1]\) | [Pearson](../metrics/pearson.md) | [`pearson.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/pearson.py) |
+| [`cosine`](#cosine) | Signal fidelity | ↑ | \([-1, 1]\) | [Cosine](../metrics/cosine.md) | [`cosine.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/cosine.py) |
+| [`curve_frechet`](#curve_frechet) | Signal fidelity | ↓ | \(\ge 0\) (signal units) | [Curve Fréchet](../metrics/curve_frechet.md) | [`curve_frechet.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/curve_frechet.py) |
 | [`sqi`](#sqi) | Morphology | ↑ | \([-1, 1]\) | [SQI](../metrics/sqi.md) | [`sqi.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/sqi.py) |
 | [`psd`](#psd) | Spectral | ↓ | \([0, \ln 2]\) | [PSD](../metrics/psd.md) | [`psd.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/psd.py) |
 | [`spectral_entropy`](#spectral_entropy) | Spectral | ↓ | \([0, \ln 2]\) | [Spectral entropy](../metrics/spectral_entropy.md) | [`spectral_entropy.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/spectral_entropy.py) |
@@ -34,9 +43,15 @@ The **Reference** line links to the paper that defines the metric.
 
 ## Shared building blocks
 
-**7-feature signal descriptor.** Used by `mmd`, `swd`, `pr_dist` and `nn_dist`. It is computed
-per lead and per recording: mean, standard deviation, RMS, maximum absolute amplitude, energy
-(\(\sum x^2 / T\)), zero-crossing rate and lag-1 autocorrelation.
+**7-feature signal descriptor.** Used by `mmd`, `swd`, `pr_dist`, `nn_dist` and `ks_test`. It
+is computed per lead and per recording: mean, standard deviation, RMS, maximum absolute
+amplitude, energy (\(\sum x^2 / T\)), zero-crossing rate and lag-1 autocorrelation.
+
+**11-feature signal descriptor.** Used by `fd`, `c2st` and the
+[embedding plots](visualization.md#embedding-projections): the same seven plus
+skewness, kurtosis, spectral centroid and spectral bandwidth.
+Both descriptors live in
+[`_signal_features.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/_signal_features.py).
 
 **Feature scaling.** Before distances are computed, the descriptors are scaled with statistics
 of the **real** set only, so a synthetic set cannot change the scale it is judged on:
@@ -50,7 +65,37 @@ of the **real** set only, so a synthetic set cannot change the scale it is judge
 **Histogram Jensen–Shannon divergence.** `spectral_entropy`, `heart_rate` and `hrv` turn one
 scalar per recording into two histograms. Each histogram has 50 equal bins spanning the pooled
 real and synthetic range. The score is the JS divergence between them, using the natural log
-and clipped to \([0, \ln 2]\). `psd` uses the same divergence, applied to the mean spectra.
+and clipped to \([0, \ln 2]\). `psd` uses the same divergence, applied to the mean spectra,
+and `js_div` applies it to pooled amplitude histograms. The functions are in
+[`_divergence.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/_divergence.py).
+
+### Matching protocol (`pairing`) { #matching-protocol }
+
+`mse`, `rmse`, `euclidean`, `pearson`, `cosine` and `curve_frechet` score *pairs* of one real and one synthetic signal,
+per lead. How the pairs are formed is an explicit choice, because published numbers for the
+same metric differ by protocol and are not comparable across protocols:
+
+| `pairing` | Pairs | Valid for |
+|---|---|---|
+| `"nn"` (default) | Each real signal and its nearest synthetic signal of the same lead. "Nearest" means smallest Euclidean distance for `mse`, `rmse`, `euclidean`, `curve_frechet`, and highest similarity for `pearson`, `cosine`. | Any generator. The only choice for unpaired generation. |
+| `"paired"` | Real signal *i* and synthetic signal *i*. Needs the same number of recordings in both sets. | Reconstruction, lead synthesis, signal-to-signal translation. |
+| `"mean"` | The mean real waveform and the mean synthetic waveform (one pair per lead). | Beat-aligned inputs only. |
+
+On the command line the protocol is set once for all of these metrics with
+`ecgen-eval eval --pairing nn|paired|mean`. The helper is
+[`_matching.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/_matching.py).
+
+**Real-vs-real baseline.** The six pairwise metrics also compute the same statistic between
+two disjoint random halves of the real set (`baseline=True`, the default) and store it in
+`extra["real_vs_real"]` and `extra["per_lead_real_vs_real"]`. It shows what real data scores
+against real data under the same protocol, which is the reference a model score has to be
+read against. With `pairing="paired"` the two halves are aligned arbitrarily, so the baseline
+is then the score of *unrelated* real recordings (chance level), not an upper bound.
+
+**Shared `extra` of the pairwise metrics.** `pairing`, `per_lead_std`, `per_lead_median`,
+`per_lead_all_values` (one value per pair; drawn as a violin plot in the report),
+`per_lead_n_pairs`, `n_skipped` (pairs without a defined value), `real_vs_real`,
+`per_lead_real_vs_real`.
 
 ---
 
@@ -179,6 +224,115 @@ The score is their harmonic mean (F-score), in \([0, 1]\), **higher is better**.
 **Reference:** Kynkäänniemi et al. (2019). Improved precision and recall metric for assessing
 generative models. *NeurIPS* 32. [arXiv:1904.06991](https://arxiv.org/abs/1904.06991)
 
+### `js_div` — Amplitude JS / KL divergence { #js_div }
+
+:material-school: [Explained](../metrics/js_div.md) ·
+:material-api: [`AmplitudeJSMetric`](../api/metrics.md#ecgen_eval.metrics.js_div.AmplitudeJSMetric) ·
+:material-github: [`js_div.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/js_div.py)
+
+Per lead, all amplitude values of the real set and of the synthetic set are pooled into two
+histograms \(P\) and \(Q\). The bins come from the real data: `n_bins` equal bins between
+its 0.1st and 99.9th percentile, plus one open-ended bin on each side, so synthetic values
+outside the real range are counted.
+
+\[
+\mathrm{JS}(P\|Q) = \tfrac{1}{2}\mathrm{KL}(P\|M) + \tfrac{1}{2}\mathrm{KL}(Q\|M),
+\quad M = \tfrac{1}{2}(P+Q)
+\]
+
+Range \([0, \ln 2]\). The temporal order of the samples plays no role.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `n_bins` | `100` | Bins between the 0.1st and 99.9th real percentile |
+| `n_subsample` | `1000` | Max recordings per set |
+| `eps` | `1e-10` | Smoothing for the KL values in `extra` |
+| `seed` | `42` | RNG seed |
+
+`extra`: `kl_real_synth`, `kl_synth_real` and their `per_lead_` versions
+(\(\mathrm{KL}(P\|Q)\), \(\mathrm{KL}(Q\|P)\)), `per_lead_js_distance`
+(\(\sqrt{\mathrm{JS}}\)), `per_lead_tail_mass` (synthetic probability outside the real
+range), `per_lead_hist_real`, `per_lead_hist_synth`, `bin_edges` (used for the histogram
+overlay in the report), `n_bins`.
+
+**Reference:** Lin (1991). Divergence measures based on the Shannon entropy. *IEEE Trans.
+Information Theory* 37(1), 145–151.
+[doi:10.1109/18.61115](https://doi.org/10.1109/18.61115)
+
+### `ks_test` — Kolmogorov–Smirnov test { #ks_test }
+
+:material-school: [Explained](../metrics/ks_test.md) ·
+:material-api: [`KSTestMetric`](../api/metrics.md#ecgen_eval.metrics.ks_test.KSTestMetric) ·
+:material-github: [`ks_test.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/ks_test.py)
+
+Per lead and for each of the 7 signal features, the two-sample KS statistic between the real
+and synthetic feature values:
+
+\[
+D = \sup_x \big| F_r(x) - F_s(x) \big|
+\]
+
+The lead score is the mean \(D\) over the features. Range \([0, 1]\). The score is an
+effect size; p-values are reported in `extra` only, because they depend on the sample size.
+They come from `scipy.stats.ks_2samp` when SciPy is installed, otherwise from the asymptotic
+Kolmogorov distribution.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `n_subsample` | `1000` | Max recordings per set |
+| `alpha` | `0.05` | Significance level for `n_rejected` |
+| `correction` | `"holm"` | Multiple-testing adjustment over features × leads: `"holm"`, `"bonferroni"`, `"none"` |
+| `seed` | `42` | RNG seed |
+
+`extra`: `feature_names`, `per_feature_D` (mean over leads), `per_lead_feature_D`,
+`per_lead_feature_p`, `per_lead_feature_p_adjusted`, `per_lead_feature_mwu_p` (Mann–Whitney U,
+only with SciPy), `n_tests`, `n_rejected`, `frac_rejected`, `alpha`, `correction`, `p_method`
+(`"scipy"` or `"asymptotic"`).
+
+The same test on clinical features is available as
+[`compare_feature_distributions`](features.md#statistical-comparison).
+
+**Reference:** Massey (1951). The Kolmogorov-Smirnov test for goodness of fit. *J. Am. Stat.
+Assoc.* 46(253), 68–78.
+[doi:10.1080/01621459.1951.10500769](https://doi.org/10.1080/01621459.1951.10500769)
+
+### `c2st` — Classifier two-sample test { #c2st }
+
+:material-school: [Explained](../metrics/c2st.md) ·
+:material-api: [`C2STMetric`](../api/metrics.md#ecgen_eval.metrics.c2st.C2STMetric) ·
+:material-github: [`c2st.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/c2st.py)
+
+A classifier is trained to separate real (label 0) from synthetic (label 1) recordings. Both
+sets are subsampled to the same size, and predictions are made out-of-fold with stratified
+k-fold cross-validation (scaling and PCA are fitted inside each training fold).
+
+\[
+\texttt{c2st} = \max\big(0,\ \mathrm{accuracy} - 0.5\big)
+\]
+
+Range \([0, 0.5]\); 0 means the classifier is at chance. One classifier is trained per lead;
+the score is the mean over leads. A classifier on all leads together is reported in `extra`.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `classifier` | `"logreg"` | `"logreg"` (logistic regression), `"rf"` (random forest, 100 trees) or `"knn"` (1-NN) |
+| `features` | `"handcrafted"` | `"handcrafted"` (11-feature descriptor) or `"signal"` (waveform decimated to ≤ 250 points, PCA to ≤ 32 components) |
+| `n_splits` | `5` | Cross-validation folds (reduced automatically for small sets) |
+| `n_subsample` | `1000` | Max recordings per class |
+| `seed` | `42` | RNG seed |
+
+`extra`: `accuracy`, `auc` (means over leads), `per_lead_accuracy`, `per_lead_auc`,
+`per_lead_fold_accuracy`, `all_leads` (`accuracy`, `auc`, `score`, `p_above_chance`),
+`feature_importance` (mean absolute logistic-regression coefficient per feature; default
+settings only), `one_nn_loo_accuracy` (leave-one-out 1-NN accuracy on all-lead features, up to
+2000 recordings), `classifier`, `features`, `n_per_class`, `n_splits`.
+
+With fewer than 4 recordings per class the score is NaN and a warning is raised.
+
+**Reference:** Lopez-Paz & Oquab (2017). Revisiting classifier two-sample tests. *ICLR*.
+[arXiv:1610.06545](https://arxiv.org/abs/1610.06545). Discriminative score: Yoon, Jarrett &
+van der Schaar (2019). Time-series generative adversarial networks. *NeurIPS* 32.
+
 ---
 
 ## Signal-fidelity metrics
@@ -193,6 +347,10 @@ averaged. The neighbour is chosen in one of two ways:
 | `mae`, `psnr`, `ssim` | **Separately for each lead**. Lead I and lead II of one real recording may be matched to different synthetic recordings, which makes these scores more forgiving. |
 
 `dtw` is different: it compares randomly drawn pairs, not nearest neighbours.
+
+`mse`, `rmse`, `euclidean`, `pearson`, `cosine` and `curve_frechet` let you choose: nearest
+neighbour per lead by default, or index-aligned pairs, or mean waveforms. See
+[Matching protocol](#matching-protocol).
 
 ### `prd` — Percent Root-mean-square Difference { #prd }
 
@@ -311,6 +469,165 @@ with a pure-NumPy fallback otherwise.
 **Reference:** Berndt & Clifford (1994). Using dynamic time warping to find patterns in time
 series. *AAAI KDD Workshop*, 359–370.
 [PDF](https://cdn.aaai.org/Workshops/1994/WS-94-03/WS94-03-031.pdf)
+
+### `mse` — Mean Squared Error { #mse }
+
+:material-school: [Explained](../metrics/mse.md) ·
+:material-api: [`MSEMetric`](../api/metrics.md#ecgen_eval.metrics.mse.MSEMetric) ·
+:material-github: [`mse.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/mse.py)
+
+\[
+\mathrm{MSE} = \frac{1}{T}\sum_{t=1}^{T} \big(x_r[t] - x_s[t]\big)^2
+\]
+
+Mean over the matched pairs of each lead.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `pairing` | `"nn"` | `"nn"`, `"paired"` or `"mean"`; see [Matching protocol](#matching-protocol) |
+| `n_subsample` | `500` | Max recordings per set |
+| `normalize` | `None` | Per recording and lead, before matching: `None`, `"zscore"` or `"minmax"` |
+| `baseline` | `True` | Also score two halves of the real set |
+| `seed` | `42` | RNG seed |
+
+`extra`: `rmse`, `per_lead_rmse`, `normalize`, and the
+[shared pairwise extras](#matching-protocol).
+
+**Reference:** Wang & Bovik (2009). Mean squared error: Love it or leave it? A new look at
+signal fidelity measures. *IEEE Signal Processing Magazine* 26(1), 98–117.
+[doi:10.1109/MSP.2008.930649](https://doi.org/10.1109/MSP.2008.930649)
+
+### `rmse` — Root Mean Square Error { #rmse }
+
+:material-school: [Explained](../metrics/mse.md) ·
+:material-api: [`RMSEMetric`](../api/metrics.md#ecgen_eval.metrics.mse.RMSEMetric) ·
+:material-github: [`mse.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/mse.py)
+
+\[
+\mathrm{RMSE} = \sqrt{\frac{1}{T}\sum_{t=1}^{T} \big(x_r[t] - x_s[t]\big)^2}
+\]
+
+The mean of the per-pair RMSE (not the root of the mean MSE). With default settings it equals
+`extra["rmse"]` of [`mae`](#mae). Same parameters as [`mse`](#mse).
+
+`extra`: `mse`, `per_lead_mse`, `nrmse`, `per_lead_nrmse` (RMSE divided by the peak-to-peak
+range of the real signal), `normalize`, and the
+[shared pairwise extras](#matching-protocol).
+
+**Reference:** as for [`mse`](#mse).
+
+### `euclidean` — Euclidean distance { #euclidean }
+
+:material-school: [Explained](../metrics/euclidean.md) ·
+:material-api: [`EuclideanMetric`](../api/metrics.md#ecgen_eval.metrics.euclidean.EuclideanMetric) ·
+:material-github: [`euclidean.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/euclidean.py)
+
+\[
+\mathrm{ED} = \sqrt{\sum_{t=1}^{T} \big(x_r[t]-x_s[t]\big)^2} = \sqrt{T}\cdot\mathrm{RMSE}
+\]
+
+Grows with the number of samples \(T\); compare only recordings of equal length. Same
+parameters as [`mse`](#mse).
+
+`extra`: `length_normalised` (\(\mathrm{ED}/\sqrt{T}\), equal to `rmse`), `n_timepoints`,
+their `per_lead_` versions, `normalize`, and the
+[shared pairwise extras](#matching-protocol).
+
+**Reference:** Wang et al. (2013). Experimental comparison of representation methods and
+distance measures for time series data. *Data Mining and Knowledge Discovery* 26, 275–309.
+[doi:10.1007/s10618-012-0250-5](https://doi.org/10.1007/s10618-012-0250-5)
+
+### `pearson` — Pearson correlation { #pearson }
+
+:material-school: [Explained](../metrics/pearson.md) ·
+:material-api: [`PearsonMetric`](../api/metrics.md#ecgen_eval.metrics.pearson.PearsonMetric) ·
+:material-github: [`pearson.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/pearson.py)
+
+\[
+r = \frac{\sum_t (x_r[t]-\bar x_r)(x_s[t]-\bar x_s)}
+{\sqrt{\sum_t (x_r[t]-\bar x_r)^2}\,\sqrt{\sum_t (x_s[t]-\bar x_s)^2}}
+\]
+
+Range \([-1, 1]\), **higher is better**. With `pairing="nn"` the neighbour is the
+best-correlated synthetic signal. Pairs with a zero-variance signal are skipped.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `pairing` | `"nn"` | `"nn"`, `"paired"` or `"mean"`; see [Matching protocol](#matching-protocol) |
+| `n_subsample` | `500` | Max recordings per set |
+| `max_lag_ms` | `0.0` | If > 0, also report the largest cross-correlation within ± this lag |
+| `fs` | `500.0` | Sampling rate (Hz), used for `max_lag_ms` only |
+| `baseline` | `True` | Also score two halves of the real set |
+| `seed` | `42` | RNG seed |
+
+`extra`: with `max_lag_ms > 0`, `xcorr_max` and `best_lag_ms` (positive: the synthetic signal
+is late) and their `per_lead_` versions; plus the
+[shared pairwise extras](#matching-protocol).
+
+**Reference:** Pearson (1895). Note on regression and inheritance in the case of two parents.
+*Proc. R. Soc. London* 58, 240–242.
+[doi:10.1098/rspl.1895.0041](https://doi.org/10.1098/rspl.1895.0041)
+
+### `cosine` — Cosine similarity { #cosine }
+
+:material-school: [Explained](../metrics/cosine.md) ·
+:material-api: [`CosineMetric`](../api/metrics.md#ecgen_eval.metrics.cosine.CosineMetric) ·
+:material-github: [`cosine.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/cosine.py)
+
+\[
+\cos(x_r, x_s) = \frac{\sum_t x_r[t]\,x_s[t]}{\lVert x_r\rVert\,\lVert x_s\rVert}
+\]
+
+Range \([-1, 1]\), **higher is better**. Pearson correlation without mean removal. With
+`pairing="nn"` the neighbour is the most similar synthetic signal. All-zero signals are
+skipped.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `pairing` | `"nn"` | `"nn"`, `"paired"` or `"mean"`; see [Matching protocol](#matching-protocol) |
+| `n_subsample` | `500` | Max recordings per set |
+| `baseline` | `True` | Also score two halves of the real set |
+| `seed` | `42` | RNG seed |
+
+`extra`: the [shared pairwise extras](#matching-protocol).
+
+**Reference:** Singhal (2001). Modern information retrieval: A brief overview. *IEEE Data
+Engineering Bulletin* 24(4), 35–43.
+
+### `curve_frechet` — Discrete (curve) Fréchet distance { #curve_frechet }
+
+:material-school: [Explained](../metrics/curve_frechet.md) ·
+:material-api: [`CurveFrechetMetric`](../api/metrics.md#ecgen_eval.metrics.curve_frechet.CurveFrechetMetric) ·
+:material-github: [`curve_frechet.py`](https://github.com/vlbthambawita/ECGEN-Eval/blob/main/ecgen_eval/metrics/curve_frechet.py)
+
+Not related to the Gaussian Fréchet distance of [`fd`](#fd) and [`fed`](#fed). For curves
+\(P=(p_1..p_n)\) and \(Q=(q_1..q_m)\):
+
+\[
+c(i,j) = \max\Big(\min\big(c(i-1,j),\, c(i-1,j-1),\, c(i,j-1)\big),\ d(p_i,q_j)\Big),
+\qquad \mathrm{DFD} = c(n,m)
+\]
+
+with \(d(p_i,q_j) = \sqrt{(x_r[i]-x_s[j])^2 + (w\,(t_i-t_j))^2}\) and
+\(w\) = `time_weight`. Signals are decimated to at most `max_len` points before matching.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `pairing` | `"nn"` | `"nn"`, `"paired"` or `"mean"`; see [Matching protocol](#matching-protocol) |
+| `n_pairs` | `100` | Max real signals scored per lead |
+| `max_len` | `500` | Max points per curve after decimation |
+| `time_weight` | `0.0` | Weight of the time axis (signal units per second); 0 compares amplitudes only |
+| `fs` | `500.0` | Sampling rate (Hz), used when `time_weight > 0` |
+| `n_candidates` | `500` | Max synthetic signals searched for the nearest neighbour |
+| `baseline` | `True` | Also score two halves of the real set |
+| `seed` | `42` | RNG seed |
+
+`extra`: `n_points`, `effective_fs`, `time_weight`, their `per_lead_` versions, and the
+[shared pairwise extras](#matching-protocol).
+
+**Reference:** Eiter & Mannila (1994). Computing discrete Fréchet distance. Technical Report
+CD-TR 94/64, TU Vienna. Applied to synthetic ECG in Delaney, Brophy & Ward (2019).
+[arXiv:1909.09150](https://arxiv.org/abs/1909.09150)
 
 ---
 

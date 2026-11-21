@@ -25,6 +25,7 @@ Some functionality depends on heavier packages that are not installed by default
 | `features` | `pip install "ecgen-eval[features]"` | `neurokit2`, `scipy` | Clinical feature extraction, `--feature-plots`, the `features` CLI command |
 | `biosppy` | `pip install "ecgen-eval[biosppy]"` | `biosppy`, `peakutils`, `scipy` | The `biosppy` feature-extraction backend |
 | `heartpy` | `pip install "ecgen-eval[heartpy]"` | `heartpy`, `scipy` | The `heartpy` feature-extraction backend (heart rate and HRV only) |
+| `umap` | `pip install "ecgen-eval[umap]"` | `umap-learn` | UMAP [embedding projections](../user-guide/visualization.md#embedding-projections) (PCA and t-SNE need no extra) |
 | `fed` | `pip install "ecgen-eval[fed]"` | `torch`, `transformers`, `huggingface_hub` | The `fed` metric (Fréchet ECG Distance) |
 
 Extras can be combined:

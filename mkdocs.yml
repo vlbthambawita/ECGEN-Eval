@@ -129,12 +129,20 @@ nav:
           - Maximum Mean Discrepancy: metrics/mmd.md
           - Sliced Wasserstein Distance: metrics/swd.md
           - Precision & Recall: metrics/pr_dist.md
+          - Amplitude JS / KL Divergence: metrics/js_div.md
+          - Kolmogorov–Smirnov Test: metrics/ks_test.md
+          - Classifier Two-Sample Test: metrics/c2st.md
       - Signal fidelity:
           - Dynamic Time Warping: metrics/dtw.md
           - Percent RMS Difference: metrics/prd.md
           - Mean Absolute Error: metrics/mae.md
           - Peak Signal-to-Noise Ratio: metrics/psnr.md
           - Structural Similarity: metrics/ssim.md
+          - MSE and RMSE: metrics/mse.md
+          - Euclidean Distance: metrics/euclidean.md
+          - Pearson Correlation: metrics/pearson.md
+          - Cosine Similarity: metrics/cosine.md
+          - Curve Fréchet Distance: metrics/curve_frechet.md
       - Morphology:
           - Signal Quality Index: metrics/sqi.md
       - Spectral:

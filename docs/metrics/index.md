@@ -44,6 +44,26 @@ with ECGEN-Eval.
 
     Splits quality into *realism* (precision) and *coverage* (recall) using k-NN manifolds.
 
+-   :material-chart-histogram: **[Amplitude JS / KL Divergence](js_div.md)** · `js_div` · ↓
+
+    ---
+
+    Compares which amplitude values the two sets use and how often. Sees gain, offset and
+    clipping errors.
+
+-   :material-chart-line-stacked: **[Kolmogorov–Smirnov Test](ks_test.md)** · `ks_test` · ↓
+
+    ---
+
+    The largest gap between two cumulative distributions, per signal feature, with p-values.
+
+-   :material-robot-confused-outline: **[Classifier Two-Sample Test](c2st.md)** · `c2st` · ↓
+
+    ---
+
+    Trains a classifier to tell real from synthetic. Chance-level accuracy means
+    indistinguishable.
+
 -   :material-sine-wave: **[Dynamic Time Warping](dtw.md)** · `dtw` · ↓
 
     ---
@@ -73,6 +93,38 @@ with ECGEN-Eval.
     ---
 
     Compares mean, variance and correlation (shape) instead of raw sample differences.
+
+-   :material-square-root: **[MSE and RMSE](mse.md)** · `mse`, `rmse` · ↓
+
+    ---
+
+    Squared point-wise error and its square root, the most reported fidelity numbers in the
+    literature.
+
+-   :material-ruler-square: **[Euclidean Distance](euclidean.md)** · `euclidean` · ↓
+
+    ---
+
+    Straight-line distance between two waveforms; RMSE scaled by the signal length.
+
+-   :material-chart-timeline-variant: **[Pearson Correlation](pearson.md)** · `pearson` · ↑
+
+    ---
+
+    Do the two waveforms rise and fall together? Ignores amplitude scale and offset.
+
+-   :material-angle-right: **[Cosine Similarity](cosine.md)** · `cosine` · ↑
+
+    ---
+
+    The angle between two signals seen as vectors. Pearson without mean removal.
+
+-   :material-vector-polyline: **[Curve Fréchet Distance](curve_frechet.md)** · `curve_frechet` · ↓
+
+    ---
+
+    The largest gap that remains after the best time alignment of two curves. Not the
+    Fréchet distance of FD and FED.
 
 -   :material-heart-pulse: **[Signal Quality Index](sqi.md)** · `sqi` · ↑
 
@@ -120,16 +172,54 @@ No single metric captures everything. A balanced evaluation covers several of th
 
 | Question | Metrics |
 |---|---|
-| Does the synthetic **population** match the real one? | [FED](fed.md), [FD](fd.md), [MMD](mmd.md), [SWD](swd.md) |
+| Does the synthetic **population** match the real one? | [FED](fed.md), [FD](fd.md), [MMD](mmd.md), [SWD](swd.md), [KS test](ks_test.md) |
+| Can a classifier **tell them apart**? | [Classifier two-sample test](c2st.md) |
+| Are **amplitudes** (gain, offset, noise floor) right? | [Amplitude JS / KL](js_div.md) |
 | Are samples **realistic**, and is the real **diversity covered**? | [Precision & Recall](pr_dist.md) |
-| Does each real ECG have a close synthetic **look-alike**? | [PRD](prd.md), [MAE](mae.md), [PSNR](psnr.md), [SSIM](ssim.md), [DTW](dtw.md) |
-| Do beats have the right **shape**? | [SQI](sqi.md) |
+| Does each real ECG have a close synthetic **look-alike**? | [PRD](prd.md), [MAE](mae.md), [MSE / RMSE](mse.md), [Euclidean](euclidean.md), [PSNR](psnr.md), [SSIM](ssim.md), [DTW](dtw.md), [Curve Fréchet](curve_frechet.md) |
+| Do beats have the right **shape**? | [SQI](sqi.md), [Pearson](pearson.md), [Cosine](cosine.md) |
 | Is the **frequency content** right? | [PSD](psd.md), [Spectral entropy](spectral_entropy.md) |
 | Is the **rhythm** physiological? | [Heart rate](heart_rate.md), [HRV](hrv.md) |
 | Is the model **copying** its training data? | [Nearest-neighbour distance](nn_dist.md) |
 
 Always compare against a **real-vs-real baseline**: score two disjoint halves of your real data
 with the same metric. That shows what "as good as real data" looks like for your data set.
+The pairwise metrics (`mse`, `rmse`, `euclidean`, `pearson`, `cosine`, `curve_frechet`) compute
+this baseline for you and report it as `extra["real_vs_real"]`.
+
+## Which metric did the paper use?
+
+The [Paper Database](../literature/database.md#metrics/Fidelity) groups what papers report
+into metric families. Every Fidelity family used by more than 10 of the reviewed papers has
+an ECGEN-Eval counterpart:
+
+| Family in the literature review | Papers | ECGEN-Eval |
+|---|:-:|---|
+| Visual inspection (qualitative) | 62 | [ECG gallery and beat-morphology bands](../user-guide/visualization.md#beat-morphology) |
+| RMSE | 55 | [`rmse`](mse.md) |
+| DTW | 44 | [`dtw`](dtw.md) |
+| Pearson / correlation | 41 | [`pearson`](pearson.md) |
+| FID / embedding Fréchet | 39 | [`fed`](fed.md), [`fd`](fd.md) |
+| MSE | 30 | [`mse`](mse.md) |
+| MAE | 29 | [`mae`](mae.md) |
+| t-SNE / UMAP / PCA plots | 26 | [Embedding projections](../user-guide/visualization.md#embedding-projections) |
+| MMD | 26 | [`mmd`](mmd.md) |
+| Curve Fréchet distance | 24 | [`curve_frechet`](curve_frechet.md) |
+| PSNR / SNR | 23 | [`psnr`](psnr.md) |
+| PRD / normalised PRD | 21 | [`prd`](prd.md) |
+| Statistical tests | 19 | [`ks_test`](ks_test.md) |
+| KL / JS divergence | 18 | [`js_div`](js_div.md) |
+| Spectral / PSD similarity | 16 | [`psd`](psd.md), [`spectral_entropy`](spectral_entropy.md) |
+| Wasserstein / EMD | 14 | [`swd`](swd.md) |
+| Classifier two-sample test | 14 | [`c2st`](c2st.md) |
+| SSIM | 13 | [`ssim`](ssim.md) |
+| Euclidean distance | 12 | [`euclidean`](euclidean.md) |
+| Cosine similarity | 12 | [`cosine`](cosine.md) |
+
+Before comparing your number with a published one, check the pairing (nearest neighbour,
+paired or class mean), the amplitude units and normalisation, and the signal length. See
+[Matching protocol](../user-guide/metric-reference.md#matching-protocol).
+
 The [Metric Reference](../user-guide/metric-reference.md) lists every parameter, and the
 [Paper Database](../literature/database.md#metrics/Fidelity) shows how the literature uses
 each metric family.

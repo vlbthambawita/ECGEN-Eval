@@ -132,15 +132,35 @@ comparison = (
 print(comparison.round(1))
 ```
 
-A two-sample test per feature is a quick way to flag the biggest mismatches:
+### Statistical comparison
+
+[`compare_feature_distributions`](../api/features.md#ecgen_eval.features.stats.compare_feature_distributions)
+runs a two-sample test per feature and flags the biggest mismatches:
 
 ```python
-from scipy.stats import ks_2samp
+from ecgen_eval.features import compare_feature_distributions
 
-for c in cols:
-    stat, p = ks_2samp(summ_real[c].dropna(), summ_synth[c].dropna())
-    print(f"{c:>18}  KS={stat:.3f}  p={p:.3g}")
+stats = compare_feature_distributions(summ_real, summ_synth)   # all numeric features
+print(stats.sort_values("ks_D", ascending=False).round(3))
 ```
+
+| Column | Meaning |
+|---|---|
+| `feature` | Feature name |
+| `n_real`, `n_synth` | Recordings with a value (NaN rows are dropped per feature) |
+| `ks_D` | Two-sample Kolmogorov–Smirnov statistic: 0 = same distribution, 1 = no overlap |
+| `ks_p`, `ks_p_adjusted` | Its p-value, raw and adjusted over the tested features (`correction="holm"`, `"bonferroni"` or `"none"`) |
+| `mwu_p` | Mann–Whitney U p-value (NaN without SciPy) |
+| `cohens_d` | (mean synthetic − mean real) / pooled SD; the sign shows the direction |
+
+Read `ks_D` and `cohens_d` as effect sizes. p-values shrink as the number of recordings
+grows, so with large sets even a negligible difference is "significant"; the
+[KS test page](../metrics/ks_test.md) has a demo of this. A large difference in `n_real` and
+`n_synth` for one feature means the fiducial points could not be found in one of the sets,
+which is worth checking before reading the test.
+
+The same statistics appear in the report's Clinical Feature Summary (`KS D` and `p` columns)
+and can be written to a CSV with `ecgen-eval features ... --stats-output stats.csv`.
 
 ## Choosing features and libraries
 
@@ -307,4 +327,8 @@ ecgen-eval features \
   --synthetic model_a.npy --synthetic model_b.npy \
   --lead II --fs 500 \
   --output features.csv
+
+# Also write KS / Mann–Whitney / Cohen's d per feature and synthetic dataset
+ecgen-eval features --real real.npy --synthetic model_a.npy --output features.csv \
+  --stats-output feature_stats.csv
 ```

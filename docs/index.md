@@ -6,7 +6,7 @@
 
 ECGEN-Eval answers one question: *how close are the ECGs produced by a generative model to
 real ECGs?* It loads real and synthetic recordings from common formats, scores them with
-16 complementary metrics, extracts clinically meaningful features, and bundles everything
+25 complementary metrics, extracts clinically meaningful features, and bundles everything
 into a single self-contained, interactive HTML report.
 
 It is part of the ECGEN research suite alongside ECGEN-FM, ECGEN-VAE, ECGEN Pulse2Pulse+
@@ -30,7 +30,7 @@ and Pulse2Pulse, but it works with output from any ECG generator.
 
     [:octicons-arrow-right-24: Quick Start](getting-started/quickstart.md)
 
--   :material-chart-bell-curve: **16 metrics**
+-   :material-chart-bell-curve: **25 metrics**
 
     ---
 

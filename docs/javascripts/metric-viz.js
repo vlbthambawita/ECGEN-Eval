@@ -784,7 +784,8 @@
     });
   };
 
-  // Point-wise signal metrics (prd, mae, psnr, ssim) on one real beat and one synthetic beat.
+  // Point-wise signal metrics (prd, mae, psnr, ssim, mse, rmse, euclidean, pearson, cosine) on one
+  // real beat and one synthetic beat.
   VIZ.pointwise = function (root) {
     var f = frame(root), hl = root.dataset.highlight || "prd", fs = 250, zn = normals(41, 400);
     f.slider("amp", "Amplitude", 0.5, 1.5, 0.01, 1, { unit: "×" });
@@ -813,9 +814,14 @@
       vx /= n; vy /= n; cxy /= n;
       var mse = se / n, L = hi - lo, C1 = (0.01 * L) * (0.01 * L), C2 = (0.03 * L) * (0.03 * L);
       var lum = (2 * mx * my + C1) / (mx * mx + my * my + C1), cs = (2 * cxy + C2) / (vx + vy + C2);
+      var yy = 0, xy = 0;
+      for (i = 0; i < n; i++) { yy += y[i] * y[i]; xy += x[i] * y[i]; }
       var vals = {
         prd: 100 * Math.sqrt(se / xx), mae: ae / n, rmse: Math.sqrt(mse),
         psnr: mse > 0 ? 10 * Math.log10((L * L) / mse) : Infinity, ssim: lum * cs,
+        mse: mse, euclidean: Math.sqrt(se),
+        pearson: vx > 0 && vy > 0 ? cxy / Math.sqrt(vx * vy) : NaN,
+        cosine: xx > 0 && yy > 0 ? xy / Math.sqrt(xx * yy) : NaN,
       };
       var p = plot(640, 260, { l: 44, r: 10, t: 10, b: 34 }, [0, 1], [-0.6, 1.5]);
       axes(p, { xticks: [0, 0.2, 0.4, 0.6, 0.8, 1], yticks: [-0.5, 0, 0.5, 1, 1.5], xlabel: "time (s)", ylabel: "mV" });
@@ -831,11 +837,21 @@
       var cards = [
         { k: "prd", label: "PRD (%)", value: fmt(vals.prd, 1), note: "lower is better" },
         { k: "mae", label: "MAE (mV)", value: fmt(vals.mae, 4), note: "lower is better" },
-        { k: "mae", label: "RMSE (mV)", value: fmt(vals.rmse, 4), note: "in extra of mae" },
+        { k: "mae", label: "RMSE (mV)", value: fmt(vals.rmse, 4), note: "also the rmse metric" },
         { k: "psnr", label: "PSNR (dB)", value: fmt(vals.psnr, 1), note: "higher is better" },
         { k: "ssim", label: "SSIM", value: fmt(vals.ssim, 3), note: "higher is better" },
       ];
-      cards.forEach(function (c) { c.main = c.k === hl && c.label.indexOf("RMSE") < 0; });
+      if (["mse", "rmse", "euclidean", "pearson", "cosine"].indexOf(hl) >= 0) {
+        cards = [
+          { k: "mse", label: "MSE (mV²)", value: fmt(vals.mse, 5), note: "lower is better" },
+          { k: "rmse", label: "RMSE (mV)", value: fmt(vals.rmse, 4), note: "√MSE, lower is better" },
+          { k: "euclidean", label: "Euclidean (mV)", value: fmt(vals.euclidean, 3), note: "√T × RMSE, T = " + n },
+          { k: "pearson", label: "Pearson r", value: fmt(vals.pearson, 3), note: "higher is better" },
+          { k: "cosine", label: "Cosine similarity", value: fmt(vals.cosine, 3), note: "higher is better" },
+          { k: "mae", label: "MAE (mV)", value: fmt(vals.mae, 4), note: "for comparison" },
+        ];
+      }
+      cards.forEach(function (c) { c.main = c.k === hl && c.label.indexOf("RMSE") < 0 || (hl === "rmse" && c.k === "rmse"); });
       if (hl === "ssim") {
         cards.push({ label: "luminance term", value: fmt(lum, 3), note: "compares means" });
         cards.push({ label: "contrast × structure", value: fmt(cs, 3), note: "compares variance and shape" });
@@ -1197,6 +1213,265 @@
         { label: "hrv score (mean of 3 JS)", value: fmt(mean(js), 4), main: true, note: "lower is better" },
         { label: "Mean SDNN real / synthetic", value: fmt(mean(real[0]), 0) + " / " + fmt(mean(syn[0]), 0) + " ms" },
         { label: "Mean RMSSD real / synthetic", value: fmt(mean(real[1]), 0) + " / " + fmt(mean(syn[1]), 0) + " ms" },
+      ]);
+    });
+  };
+
+  // Discrete (curve) Fréchet distance between one real and one synthetic beat (curve_frechet.py).
+  // c(i,j) = max(min(c(i-1,j), c(i-1,j-1), c(i,j-1)), d(i,j)); the answer is c(n-1,m-1).
+  VIZ.curveFrechet = function (root) {
+    var f = frame(root), fs = 100;
+    f.slider("shift", "Time shift", -150, 150, 5, 40, { unit: " ms", digits: 0 });
+    f.slider("amp", "Amplitude", 0.5, 1.5, 0.01, 1, { unit: "×" });
+    f.slider("t", "T-wave amplitude", -1, 1.5, 0.05, 1, { unit: "×" });
+    f.slider("tw", "Time weight", 0, 5, 0.1, 0, { unit: " mV/s", digits: 1, help: "0 compares amplitudes only (the default)" });
+    f.presets([
+      ["Shifted 40 ms", { shift: 40, amp: 1, t: 1, tw: 0 }],
+      ["Same shift, time costs", { shift: 40, amp: 1, t: 1, tw: 3 }],
+      ["R peak 30 % lower", { shift: 0, amp: 0.7, t: 1, tw: 0 }],
+      ["Inverted T wave", { shift: 0, amp: 1, t: -0.6, tw: 0 }],
+    ]);
+    f.draw(function () {
+      // Slightly widened QRS so the 100 Hz demo grid resolves the R peak.
+      var o = beatOpts({ qrs: 1.6 }), a = beat(fs, 1, 0.4, o), n = a.length, i, j;
+      var b = beat(fs, 1, 0.4 + f.v("shift") / 1000, beatOpts({ qrs: 1.6, amp: f.v("amp"), t: f.v("t") }));
+      var tw = f.v("tw") / fs, C = [], D = [], maxPt = 0, se = 0;
+      function d(p, q) { var dy = Math.abs(a[p] - b[q]), dx = tw * (p - q); return Math.sqrt(dy * dy + dx * dx); }
+      for (i = 0; i < n; i++) {
+        C.push(new Float64Array(n)); D.push(new Float64Array(n));
+        for (j = 0; j < n; j++) {
+          var dij = D[i][j] = d(i, j), best;
+          if (i === 0 && j === 0) best = 0;
+          else if (i === 0) best = C[0][j - 1];
+          else if (j === 0) best = C[i - 1][0];
+          else best = Math.min(C[i - 1][j], C[i - 1][j - 1], C[i][j - 1]);
+          C[i][j] = Math.max(best, dij);
+        }
+        maxPt = Math.max(maxPt, Math.abs(a[i] - b[i]));
+        se += (a[i] - b[i]) * (a[i] - b[i]);
+      }
+      // Walk the optimal coupling backwards; remember where the gap is largest (the bottleneck).
+      var path = [], bi = n - 1, bj = n - 1, worst = [n - 1, n - 1];
+      i = n - 1; j = n - 1;
+      while (true) {
+        path.push([i, j]);
+        if (D[i][j] > D[worst[0]][worst[1]]) worst = [i, j];
+        if (i === 0 && j === 0) break;
+        if (i === 0) j--;
+        else if (j === 0) i--;
+        else {
+          var up = C[i - 1][j], diag = C[i - 1][j - 1], left = C[i][j - 1];
+          if (diag <= up && diag <= left) { i--; j--; } else if (up <= left) i--; else j--;
+        }
+      }
+      bi = worst[0]; bj = worst[1];
+      var p = plot(640, 270, { l: 44, r: 10, t: 10, b: 34 }, [0, 1], [-0.6, 1.6]);
+      axes(p, { xticks: [0, 0.2, 0.4, 0.6, 0.8, 1], yticks: [-0.5, 0, 0.5, 1, 1.5], xlabel: "time (s)", ylabel: "mV" });
+      for (var k = 0; k < path.length; k += 3) {
+        p.svg.appendChild(sv("path", { d: "M" + p.X(path[k][0] / fs) + " " + p.Y(a[path[k][0]]) + "L" + p.X(path[k][1] / fs) + " " + p.Y(b[path[k][1]]), class: "mv-match" }));
+      }
+      line(p, function (q) { return q / fs; }, a, "mv-real mv-line");
+      line(p, function (q) { return q / fs; }, b, "mv-synth mv-line");
+      p.svg.appendChild(sv("path", { d: "M" + p.X(bi / fs) + " " + p.Y(a[bi]) + "L" + p.X(bj / fs) + " " + p.Y(b[bj]), class: "mv-nnbad" }));
+      dot(p, bi / fs, a[bi], 4, "mv-real mv-dotc");
+      dot(p, bj / fs, b[bj], 4, "mv-synth mv-dotc");
+      f.stage.appendChild(legend([["mv-real", "Real beat"], ["mv-synth", "Synthetic beat"],
+        ["mv-matchkey", "Coupling (which points are compared)"], ["mv-nnbadkey", "Largest gap = the score"]]));
+      f.stage.appendChild(p.svg);
+      f.readouts([
+        { label: "curve_frechet", value: fmt(C[n - 1][n - 1], 3), main: true, note: "largest gap along the best coupling" },
+        { label: "Largest gap without warping", value: fmt(maxPt, 3), note: "same time index, max |difference|" },
+        { label: "RMSE (mV)", value: fmt(Math.sqrt(se / n), 3), note: "for comparison" },
+      ]);
+    });
+  };
+
+  // Amplitude-distribution JS / KL divergence (js_div.py): pooled sample values, bins from the
+  // real 0.1–99.9 percentile range plus one open-ended tail bin on each side.
+  VIZ.amplitudeJS = function (root) {
+    var f = frame(root), fs = 250, dur = 8, nb = 60;
+    var real = strip(fs, dur, rTimes(70, 20, 10, dur, 11), beatOpts(), 0.015, 12);
+    var base = strip(fs, dur, rTimes(74, 20, 10, dur, 13), beatOpts(), 0, 14), zn = normals(15, base.length);
+    f.slider("gain", "Synthetic gain", 0.4, 2, 0.01, 1, { unit: "×" });
+    f.slider("off", "Baseline offset", -0.3, 0.3, 0.01, 0, { unit: " mV" });
+    f.slider("noise", "Noise", 0, 0.15, 0.005, 0.015, { unit: " mV", digits: 3 });
+    f.slider("clip", "Clipping level", 0.3, 1.5, 0.05, 1.5, { unit: " mV" });
+    f.slider("order", "Sample order", 0, 1, 1, 0, { values: [0, 1], labels: ["as generated", "shuffled in time"] });
+    f.presets([
+      ["Matched", { gain: 1, off: 0, noise: 0.015, clip: 1.5, order: 0 }],
+      ["Gain 1.5×", { gain: 1.5, off: 0, noise: 0.015, clip: 1.5, order: 0 }],
+      ["Baseline offset", { gain: 1, off: 0.15, noise: 0.015, clip: 1.5, order: 0 }],
+      ["Too clean", { gain: 1, off: 0, noise: 0, clip: 1.5, order: 0 }],
+      ["Clipped R peaks", { gain: 1, off: 0, noise: 0.015, clip: 0.6, order: 0 }],
+      ["Shuffled in time", { gain: 1, off: 0, noise: 0.015, clip: 1.5, order: 1 }],
+    ]);
+    f.draw(function () {
+      var n = base.length, syn = new Float64Array(n), i;
+      for (i = 0; i < n; i++) syn[i] = Math.min(f.v("clip"), f.v("gain") * base[i] + f.v("off") + f.v("noise") * zn[i]);
+      if (f.v("order") === 1) {
+        var r = mulberry32(16);
+        for (i = n - 1; i > 0; i--) { var k = Math.floor(r() * (i + 1)), tmp = syn[i]; syn[i] = syn[k]; syn[k] = tmp; }
+      }
+      var sorted = Array.prototype.slice.call(real).sort(function (x, y) { return x - y; });
+      var lo = sorted[Math.floor(0.001 * (n - 1))], hi = sorted[Math.ceil(0.999 * (n - 1))], w = (hi - lo) / nb;
+      function histTail(v) {
+        var h = new Float64Array(nb + 2);
+        for (var q = 0; q < v.length; q++) {
+          var bin = v[q] < lo ? 0 : v[q] > hi ? nb + 1 : Math.min(nb, 1 + Math.floor((v[q] - lo) / w));
+          h[bin] += 1 / v.length;
+        }
+        return h;
+      }
+      var P = histTail(real), Q = histTail(syn), js = 0, klPQ = 0, klQP = 0, eps = 1e-10, sp = 0, sq = 0;
+      for (i = 0; i < nb + 2; i++) {
+        var m = 0.5 * (P[i] + Q[i]);
+        if (P[i] > 0) js += 0.5 * P[i] * Math.log(P[i] / m);
+        if (Q[i] > 0) js += 0.5 * Q[i] * Math.log(Q[i] / m);
+        sp += P[i] + eps; sq += Q[i] + eps;
+      }
+      for (i = 0; i < nb + 2; i++) {
+        var pe = (P[i] + eps) / sp, qe = (Q[i] + eps) / sq;
+        klPQ += pe * Math.log(pe / qe); klQP += qe * Math.log(qe / pe);
+      }
+      var t = plot(640, 130, { l: 44, r: 10, t: 8, b: 30 }, [0, 4], [-0.6, 1.6]);
+      axes(t, { xticks: [0, 1, 2, 3, 4], yticks: [0, 1], xlabel: "first 4 s of the synthetic strip (s)" });
+      line(t, function (q) { return q / fs; }, syn.subarray(0, 4 * fs), "mv-synth mv-line");
+      // Square-root height so the rare large amplitudes (R peaks) stay visible next to the baseline.
+      var sr = function (h) { return Array.prototype.map.call(h, Math.sqrt); };
+      var hp = sr(P), hq = sr(Q), top = Math.max(Math.max.apply(null, hp), Math.max.apply(null, hq)) * 1.1;
+      var p = plot(640, 230, { l: 44, r: 10, t: 10, b: 34 }, [lo - w, hi + w], [0, top]);
+      axes(p, { xticks: [-0.2, 0, 0.2, 0.4, 0.6, 0.8, 1].filter(function (v) { return v > lo && v < hi; }),
+        xlabel: "amplitude (mV) — outermost bars: values outside the real range", ylabel: "share (√ scale)" });
+      bars(p, hp, lo - w, hi + w, "mv-real mv-bar");
+      bars(p, hq, lo - w, hi + w, "mv-synth mv-bar");
+      f.stage.appendChild(legend([["mv-real", "Real amplitudes"], ["mv-synth", "Synthetic amplitudes"]]));
+      f.stage.appendChild(el("div", { class: "mviz-col" }, [t.svg, p.svg]));
+      f.readouts([
+        { label: "js_div score (JS)", value: fmt(Math.min(Math.max(js, 0), Math.LN2), 4), main: true, note: "lower is better (max ln 2 ≈ 0.693)" },
+        { label: "KL(real ‖ synthetic)", value: fmt(klPQ, 3), note: "in extra" },
+        { label: "KL(synthetic ‖ real)", value: fmt(klQP, 3), note: "in extra; not symmetric" },
+        { label: "Tail mass", value: fmt(Q[0] + Q[nb + 1], 3), note: "synthetic samples outside the real range" },
+      ]);
+    });
+  };
+
+  // Two-sample Kolmogorov–Smirnov statistic on one feature (ks_test.py): the largest gap between
+  // the two empirical distribution functions, with the asymptotic p-value of _stats.py.
+  VIZ.ksTest = function (root) {
+    var f = frame(root), zr = normals(81, 1000), zs = normals(82, 1000);
+    f.slider("mu", "Synthetic mean", 0.15, 0.4, 0.005, 0.25, { unit: " mV", digits: 3 });
+    f.slider("sd", "Synthetic spread (SD)", 0.005, 0.1, 0.005, 0.04, { unit: " mV", digits: 3 });
+    f.slider("n", "Recordings per set", 0, 2, 1, 200, { values: [50, 200, 1000], labels: ["50", "200", "1000"] });
+    f.presets([
+      ["Matched", { mu: 0.25, sd: 0.04, n: 200 }],
+      ["Shifted mean", { mu: 0.28, sd: 0.04, n: 200 }],
+      ["Too uniform", { mu: 0.25, sd: 0.015, n: 200 }],
+      ["Small shift, 50 recordings", { mu: 0.26, sd: 0.04, n: 50 }],
+      ["Same shift, 1000 recordings", { mu: 0.26, sd: 0.04, n: 1000 }],
+    ]);
+    f.draw(function () {
+      var N = f.v("n"), a = [], b = [], i;
+      for (i = 0; i < N; i++) { a.push(0.25 + 0.04 * zr[i]); b.push(f.v("mu") + f.v("sd") * zs[i]); }
+      a.sort(function (x, y) { return x - y; }); b.sort(function (x, y) { return x - y; });
+      // Sweep the pooled values; the CDFs are right-continuous step functions.
+      var ia = 0, ib = 0, D = 0, at = a[0], fa = 0, fb = 0;
+      while (ia < N || ib < N) {
+        var x = Math.min(ia < N ? a[ia] : Infinity, ib < N ? b[ib] : Infinity);
+        while (ia < N && a[ia] <= x) ia++;
+        while (ib < N && b[ib] <= x) ib++;
+        if (Math.abs(ia - ib) / N > D) { D = Math.abs(ia - ib) / N; at = x; fa = ia / N; fb = ib / N; }
+      }
+      var en = Math.sqrt(N / 2), lam = (en + 0.12 + 0.11 / en) * D, pv = 1;
+      if (lam >= 1e-3) { pv = 0; for (i = 1; i <= 100; i++) pv += 2 * Math.pow(-1, i - 1) * Math.exp(-2 * i * i * lam * lam); }
+      pv = Math.min(1, Math.max(0, pv));
+      var lo = 0.1, hi = 0.45, p = plot(640, 280, { l: 44, r: 10, t: 10, b: 34 }, [lo, hi], [0, 1]);
+      axes(p, { xticks: [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45], yticks: [0, 0.25, 0.5, 0.75, 1],
+        xlabel: "feature value per recording (here: signal SD, mV)", ylabel: "share of recordings ≤ x" });
+      function steps(v, cls) {
+        var d = "M" + p.X(lo) + " " + p.Y(0);
+        for (var q = 0; q < v.length; q++) {
+          var X = p.X(Math.min(hi, Math.max(lo, v[q])));
+          d += "H" + X.toFixed(1) + "V" + p.Y((q + 1) / v.length).toFixed(1);
+        }
+        p.svg.appendChild(sv("path", { d: d + "H" + p.X(hi), class: cls, fill: "none" }));
+      }
+      steps(a, "mv-real mv-line");
+      steps(b, "mv-synth mv-line");
+      var gx = p.X(Math.min(hi, Math.max(lo, at)));
+      p.svg.appendChild(sv("path", { d: "M" + gx + " " + p.Y(fa) + "V" + p.Y(fb), class: "mv-nnbad" }));
+      f.stage.appendChild(legend([["mv-real", "Real (cumulative distribution)"], ["mv-synth", "Synthetic"], ["mv-nnbadkey", "Largest gap = D"]]));
+      f.stage.appendChild(p.svg);
+      f.readouts([
+        { label: "KS statistic D", value: fmt(D, 3), main: true, note: "the score averages D over 7 features" },
+        { label: "p-value", value: pv < 0.001 ? "< 0.001" : fmt(pv, 3), tone: pv < 0.05 ? "bad" : null, note: "shrinks as the sets grow" },
+        { label: "Recordings per set", value: String(N) },
+      ]);
+    });
+  };
+
+  // Classifier two-sample test (c2st.py), on two features. Two classifiers, each scored on
+  // held-out halves: a linear one (nearest class mean) and 1-nearest-neighbour.
+  VIZ.c2st = function (root) {
+    var f = frame(root), N = 200, zr = normals(91, 2 * N), zs = normals(92, 2 * N);
+    f.slider("dx", "Synthetic shift", 0, 3, 0.05, 0, { help: "in real standard deviations" });
+    f.slider("sp", "Synthetic spread", 0.2, 2, 0.05, 1, { unit: "×" });
+    f.slider("clf", "Classifier", 0, 1, 1, 0, { values: [0, 1], labels: ["linear (class means)", "1-nearest neighbour"] });
+    f.presets([
+      ["Indistinguishable", { dx: 0, sp: 1, clf: 0 }],
+      ["Shifted", { dx: 1.5, sp: 1, clf: 0 }],
+      ["Too narrow, linear classifier", { dx: 0, sp: 0.35, clf: 0 }],
+      ["Too narrow, 1-NN classifier", { dx: 0, sp: 0.35, clf: 1 }],
+    ]);
+    f.draw(function () {
+      var X = [], y = [], i, k, sp = f.v("sp"), dx = f.v("dx"), knn = f.v("clf") === 1;
+      for (i = 0; i < N; i++) { X.push([zr[2 * i], zr[2 * i + 1]]); y.push(0); }
+      for (i = 0; i < N; i++) { X.push([dx + sp * zs[2 * i], sp * zs[2 * i + 1]]); y.push(1); }
+      var pred = new Array(2 * N), w = null;
+      // Two folds: even indices train / odd test, then the reverse. Both folds keep classes balanced.
+      for (var fold = 0; fold < 2; fold++) {
+        var train = [], test = [];
+        for (i = 0; i < 2 * N; i++) (i % 2 === fold ? train : test).push(i);
+        var c = [[0, 0, 0], [0, 0, 0]];
+        train.forEach(function (q) { c[y[q]][0] += X[q][0]; c[y[q]][1] += X[q][1]; c[y[q]][2] += 1; });
+        for (k = 0; k < 2; k++) { c[k][0] /= c[k][2]; c[k][1] /= c[k][2]; }
+        if (fold === 0) w = c;
+        test.forEach(function (q) {
+          if (!knn) {
+            var d0 = Math.pow(X[q][0] - c[0][0], 2) + Math.pow(X[q][1] - c[0][1], 2);
+            var d1 = Math.pow(X[q][0] - c[1][0], 2) + Math.pow(X[q][1] - c[1][1], 2);
+            pred[q] = d1 < d0 ? 1 : 0;
+          } else {
+            var best = Infinity, lab = 0;
+            train.forEach(function (r) {
+              var dd = Math.pow(X[q][0] - X[r][0], 2) + Math.pow(X[q][1] - X[r][1], 2);
+              if (dd < best) { best = dd; lab = y[r]; }
+            });
+            pred[q] = lab;
+          }
+        });
+      }
+      var correct = 0;
+      for (i = 0; i < 2 * N; i++) if (pred[i] === y[i]) correct++;
+      var acc = correct / (2 * N), score = Math.max(0, acc - 0.5);
+      var p = plot(640, 330, { l: 30, r: 10, t: 10, b: 30 }, [-4, 6.4], [-3.4, 3.4]);
+      axes(p, { xticks: [-4, -2, 0, 2, 4, 6], yticks: [-2, 0, 2], xlabel: "feature 1", ylabel: "feature 2" });
+      for (i = 0; i < 2 * N; i++) {
+        var wrong = pred[i] !== y[i];
+        dot(p, X[i][0], X[i][1], 3, (y[i] ? "mv-synth" : "mv-real") + " mv-pt" + (wrong ? " mv-miss" : ""));
+      }
+      if (!knn) {
+        // Boundary of the first fold: points equally far from both class means.
+        var mx = (w[0][0] + w[1][0]) / 2, my = (w[0][1] + w[1][1]) / 2, nx = w[1][0] - w[0][0], ny = w[1][1] - w[0][1];
+        var len = Math.sqrt(nx * nx + ny * ny) || 1, tx = -ny / len, ty = nx / len;
+        p.svg.appendChild(sv("path", { d: "M" + p.X(mx - 5 * tx) + " " + p.Y(my - 5 * ty) + "L" + p.X(mx + 5 * tx) + " " + p.Y(my + 5 * ty), class: "mv-dir" }));
+      }
+      f.stage.appendChild(legend([["mv-real", "Real"], ["mv-synth", "Synthetic"], ["mv-misskey", "Misclassified on held-out data"]]
+        .concat(knn ? [] : [["mv-dirkey", "Decision boundary"]])));
+      f.stage.appendChild(p.svg);
+      f.readouts([
+        { label: "c2st score", value: fmt(score, 3), main: true, note: "max(0, accuracy − 0.5); lower is better" },
+        { label: "Held-out accuracy", value: fmt(100 * acc, 1) + " %", note: "50 % = chance" },
+        { label: "Classifier", value: knn ? "1-NN" : "linear" },
       ]);
     });
   };

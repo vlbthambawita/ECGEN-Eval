@@ -20,9 +20,34 @@ Papers behind the metrics, models and features implemented in ECGEN-Eval.
 | `heart_rate` | Pan, J., & Tompkins, W. J. (1985). A real-time QRS detection algorithm. *IEEE TBME*, 32(3), 230–236. [doi:10.1109/TBME.1985.325532](https://doi.org/10.1109/TBME.1985.325532) |
 | `sqi` | Clifford, G. D., et al. (2017). AF classification from a short single lead ECG recording: the PhysioNet/Computing in Cardiology Challenge 2017. *CinC*, 44. [doi:10.22489/CinC.2017.065-469](https://doi.org/10.22489/CinC.2017.065-469) |
 | `nn_dist` | Meehan, C., Chaudhuri, K., & Dasgupta, S. (2020). A non-parametric test to detect data-copying in generative models. *AISTATS*. [arXiv:2004.05675](https://arxiv.org/abs/2004.05675) |
+| `mse`, `rmse` | Wang, Z., & Bovik, A. C. (2009). Mean squared error: Love it or leave it? A new look at signal fidelity measures. *IEEE Signal Processing Magazine*, 26(1), 98–117. [doi:10.1109/MSP.2008.930649](https://doi.org/10.1109/MSP.2008.930649) |
+| `euclidean` | Wang, X., Mueen, A., Ding, H., Trajcevski, G., Scheuermann, P., & Keogh, E. (2013). Experimental comparison of representation methods and distance measures for time series data. *Data Mining and Knowledge Discovery*, 26, 275–309. [doi:10.1007/s10618-012-0250-5](https://doi.org/10.1007/s10618-012-0250-5) |
+| `pearson` | Pearson, K. (1895). Note on regression and inheritance in the case of two parents. *Proc. R. Soc. London*, 58, 240–242. [doi:10.1098/rspl.1895.0041](https://doi.org/10.1098/rspl.1895.0041) |
+| `cosine` | Singhal, A. (2001). Modern information retrieval: A brief overview. *IEEE Data Engineering Bulletin*, 24(4), 35–43. |
+| `curve_frechet` | Eiter, T., & Mannila, H. (1994). Computing discrete Fréchet distance. Technical Report CD-TR 94/64, TU Vienna. Applied to ECG: Delaney, A. M., Brophy, E., & Ward, T. E. (2019). Synthesis of realistic ECG using generative adversarial networks. [arXiv:1909.09150](https://arxiv.org/abs/1909.09150) |
+| `js_div` | Lin, J. (1991). Divergence measures based on the Shannon entropy. *IEEE Trans. Information Theory*, 37(1), 145–151. [doi:10.1109/18.61115](https://doi.org/10.1109/18.61115). Kullback, S., & Leibler, R. A. (1951). On information and sufficiency. *Ann. Math. Statist.*, 22(1), 79–86. [doi:10.1214/aoms/1177729694](https://doi.org/10.1214/aoms/1177729694) |
+| `ks_test` | Massey, F. J. (1951). The Kolmogorov-Smirnov test for goodness of fit. *J. Am. Stat. Assoc.*, 46(253), 68–78. [doi:10.1080/01621459.1951.10500769](https://doi.org/10.1080/01621459.1951.10500769) |
+| `c2st` | Lopez-Paz, D., & Oquab, M. (2017). Revisiting classifier two-sample tests. *ICLR*. [arXiv:1610.06545](https://arxiv.org/abs/1610.06545). Yoon, J., Jarrett, D., & van der Schaar, M. (2019). Time-series generative adversarial networks. *NeurIPS*, 32. |
 | `spectral_entropy` | Inouye, T., et al. (1991). Quantification of EEG irregularity by use of the entropy of the power spectrum. *EEG Clin. Neurophysiol.*, 79(3), 204–210. [doi:10.1016/0013-4694(91)90138-T](https://doi.org/10.1016/0013-4694(91)90138-T) |
 
+## Visualization
+
+- **t-SNE** — van der Maaten, L., & Hinton, G. (2008). Visualizing data using t-SNE. *JMLR*, 9,
+  2579–2605. [Link](https://jmlr.org/papers/v9/vandermaaten08a.html)
+- **UMAP** — McInnes, L., Healy, J., & Melville, J. (2018). UMAP: Uniform manifold
+  approximation and projection for dimension reduction.
+  [arXiv:1802.03426](https://arxiv.org/abs/1802.03426)
+
 ## ECG generation and evaluation
+
+- Wang, W., et al. (2025). Advancing electrocardiogram synthesis: Analyzing key metrics for
+  enhanced evaluation. *Computers in Biology and Medicine*.
+  [doi:10.1016/j.compbiomed.2025.110879](https://doi.org/10.1016/j.compbiomed.2025.110879)
+  (compares point-wise and distribution metrics against a real-vs-real reference)
+- Berger, L., Haberbusch, M., & Moscato, F. (2023). Generative adversarial networks in
+  electrocardiogram synthesis: Recent developments and challenges. *Artificial Intelligence
+  in Medicine*.
+  [doi:10.1016/j.artmed.2023.102632](https://doi.org/10.1016/j.artmed.2023.102632)
 
 - Thambawita, V., et al. (2021). DeepFake electrocardiograms using generative adversarial
   networks are the beginning of the end for privacy issues in medicine. *Scientific Reports*,

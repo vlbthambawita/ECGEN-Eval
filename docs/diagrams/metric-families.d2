@@ -20,6 +20,9 @@ families: {
     fed: "fed ↓" {class: metric}
     swd: "swd ↓" {class: metric}
     pr_dist: "pr_dist ↑" {class: metric}
+    js_div: "js_div ↓" {class: metric}
+    ks_test: "ks_test ↓" {class: metric}
+    c2st: "c2st ↓" {class: metric}
   }
   fidelity: "Signal fidelity" {
     class: group
@@ -29,6 +32,11 @@ families: {
     psnr: "psnr ↑" {class: data}
     ssim: "ssim ↑" {class: data}
     dtw: "dtw ↓" {class: data}
+    mse: "mse ↓ · rmse ↓" {class: data}
+    euclidean: "euclidean ↓" {class: data}
+    pearson: "pearson ↑" {class: data}
+    cosine: "cosine ↑" {class: data}
+    curve_frechet: "curve_frechet ↓" {class: data}
   }
   physio: "Physiological" {
     class: group

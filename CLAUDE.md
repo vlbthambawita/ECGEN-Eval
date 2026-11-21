@@ -15,6 +15,7 @@ pip install -e ".[features]"   # + neurokit2 + scipy for clinical feature extrac
 pip install -e ".[fed]"        # + torch + transformers + huggingface_hub for FED metric
 pip install -e ".[biosppy]"    # + biosppy (+ peakutils) for the biosppy feature backend
 pip install -e ".[heartpy]"    # + heartpy for the heartpy feature backend
+pip install -e ".[umap]"       # + umap-learn for UMAP embedding plots
 pip install scipy wfdb         # optional: needed for Welch PSD and WFDB loading
 
 # Test
@@ -95,18 +96,35 @@ All metrics inherit `BaseMetric` and return a `MetricResult` (scalar score + per
 | `nn_dist` | `NNDistMetric` | Nearest-neighbour distance; authenticity (memorisation) in `extra` |
 | `heart_rate` | `HeartRateMetric` | JS divergence of heart-rate distributions |
 | `spectral_entropy` | `SpectralEntropyMetric` | JS divergence of spectral-entropy distributions |
+| `mse` / `rmse` | `MSEMetric` / `RMSEMetric` | Pointwise MSE / RMSE on matched pairs (`pairing`) |
+| `euclidean` | `EuclideanMetric` | Time-domain L2 distance on matched pairs (= √T · RMSE) |
+| `pearson` | `PearsonMetric` | Pearson r on matched pairs; optional max cross-correlation within a lag |
+| `cosine` | `CosineMetric` | Cosine similarity on matched pairs |
+| `curve_frechet` | `CurveFrechetMetric` | Discrete (curve) Fréchet distance on matched, decimated pairs; unrelated to `fd`/`fed` |
+| `js_div` | `AmplitudeJSMetric` | JS divergence of pooled amplitude histograms (KL in `extra`) |
+| `ks_test` | `KSTestMetric` | Mean two-sample KS statistic over the 7 MMD features; p-values in `extra` |
+| `c2st` | `C2STMetric` | Classifier two-sample test: max(0, CV accuracy − 0.5) of a real-vs-synthetic classifier |
 
 `FEDMetric` supports three backbones (selected via `--backbone`): `ecgfounder` (PKUDigitalHealth/ECGFounder, RegNet, 10.7 M ECGs), `hubert_ecg` (Edoardo-BS/hubert-ecg-base, Transformer, 9.1 M ECGs), `ecgfm` (bowang-lab/ECG-FM, wav2vec2-style, 1.5 M ECGs). Weights are downloaded from HuggingFace **on first use** and cached locally. Set `HF_HOME` to control the cache directory.
 
 The shared Fréchet math lives in `ecgen_eval/metrics/_frechet_utils.py` (used by both `fd.py` and `fed.py`). Encoder adapters live in `ecgen_eval/metrics/encoders/` — add new backbones there without touching `FEDMetric`.
 
-Convention: lower is better unless the metric sets `higher_is_better = True` (`psnr`, `ssim`, `pr_dist`, `sqi`).
+Shared private helpers in `ecgen_eval/metrics/` — reuse them instead of copying code:
+- `_matching.py`: subsampling and the `pairing` protocols (`nn` nearest neighbour, `paired` index-aligned, `mean` mean waveforms), `split_half` for real-vs-real baselines.
+- `_pairwise.py`: `PairwiseSignalMetric`, base class of `mse`, `rmse`, `euclidean`, `pearson`, `cosine`, `curve_frechet`. Subclasses implement `_pair_values(R, S)`; the base handles pairing, the baseline (`extra["real_vs_real"]`) and common extras.
+- `_signal_features.py` (7- and 11-feature descriptors), `_divergence.py` (JS / KL), `_stats.py` (KS test, p-value adjustment, Cohen's d).
 
-CLI `eval` runs every metric except `fed` by default (`DEFAULT_METRICS` in `cli.py`), and passes the real dataset's `fs` to any metric whose constructor takes `fs`. Metric constructors must be callable with no arguments.
+Existing metric scores are pinned in `tests/test_metrics.py::test_original_metric_scores_unchanged`; a refactor of the helpers must keep them.
+
+Convention: lower is better unless the metric sets `higher_is_better = True` (`psnr`, `ssim`, `pr_dist`, `sqi`, `pearson`, `cosine`).
+
+CLI `eval` runs a curated set of 12 metrics by default (`DEFAULT_METRICS` in `cli.py`: `fd`, `mmd`, `pr_dist`, `c2st`, `rmse`, `pearson`, `dtw`, `js_div`, `psd`, `heart_rate`, `hrv`, `nn_dist`); `-m all` expands to every metric except `fed` (`ALL_METRICS`), which must always be named explicitly. A new metric is not in the default unless added to `DEFAULT_METRICS`. `eval` passes the real dataset's `fs` to any metric whose constructor takes `fs`, and `--pairing` to any whose constructor takes `pairing`. Metric constructors must be callable with no arguments.
 
 ### Visualization (`ecgen_eval/visualization/`)
-- `ecg_waveform.py`: Plotly interactive comparisons (`overlay`, `sidebyside`, `grid` modes).
-- `metric_plots.py`: Per-lead bar, violin, PSD overlay, and radar chart figures.
+- `ecg_waveform.py`: Plotly interactive comparisons (`overlay`, `sidebyside`, `grid` modes); `show_r_peaks=True` marks detected R peaks.
+- `metric_plots.py`: Per-lead bar, violin, PSD overlay, amplitude-histogram overlay (`js_div`), and radar chart figures.
+- `beat_plots.py`: `plot_beat_bands` (median + quantile band, or density map, of all R-peak-aligned beats) and `extract_aligned_beats`.
+- `embedding_plots.py`: `compute_embedding_2d` / `plot_embedding_2d` — PCA, t-SNE, UMAP (`[umap]` extra); PCA and UMAP are fitted on the real data only.
 - `ecg_paper.py`: ECG graph-paper background (5mm/1mm grid) utilities.
 - `feature_plots.py`: 2D and 3D clinical feature distribution plots.
   - `plot_feature_2d(real_df, synth_df, x, y)` — scatter + `Histogram2dContour` KDE overlay.
@@ -117,17 +135,22 @@ CLI `eval` runs every metric except `fed` by default (`DEFAULT_METRICS` in `cli.
 ### Report (`ecgen_eval/report/html_report.py`)
 `generate_report()` produces a single self-contained `.html` file embedding all Plotly figures. Use `plotly_cdn=False` (`--offline` flag) to embed Plotly.js for offline use.
 
-New optional parameters: `feature_df_real`, `feature_dfs_synth`, `feature_plots_2d`, `feature_plots_3d` — when provided, add a Clinical Feature Summary table and 2D/3D distribution plot sections to the report.
+New optional parameters: `feature_df_real`, `feature_dfs_synth`, `feature_plots_2d`, `feature_plots_3d` — when provided, add a Clinical Feature Summary table (with KS statistics from `ecgen_eval.features.stats.compare_feature_distributions`) and 2D/3D distribution plot sections to the report.
+
+Further report options: `beat_bands` (Beat Morphology section, on by default), `embedding_plots` (list of figures), `gallery_selection` (`first` / `random`). Metric score tables show scalar extras listed in `_EXTRA_COLUMNS` (real-vs-real baseline, accuracy, AUC, KL).
 
 ### CLI (`ecgen_eval/cli.py`)
 Click-based entry point `ecgen-eval`. Five commands:
-- `eval` — run metrics + generate report; `--feature-plots` triggers feature extraction and adds plot sections.
-- `features` — extract clinical features only and save a summary CSV.
-- `visualize` — ECG waveform comparison plots, no metrics.
+- `eval` — run metrics + generate report; `--feature-plots` triggers feature extraction and adds plot sections; `--pairing`, `--embedding-plots` / `--embedding-method` / `--embedding-features`, `--no-beat-bands`, `--gallery-selection`.
+- `features` — extract clinical features only and save a summary CSV; `--stats-output` writes two-sample tests per feature.
+- `visualize` — ECG waveform comparison plots, no metrics; `--compare-mode beats|beat-density`, `--show-r-peaks`, `--embedding`.
 - `list-metrics` — print available metric registry.
 - `list-features` — print feature groups and extraction backends.
 
 `--synthetic` is repeatable in `eval` and `features` to compare multiple models in one run.
+
+### Docs for a metric
+Each metric has a page `docs/metrics/<key>.md` (with an interactive demo from `docs/javascripts/metric-viz.js`), a section in `docs/user-guide/metric-reference.md`, rows in `docs/user-guide/metrics.md`, `docs/metrics/index.md`, `docs/references.md` and the README, an entry in `docs/api/metrics.md` and `mkdocs.yml`, and its key in the `METRICS` table of `literature_review_claude/build_db.py` (then rebuild the DB). `METRIC_KEYS` in `docs/javascripts/literature-db.js` turns keys into links.
 
 ## Code Style
 - Line length: 100 characters (black + ruff both configured to 100).

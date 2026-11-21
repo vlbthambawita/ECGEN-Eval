@@ -6,6 +6,10 @@
 
 ::: ecgen_eval.features.extractor.extract_features
 
+## Statistical comparison
+
+::: ecgen_eval.features.stats.compare_feature_distributions
+
 ## Feature groups
 
 ::: ecgen_eval.features.groups

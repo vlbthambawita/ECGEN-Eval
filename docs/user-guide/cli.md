@@ -40,9 +40,10 @@ ecgen-eval eval --real REAL --synthetic SYNTH [--synthetic SYNTH2 ...] [OPTIONS]
 |---|---|---|
 | `-r, --real PATH` | *required* | Real ECG data |
 | `-s, --synthetic PATH` | *required* | Synthetic ECG data. Repeatable |
-| `-m, --metrics KEY` | all except `fed` | Metric to compute. Repeatable. See `list-metrics` |
+| `-m, --metrics KEY` | curated set of 12 | Metric to compute. Repeatable. `all` runs every metric except `fed`. See `list-metrics` |
 | `-o, --output PATH` | `ecgen_eval_report.html` | Report path |
-| `--fs FLOAT` | `500.0` | Sampling frequency (Hz) of the data; also passed to `psd`, `spectral_entropy`, `hrv`, `heart_rate` |
+| `--fs FLOAT` | `500.0` | Sampling frequency (Hz) of the data; also passed to `psd`, `spectral_entropy`, `hrv`, `heart_rate`, `pearson`, `curve_frechet` |
+| `--pairing` | `nn` | How `mse`, `rmse`, `euclidean`, `pearson`, `cosine` and `curve_frechet` match signals: `nn` (nearest neighbour), `paired` (recording *i* with recording *i*; needs equal counts) or `mean` (mean waveforms). See [Matching protocol](metric-reference.md#matching-protocol) |
 | `--n-samples INT` | `3` | Recordings shown in the ECG gallery |
 | `--leads TEXT` | all | Comma-separated leads for the gallery, e.g. `I,II,V1` |
 | `--compare-mode` | `overlay` | `overlay`, `sidebyside` or `grid` |
@@ -50,15 +51,39 @@ ecgen-eval eval --real REAL --synthetic SYNTH [--synthetic SYNTH2 ...] [OPTIONS]
 | `--offline` | off | Embed Plotly.js so the report works without internet |
 | `--real-label TEXT` | file/folder name | Display label for the real set |
 | `--synth-labels TEXT` | file/folder names | Comma-separated labels, in `--synthetic` order |
-| `--feature-plots` | off | Extract clinical features and add summary table + 2D/3D plots (needs `[features]`) |
+| `--gallery-selection` | `first` | Recordings shown in the gallery: `first` or `random` (fixed seed; the indices are printed in the report) |
+| `--beat-bands / --no-beat-bands` | on | Beat morphology section: median and 5–95 % band of all detected beats |
+| `--embedding-plots` | off | Add 2-D [embedding projections](visualization.md#embedding-projections) of real vs synthetic recordings |
+| `--embedding-method` | `pca` | `pca`, `tsne` or `umap` (needs `[umap]`). Repeatable |
+| `--embedding-features` | `handcrafted` | `handcrafted` (11 signal features per lead), `signal` (waveform) or `clinical` (runs feature extraction) |
+| `--feature-plots` | off | Extract clinical features and add summary table (with KS statistics) + 2D/3D plots (needs `[features]`) |
 | `-F, --feature`, `--feature-backend`, `--rpeak-method`, `--delineation-method` | all / `hybrid` | Which features and which library, with `--feature-plots`; see [Feature options](#feature-options) |
 | `--backbone` | `ecgfounder` | FED backbone: `ecgfounder`, `hubert_ecg`, `ecgfm` |
 | `--fed-device TEXT` | `cpu` | PyTorch device for FED, e.g. `cuda` |
 | `--fed-batch-size INT` | `32` | FED batch size |
 
 !!! note "Default metric set"
-    Without `-m`, every registered metric runs **except `fed`**, which requires the `[fed]`
-    extra and downloads model weights. Add `-m fed` (or list it with others) to include it.
+    Without `-m`, a curated set of 12 metrics runs: one or two per evaluation question, with
+    no near-duplicates.
+
+    | Question | Metrics |
+    |---|---|
+    | Does the population match? | `fd`, `mmd` |
+    | Realism and coverage? | `pr_dist` |
+    | Can a classifier tell them apart? | `c2st` |
+    | Do waveforms match? | `rmse`, `pearson`, `dtw` |
+    | Are amplitudes right? | `js_div` |
+    | Is the frequency content right? | `psd` |
+    | Is the rhythm physiological? | `heart_rate`, `hrv` |
+    | Is the model copying? | `nn_dist` |
+
+    `-m all` runs every registered metric except `fed` (24 metrics). `fed` requires the
+    `[fed]` extra and downloads model weights, so it always has to be named: `-m fed`, or
+    `-m all -m fed` for everything. The metrics left out of the default either repeat one
+    that is in it (`mse`, `euclidean`, `mae`, `prd`, `psnr` against `rmse`; `swd`, `ks_test`
+    against `mmd`; `spectral_entropy` against `psd`; `sqi`, `ssim` against `pearson`) or
+    separate generators poorly (`cosine`, `curve_frechet`). Request them with `-m` when you
+    need to reproduce a number from a paper.
 
 !!! note "Sampling rate"
     Metrics that take a sampling rate (`psd`, `spectral_entropy`, `hrv`, `heart_rate`) and the
@@ -85,6 +110,17 @@ ecgen-eval eval -r ptbxl/ -s fm.npy -s vae.npy \
 ecgen-eval eval -r real.npy -s synth.npy -m fed -m fd \
   --backbone hubert_ecg --fed-device cuda --fed-batch-size 64 --offline -o fed.html
 
+# Paired data (e.g. reconstructed leads): compare recording i with recording i
+ecgen-eval eval -r real.npy -s reconstructed.npy --pairing paired \
+  -m rmse -m pearson -m curve_frechet -o paired.html
+
+# Paper-style fidelity set plus PCA and t-SNE projections
+ecgen-eval eval -r real.npy -s synth.npy -m rmse -m pearson -m js_div -m ks_test -m c2st \
+  --embedding-plots --embedding-method pca --embedding-method tsne -o fidelity.html
+
+# Every metric, including FED
+ecgen-eval eval -r real.npy -s synth.npy -m all -m fed -o everything.html
+
 # Include clinical feature distributions
 ecgen-eval eval -r real.npy -s synth.npy -m mmd -m hrv --feature-plots -o features.html
 
@@ -109,6 +145,7 @@ ecgen-eval features --real REAL [--synthetic SYNTH ...] [OPTIONS]
 | `--fs FLOAT` | `500.0` | Sampling frequency (Hz) |
 | `--max-samples INT` | — | Cap on recordings per dataset |
 | `--lead TEXT` | `II` | Lead used for R-peak detection and interval timing |
+| `--stats-output PATH` | — | Also write a CSV of two-sample tests (KS, Mann–Whitney U, Cohen's d) between the real and each synthetic feature distribution; see [Statistical comparison](features.md#statistical-comparison) |
 | `-F, --feature`, `--feature-backend`, `--rpeak-method`, `--delineation-method` | all / `hybrid` | See [Feature options](#feature-options) |
 
 ```bash
@@ -147,12 +184,17 @@ ecgen-eval visualize --real REAL --synthetic SYNTH [OPTIONS]
 | `--fs FLOAT` | `500.0` | Sampling frequency (Hz) |
 | `--n-samples INT` | `3` | Recordings to plot |
 | `--leads TEXT` | all | Comma-separated leads |
-| `--compare-mode` | `overlay` | `overlay`, `sidebyside` or `grid` |
+| `--compare-mode` | `overlay` | `overlay`, `sidebyside`, `grid` (individual recordings), `beats` (median and 5–95 % band of all R-peak-aligned beats) or `beat-density` (their density maps) |
+| `--show-r-peaks` | off | Mark detected R peaks on every trace |
+| `--embedding` | — | Add a 2-D projection of 11 signal features per lead: `pca`, `tsne` or `umap`. Repeatable |
 | `--max-samples INT` | — | Cap on recordings loaded |
 | `--offline` | off | Embed Plotly.js |
 
 ```bash
 ecgen-eval visualize -r real.npy -s synth.npy --compare-mode grid --n-samples 5
+
+# All beats instead of a few recordings, plus a PCA projection
+ecgen-eval visualize -r real.npy -s synth.npy --compare-mode beats --embedding pca
 ```
 
 ## `list-metrics`

@@ -24,6 +24,7 @@ Optional extras:
 pip install "ecgen-eval[features]"        # clinical feature extraction (neurokit2 + scipy)
 pip install "ecgen-eval[fed]"             # Fréchet ECG Distance (torch, transformers, huggingface_hub)
 pip install "ecgen-eval[features,fed]"    # both
+pip install "ecgen-eval[umap]"            # UMAP embedding plots (umap-learn)
 ```
 
 Other optional packages:
@@ -92,6 +93,29 @@ with `.score`, `.per_lead_scores`, and `.extra`.
 | `heart_rate` | Heart Rate Distribution (JS divergence) | Lower ↓ | [Pan & Tompkins, IEEE TBME 1985](https://doi.org/10.1109/TBME.1985.325532) · Applied: [Golany & Radinsky, AAAI 2019](https://doi.org/10.1609/aaai.v33i01.3301557) |
 | `spectral_entropy` | Spectral Entropy Divergence | Lower ↓ | [Inouye et al., EEG Clin Neurophysiol 1991](https://doi.org/10.1016/0013-4694(91)90138-T) |
 
+### Fidelity metrics from the literature review
+
+Every Fidelity metric family that more than 10 of the 172 reviewed papers report
+([Paper Database](https://vajira.info/ECGEN-Eval/literature/database/#metrics/Fidelity)).
+The first six take `pairing="nn" | "paired" | "mean"` (`--pairing` on the CLI) and report a
+real-vs-real baseline in `extra["real_vs_real"]`.
+
+| Key | Name | Lower / Higher | Paper |
+|---|---|---|---|
+| `mse` | Mean Squared Error | Lower ↓ | [Wang & Bovik, IEEE SPM 2009](https://doi.org/10.1109/MSP.2008.930649) |
+| `rmse` | Root Mean Square Error | Lower ↓ | [Wang & Bovik, IEEE SPM 2009](https://doi.org/10.1109/MSP.2008.930649) |
+| `euclidean` | Euclidean Distance (time domain) | Lower ↓ | [Wang et al., DMKD 2013](https://doi.org/10.1007/s10618-012-0250-5) |
+| `pearson` | Pearson Correlation | Higher ↑ | [Pearson, Proc R Soc 1895](https://doi.org/10.1098/rspl.1895.0041) |
+| `cosine` | Cosine Similarity | Higher ↑ | Singhal, IEEE Data Eng Bull 2001 |
+| `curve_frechet` | Discrete (curve) Fréchet Distance | Lower ↓ | Eiter & Mannila, TU Vienna 1994 · Applied: [Delaney et al., 2019](https://arxiv.org/abs/1909.09150) |
+| `js_div` | Amplitude-distribution JS divergence (KL in `extra`) | Lower ↓ | [Lin, IEEE TIT 1991](https://doi.org/10.1109/18.61115) |
+| `ks_test` | Kolmogorov–Smirnov test on 7 signal features | Lower ↓ | [Massey, JASA 1951](https://doi.org/10.1080/01621459.1951.10500769) |
+| `c2st` | Classifier Two-Sample Test (discriminative score) | Lower ↓ | [Lopez-Paz & Oquab, ICLR 2017](https://arxiv.org/abs/1610.06545) |
+
+The same review added two qualitative tools: **beat-morphology bands** (median and 5–95 % of
+all R-peak-aligned beats; in every report) and **embedding projections**
+(`--embedding-plots`, PCA / t-SNE / UMAP).
+
 ## Feature Extraction
 
 Extract 10 clinical ECG features per recording and compare their distributions between real and synthetic datasets.
@@ -152,7 +176,8 @@ fig.show()
 ## CLI
 
 ```bash
-# Run all metrics (except fed) and generate interactive HTML report
+# Run the default set of 12 metrics and generate an interactive HTML report
+# (add `-m all` for every metric except fed)
 ecgen-eval eval \
   --real   /path/to/real_ecgs.npy \
   --synthetic /path/to/model1_ecgs.npy \
@@ -183,7 +208,7 @@ ecgen-eval visualize \
 ```
 
 Key options for `eval`:
-- `-m mmd -m prd -m psd` — run a subset of metrics (repeat `-m` per metric; default: all except `fed`)
+- `-m mmd -m prd -m psd` — choose metrics (repeat `-m` per metric). Default: a curated set of 12 (`fd`, `mmd`, `pr_dist`, `c2st`, `rmse`, `pearson`, `dtw`, `js_div`, `psd`, `heart_rate`, `hrv`, `nn_dist`). `-m all` runs every metric except `fed`; add `-m fed` for the foundation-model metric
 - `--feature-plots` — add clinical feature extraction + 2D/3D distribution plots
 - `--fs 500` — sampling frequency (also passed to `psd`, `spectral_entropy`, `hrv`, `heart_rate`)
 - `--n-samples 5` — ECG samples shown in gallery
@@ -241,11 +266,22 @@ ecgen_eval/
 │   ├── sqi.py              Signal Quality Index
 │   ├── nn_dist.py          Nearest-Neighbour Distance
 │   ├── heart_rate.py       Heart Rate Distribution
-│   └── spectral_entropy.py Spectral Entropy Divergence
+│   ├── spectral_entropy.py Spectral Entropy Divergence
+│   ├── mse.py              MSE and RMSE
+│   ├── euclidean.py        Euclidean Distance
+│   ├── pearson.py          Pearson Correlation
+│   ├── cosine.py           Cosine Similarity
+│   ├── curve_frechet.py    Discrete (curve) Fréchet Distance
+│   ├── js_div.py           Amplitude JS / KL Divergence
+│   ├── ks_test.py          Kolmogorov–Smirnov Test
+│   ├── c2st.py             Classifier Two-Sample Test
+│   └── _matching.py        Pairing helper (nn / paired / mean)
 ├── visualization/
 │   ├── ecg_paper.py        ECG graph-paper figure factory
 │   ├── ecg_waveform.py     Waveform comparison plots
-│   ├── metric_plots.py     Bar, violin, PSD overlay, radar
+│   ├── metric_plots.py     Bar, violin, PSD overlay, amplitude histogram, radar
+│   ├── beat_plots.py       R-peak-aligned beat bands and density maps
+│   ├── embedding_plots.py  PCA / t-SNE / UMAP projections
 │   └── feature_plots.py    2D/3D clinical feature distribution plots
 ├── report/
 │   └── html_report.py      HTML report generator

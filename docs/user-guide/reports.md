@@ -9,11 +9,13 @@ browser or shared as one file.
 | Section | Description |
 |---|---|
 | Dataset summary | Recordings, leads, length and sampling rate for each dataset |
-| ECG gallery | Real vs synthetic recordings on ECG graph paper (`overlay` / `sidebyside` / `grid`) |
-| Per-metric sections | Score table, per-lead bar chart, plus a PSD overlay for `psd` and a violin plot for `dtw` |
+| ECG gallery | Real vs synthetic recordings on ECG graph paper (`overlay` / `sidebyside` / `grid`). The indices of the recordings shown are printed below it |
+| Beat morphology | Median and 5–95 % band of all R-peak-aligned beats per dataset and lead; see [Beat morphology](visualization.md#beat-morphology). Skipped when no beat is detected |
+| Embedding projections *(optional)* | PCA / t-SNE / UMAP plots of real vs synthetic recordings; see [Embedding projections](visualization.md#embedding-projections) |
+| Per-metric sections | Score table, per-lead bar chart, plus a PSD overlay for `psd`, an amplitude-histogram overlay for `js_div`, and a violin plot for `dtw` and the pairwise metrics. The score table adds the real-vs-real baseline, classifier accuracy and AUC, or KL values where a metric provides them, and names the `pairing` |
 | Radar chart | All metrics and datasets at a glance, normalised so that the outer edge is best |
 | Metrics summary table | All scores in one table, with a **Download CSV** button |
-| Clinical feature summary *(optional)* | Mean ± std per feature, real vs synthetic |
+| Clinical feature summary *(optional)* | Mean ± std per feature, real vs synthetic, with the two-sample KS statistic and its Holm-adjusted p-value for every synthetic dataset |
 | 2D / 3D feature plots *(optional)* | Distribution plots of [clinical features](features.md) |
 | References | Citation for every metric used |
 
@@ -62,6 +64,16 @@ generate_report(
 )
 ```
 
+Embedding projections are passed in as ready-made figures:
+
+```python
+from ecgen_eval.visualization import compute_embedding_2d, plot_embedding_2d
+
+figs = [plot_embedding_2d(compute_embedding_2d(real, synths, method=m)) for m in ("pca", "tsne")]
+generate_report(real, synths, metric_results, "report.html",
+                embedding_plots=figs, gallery_selection="random")
+```
+
 ### Parameters
 
 | Parameter | Default | Description |
@@ -79,6 +91,10 @@ generate_report(
 | `feature_dfs_synth` | `None` | List of synthetic `summary_df`s, same order as `synthetics` |
 | `feature_plots_2d` | `False` | Add 2D feature distribution plots |
 | `feature_plots_3d` | `False` | Add 3D feature distribution plots |
+| `beat_bands` | `True` | Add the Beat morphology section |
+| `embedding_plots` | `None` | List of figures from `plot_embedding_2d` for the Embedding projections section |
+| `gallery_selection` | `"first"` | Recordings shown in the gallery: `"first"` or `"random"` (seeded with `gallery_seed`) |
+| `gallery_seed` | `42` | Seed for `gallery_selection="random"` |
 
 Returns the `Path` of the written file.
 
