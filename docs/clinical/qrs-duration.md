@@ -51,6 +51,19 @@ This needs no NeuroKit2. Against GE 12SL: typical error 6.4 ms, r 0.88, the same
 as between two commercial programs ([validation](index.md#validation)). With a single lead
 it is less accurate (r ≈ 0.5).
 
+??? info "With other backends"
+    - **`scipy`**: the same all-lead method as above, so the same accuracy.
+    - **`neurokit2`**: `ECG_R_Onsets` to `ECG_R_Offsets` from `nk.ecg_delineate` on one lead.
+      With `dwt` they are searched between the P peak and the Q wave and between the R and T
+      peaks, where the wavelet slope falls below 50 % of its maximum; typical error 72 ms on
+      PTB-XL. `peak` gives no QRS boundaries (`NaN`).
+    - **`biosppy`**: from the beat template, the last local maximum before the Q wave to the
+      first local maximum after the R peak. Without a Q or S wave these move; typical error
+      17 ms (15 ms with all leads).
+    - **`heartpy`**: not measured (`NaN`).
+
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [Signal Quality Index](../metrics/sqi.md) and [DTW](../metrics/dtw.md) also react to QRS

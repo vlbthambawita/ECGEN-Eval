@@ -57,6 +57,16 @@ For every lead:
 Works with or without NeuroKit2. Against GE 12SL (average over the 12 leads): r 0.96
 ([validation](index.md#validation)).
 
+??? info "With other backends"
+    The formula is the same for every backend; the search window runs from J + 80 ms to the
+    backend's T offset.
+
+    - **`scipy`**: no T offset, so the window ends at QRS onset + min(0.6 RR, 550 ms).
+    - **`neurokit2`**, **`biosppy`**: their own QRS offset and T offset.
+    - **`heartpy`**, `neurokit2` with `peak`: no QRS points, so `NaN`.
+
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [ST deviation](st-deviation.md) · [QT & QTc](qt-qtc.md)

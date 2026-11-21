@@ -117,6 +117,7 @@ nav:
       - Metrics Overview: user-guide/metrics.md
       - Metric Reference: user-guide/metric-reference.md
       - Clinical Features: user-guide/features.md
+      - Extraction Backends: user-guide/feature-backends.md
       - Visualization: user-guide/visualization.md
       - HTML Reports: user-guide/reports.md
       - Command-Line Interface: user-guide/cli.md

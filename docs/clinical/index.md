@@ -215,7 +215,8 @@ The table above is for the default `hybrid` backend. The same check was repeated
 500 recordings drawn at random from PTB-XL fold 9 (a different draw from the table above, so the
 `hybrid` numbers differ slightly). Each cell gives the mean absolute error against GE 12SL and,
 in brackets, the share of recordings within a tolerance: 5 bpm for heart rate, 20 ms for PR and
-QRS, 30 ms for QT. "—" means the backend does not measure that feature.
+QRS, 30 ms for QT. "—" means the backend does not measure that feature. How each backend finds
+the waves is explained in [How the Extraction Backends Work](../user-guide/feature-backends.md).
 
 | Backend | HR | PR | QRS | QT | Time / recording |
 |---|---|---|---|---|---|

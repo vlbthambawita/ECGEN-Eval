@@ -63,6 +63,15 @@ At least three R peaks are needed; otherwise the values are `NaN`.
     computes pNN50 as a fraction (0–1). Both are fine for comparing real with synthetic data,
     but don't mix them.
 
+??? info "With other backends"
+    The HRV formulas are the same for every backend; only the R peaks differ (see
+    [heart rate](heart-rate.md)). HeartPy computes its own HRV measures, but ECGEN-Eval does
+    not use them, so `heartpy` results stay comparable with the other backends. Dropped
+    HeartPy beats leave long RR intervals; those above 2000 ms are removed, shorter ones
+    still enter SDNN and RMSSD.
+
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [Heart rate & RR](heart-rate.md) · [HRV metric](../metrics/hrv.md)

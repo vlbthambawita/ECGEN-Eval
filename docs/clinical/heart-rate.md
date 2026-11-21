@@ -57,6 +57,20 @@ Against the GE 12SL heart rate of 500 PTB-XL recordings the typical error is 1.7
 ([validation](index.md#validation)). At least two R peaks are needed; otherwise the value is
 `NaN`.
 
+??? info "With other backends"
+    The RR and heart-rate formulas are the same for every backend; only the R peaks differ.
+
+    - **`hybrid`, `neurokit2`**: NeuroKit2's gradient detector (`nk.ecg_peaks`), or any other
+      `--rpeak-method`.
+    - **`scipy`**: Pan–Tompkins style detector (5–15 Hz band-pass, squared derivative,
+      150 ms integration).
+    - **`biosppy`**: a BioSPPy segmenter (Hamilton by default), moved to the local maximum
+      within ±50 ms. The most accurate heart rate on PTB-XL (typical error 0.6 bpm).
+    - **`heartpy`**: HeartPy's moving-average detector after 4× upsampling. Rejected beats are
+      dropped, which merges RR intervals, so the heart rate can come out low.
+
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [Heart-rate variability](hrv.md): how much the RR interval changes from beat to beat.

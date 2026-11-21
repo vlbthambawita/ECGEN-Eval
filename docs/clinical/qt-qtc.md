@@ -55,6 +55,18 @@ Needs NeuroKit2 (`NaN` without it). Against GE 12SL, QT has r 0.85 but is about 
 shorter on average; the tangent method is known to end the T wave earlier. QTc has r 0.63
 ([validation](index.md#validation)).
 
+??? info "With other backends"
+    - **`neurokit2`**: QRS onset to `ECG_T_Offsets` from `nk.ecg_delineate`. With `dwt` the T
+      offset is where the wavelet slope after the T peak falls below 40 % of its maximum; with
+      `prominence` it is the right base of the T peak. No tangent method.
+    - **`biosppy`**: T peak = the highest point from +0.14 s to +0.4 s of the beat template;
+      T offset = the first local minimum after it. Inverted T waves and T waves ending after
+      +0.4 s are missed; typical error 35 ms.
+    - **`scipy`**, **`heartpy`**: not measured (`NaN`).
+
+    QTc always uses the backend's own QT and RR.
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [Heart rate & RR](heart-rate.md) · [T-wave amplitude](t-wave.md)

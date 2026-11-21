@@ -51,6 +51,17 @@ value is the median over beats.
 Needs NeuroKit2 (`NaN` without it). Against GE 12SL: typical error 8.5 ms, r 0.87
 ([validation](index.md#validation)).
 
+??? info "With other backends"
+    - **`neurokit2`**: P onset and QRS onset (`ECG_R_Onsets`) from `nk.ecg_delineate` on the
+      primary lead. With `dwt` the QRS onset is searched between the P peak and the Q wave, so
+      a misplaced P peak also moves the QRS onset; typical error 52 ms on PTB-XL. `peak` gives
+      no QRS onset (`NaN`).
+    - **`biosppy`**: P onset and Q start from local extrema of the beat template. The P onset
+      lands close to the P peak, so PR is about 37 ms short.
+    - **`scipy`**, **`heartpy`**: not measured (`NaN`).
+
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [P-wave duration](p-wave.md) · [QRS duration](qrs-duration.md)

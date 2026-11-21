@@ -27,6 +27,11 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
   backends whose packages are not installed.
 - Backend comparison against GE 12SL in
   [Clinical Features Explained](clinical/index.md#backend-comparison).
+- New docs page [How the Extraction Backends Work](user-guide/feature-backends.md): a
+  step-by-step description of how each backend (`hybrid`, `neurokit2` with its four delineation
+  methods, `scipy`, `biosppy` with its seven R-peak detectors, `heartpy`) finds the beats and
+  wave points, and how the feature groups turn them into features. Every page under Clinical
+  Features Explained now has a "With other backends" note.
 - The feature-extractor catalogue (`ecgen_literature.sqlite`, `feature_extractors.csv`) has an
   `ecgen_eval_backend` column naming the ECGEN-Eval backends built on each tool.
 

@@ -55,6 +55,17 @@ For every lead:
 Works with or without NeuroKit2. Against the Philips Uni-G ST level at J + 80 ms: r 0.97
 ([validation](index.md#validation)).
 
+??? info "With other backends"
+    The formula is the same for every backend; it moves with the backend's QRS onset (baseline)
+    and QRS offset (J point).
+
+    - **`scipy`**: same QRS points as `hybrid`, so the same values.
+    - **`neurokit2`**, **`biosppy`**: their own QRS onset and offset (see
+      [QRS duration](qrs-duration.md)); a late or early J point shifts where the ST level is read.
+    - **`heartpy`**, `neurokit2` with `peak`: no QRS points, so `NaN`.
+
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [T-wave amplitude](t-wave.md): measured against the same baseline.

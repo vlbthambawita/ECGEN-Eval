@@ -48,7 +48,8 @@ The clinical rationale for each feature is discussed in the
 Extraction has two stages: a **delineation backend** finds the beats and their fiducial points,
 then the selected **feature groups** measure them (see
 [Choosing features and libraries](#choosing-features-and-libraries)). The steps below describe
-the default `hybrid` backend.
+the default `hybrid` backend; [How the Extraction Backends Work](feature-backends.md) walks
+through every backend step by step.
 
 [![Feature extraction: a selectable delineation backend finds R peaks and fiducials, then the selected feature groups fill summary_df and beat_df](../assets/diagrams/features-light.svg#only-light){ .ecgen-diagram }](../assets/diagrams/features-light.svg "Open full size")
 [![Feature extraction: a selectable delineation backend finds R peaks and fiducials, then the selected feature groups fill summary_df and beat_df](../assets/diagrams/features-dark.svg#only-dark){ .ecgen-diagram }](../assets/diagrams/features-dark.svg "Open full size")
@@ -213,6 +214,9 @@ usage error in the CLI. The `neurokit2` and `biosppy` backends delineate the pri
 default (`leads="all"` delineates every lead at the primary lead's R peaks and takes the
 median). The `neurokit2` `peak` method gives no QRS boundaries, so QRS duration, PR, QT and the
 amplitudes are `NaN`.
+
+Each backend's algorithm is explained step by step in
+[How the Extraction Backends Work](feature-backends.md).
 
 - **`biosppy`** finds each wave point as a local extremum of a heartbeat template (−0.2 s to
   +0.4 s around R). This is fast but literal: the P onset lands close to the P peak (PR about

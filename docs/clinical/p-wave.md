@@ -48,6 +48,17 @@ Needs NeuroKit2 (`NaN` without it). The P wave is small and its edges are gentle
 the least precise feature: against GE 12SL the typical error is 12 ms (r 0.41), and even two
 commercial programs only reach r 0.48 ([validation](index.md#validation)).
 
+??? info "With other backends"
+    - **`neurokit2`**: P onset and offset straight from `nk.ecg_delineate` (wavelet thresholds
+      with `dwt`/`cwt`, prominence bases with `prominence`). The `peak` method has no P offset,
+      so the duration is `NaN`.
+    - **`biosppy`**: P onset = the last local minimum before the highest point between −0.2 s
+      and −0.04 s of the beat template; P offset = the first local minimum after it. Small
+      ripples count as minima, so the P wave comes out short.
+    - **`scipy`**, **`heartpy`**: not measured (`NaN`).
+
+    Details: [How the Extraction Backends Work](../user-guide/feature-backends.md).
+
 ## Learn more
 
 - [PR interval](pr-interval.md): the P wave plus the pause that follows.
