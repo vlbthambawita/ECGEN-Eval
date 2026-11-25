@@ -10,6 +10,16 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+## [0.9.1] — 2026-11-25
+
+First PyPI release of the 0.9 series. It contains everything listed under 0.9.0 below; 0.9.0
+was tagged but never reached PyPI, because the release tests could not start.
+
+### Fixed
+
+- Release workflow: the tests now run on Python 3.11 and 3.12. The GitHub runner image no
+  longer provides Python 3.9, which stopped the 0.9.0 release before the build step.
+
 ## [0.9.0] — 2026-11-21
 
 ### Added
@@ -286,7 +296,8 @@ Initial release.
 - Interactive Plotly visualizations on ECG graph paper and a self-contained HTML report.
 - `ecgen-eval` CLI with `eval`, `visualize` and `list-metrics`.
 
-[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.0...v0.7.1
