@@ -10,6 +10,12 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
+### Changed
+
+- **Python 3.11 or newer is now required** (`requires-python = ">=3.11"`, was `>=3.6`). The
+  package is tested on Python 3.11 and 3.12 only. Releases up to 0.9.2 remain installable on
+  older Python versions.
+
 ## [0.9.2] — 2026-11-26
 
 First PyPI release of the 0.9 series. It contains everything listed under 0.9.0 below; 0.9.0

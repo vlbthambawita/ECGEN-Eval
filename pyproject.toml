@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Evaluation metrics and interactive reports for synthetic ECG quality assessment"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.6"
+requires-python = ">=3.11"
 authors = [
     { name = "Vajira Thambawita", email = "vajira@simula.no" },
 ]
@@ -19,8 +19,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]

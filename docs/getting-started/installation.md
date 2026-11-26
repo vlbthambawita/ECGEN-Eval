@@ -1,6 +1,6 @@
 # Installation
 
-ECGEN-Eval is tested on **Python 3.9 and 3.11**; Python 3.9 or newer is recommended.
+ECGEN-Eval requires **Python 3.11 or newer** and is tested on Python 3.11 and 3.12.
 
 ## Install from PyPI
 
