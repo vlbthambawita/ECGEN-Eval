@@ -10,15 +10,19 @@ version with `ecgen-eval --version` or `python -c "import ecgen_eval; print(ecge
 
 ## [Unreleased]
 
-## [0.9.1] — 2026-11-25
+## [0.9.2] — 2026-11-26
 
 First PyPI release of the 0.9 series. It contains everything listed under 0.9.0 below; 0.9.0
-was tagged but never reached PyPI, because the release tests could not start.
+and 0.9.1 were tagged but never reached PyPI, because the release tests did not pass in CI.
+No metric score changed.
 
 ### Fixed
 
 - Release workflow: the tests now run on Python 3.11 and 3.12. The GitHub runner image no
   longer provides Python 3.9, which stopped the 0.9.0 release before the build step.
+- Tests: the check that pins the scores of the original metrics allowed a relative difference
+  of 1e-6, which newer NumPy / SciPy versions exceed for `spectral_entropy` through float32
+  rounding (2e-6). The tolerance is now 1e-4. This stopped the 0.9.1 release.
 
 ## [0.9.0] — 2026-11-21
 
@@ -296,8 +300,8 @@ Initial release.
 - Interactive Plotly visualizations on ECG graph paper and a self-contained HTML report.
 - `ecgen-eval` CLI with `eval`, `visualize` and `list-metrics`.
 
-[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.1...HEAD
-[0.9.1]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.0...v0.9.1
+[Unreleased]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.2...HEAD
+[0.9.2]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.9.0...v0.9.2
 [0.9.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/vlbthambawita/ECGEN-Eval/compare/v0.7.0...v0.7.1
